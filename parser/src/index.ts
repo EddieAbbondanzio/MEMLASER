@@ -2,12 +2,17 @@ import * as fs from "fs";
 
 // https://learn.microsoft.com/en-us/microsoft-edge/devtools-guide-chromium/memory-problems/heap-snapshot-schema
 
+// These may change in the future, so we check the actual values when parsing.
 const NUM_OF_NODE_FIELDS = 7;
+const NUM_OF_EDGE_FIELDS = 3;
 
 interface HeapSnapshot {
   snapshot: Snapshot;
   nodes: number[];
-  edges: number[];
+  // N.B. Edges will always be a repeating pattern of [number, string | number,
+  // number, ...] but that's hard to type so we type it as [number | string,
+  // number | string, ...]
+  edges: (number | string)[];
   trace_function_infos: unknown[];
   trace_tree: unknown[];
   samples: unknown[];
@@ -25,8 +30,8 @@ interface Snapshot {
 interface Meta {
   node_fields: NodeFields;
   node_types: NodeTypes;
-  edge_fields: string[];
-  edge_types: string[];
+  edge_fields: EdgeFields;
+  edge_types: EdgeTypes;
 }
 
 const NODE_FIELDS = [
@@ -68,7 +73,8 @@ const NODE_TYPES = [
 type NodeTypes = typeof NODE_TYPES;
 
 interface Node {
-  type: ObjectType;
+  nodeIndex: number;
+  type: NodeObjectType;
   name: string;
   id: number;
   selfSize: number;
@@ -76,14 +82,34 @@ interface Node {
   traceNodeId: number;
   detached: boolean;
 }
-type ObjectType = keyof NodeTypes[0];
+type NodeObjectType = keyof NodeTypes[0];
+
+const EDGE_FIELDS = ["type", "name_or_index", "to_node"];
+type EdgeFields = typeof EDGE_FIELDS;
+
+const EDGE_TYPES = [
+  ["context", "element", "property", "internal", "hidden", "shortcut", "weak"],
+  "string_or_number",
+  "node",
+] as const;
+type EdgeTypes = typeof EDGE_TYPES;
+type EdgeObjectType = keyof EdgeTypes[0];
+
+interface Edge {
+  type: EdgeObjectType;
+  name: string;
+  toNode: number;
+}
 
 async function main(): Promise<void> {
   console.log(process.cwd());
   const rawContent = await fs.promises.readFile("samples/reddit.heapsnapshot");
   const rawSnapshot: HeapSnapshot = JSON.parse(rawContent.toString());
 
-  parseNodes(rawSnapshot);
+  // TODO: Move the following lines into a helper such as parseSnapshot(): HeapSnapshot
+  const nodes = parseNodes(rawSnapshot);
+  const edges = parseEdges(rawSnapshot);
+  console.log(edges);
 }
 void main();
 
@@ -122,7 +148,7 @@ export function parseNode(
   const { nodes, strings } = heapSnapshot;
   const values = nodes.slice(index, index + numOfFields);
 
-  const type = NODE_TYPES[0][values[0]] as ObjectType;
+  const type = NODE_TYPES[0][values[0]] as NodeObjectType;
   const name = strings[values[1]];
   const id = values[2];
   const selfSize = values[3];
@@ -131,6 +157,7 @@ export function parseNode(
   const detached = Boolean(values[6]);
 
   return {
+    nodeIndex: index,
     type,
     name,
     id,
@@ -138,5 +165,58 @@ export function parseNode(
     edgeCount,
     traceNodeId,
     detached,
+  };
+}
+
+export function parseEdges(heapSnapshot: HeapSnapshot): Edge[] {
+  const { snapshot, edges } = heapSnapshot;
+  const totalEdgeCount = snapshot.edge_count;
+  const edgeFields = snapshot.meta.edge_fields;
+  const numOfEdgeFields = edgeFields.length;
+
+  if (numOfEdgeFields !== NUM_OF_EDGE_FIELDS) {
+    throw new Error(
+      `Invalid snapshot. Expected ${NUM_OF_NODE_FIELDS} edge fields, got ${numOfEdgeFields}.`,
+    );
+  }
+  if (edges.length % numOfEdgeFields !== 0) {
+    throw new Error(
+      `Invalid snapshot. Number of elements in nodes is not divisible by length of node_fields.`,
+    );
+  }
+
+  const parsedEdges = [];
+  for (let i = 0; i < totalEdgeCount; i++) {
+    const index = i * numOfEdgeFields;
+    const node = parseEdge(heapSnapshot, index, numOfEdgeFields);
+    parsedEdges.push(node);
+  }
+
+  return parsedEdges;
+}
+
+export function parseEdge(
+  heapSnapshot: HeapSnapshot,
+  index: number,
+  numOfFields: number,
+): Edge {
+  const { edges, strings } = heapSnapshot;
+  const values = edges.slice(index, index + numOfFields);
+
+  const type = EDGE_TYPES[0][values[0] as number] as EdgeObjectType;
+  const nameOrIndex = values[1];
+  const toNode = values[2] as number;
+
+  let name;
+  if (typeof nameOrIndex === "string") {
+    name = nameOrIndex;
+  } else {
+    name = strings[nameOrIndex];
+  }
+
+  return {
+    type,
+    name,
+    toNode,
   };
 }
