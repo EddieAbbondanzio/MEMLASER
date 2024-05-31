@@ -103,15 +103,21 @@ interface Edge {
 
 async function main(): Promise<void> {
   console.log(process.cwd());
-  const rawContent = await fs.promises.readFile("samples/reddit.heapsnapshot");
-  const rawSnapshot: HeapSnapshot = JSON.parse(rawContent.toString());
-
-  // TODO: Move the following lines into a helper such as parseSnapshot(): HeapSnapshot
-  const nodes = parseNodes(rawSnapshot);
-  const edges = parseEdges(rawSnapshot);
-  console.log(edges);
+  await parseSnapshot("samples/reddit.heapsnapshot");
 }
 void main();
+
+// TODO: What does this return?
+export async function parseSnapshot(filePath: string): Promise<void> {
+  const rawContent = await fs.promises.readFile(filePath);
+  const rawSnapshot: HeapSnapshot = JSON.parse(rawContent.toString());
+
+  const nodes = parseNodes(rawSnapshot);
+  const edges = parseEdges(rawSnapshot);
+
+  // TODO: What does this return?
+  buildObjectGraph(nodes, edges);
+}
 
 export function parseNodes(heapSnapshot: HeapSnapshot): Node[] {
   const { snapshot, nodes } = heapSnapshot;
@@ -181,7 +187,7 @@ export function parseEdges(heapSnapshot: HeapSnapshot): Edge[] {
   }
   if (edges.length % numOfEdgeFields !== 0) {
     throw new Error(
-      `Invalid snapshot. Number of elements in nodes is not divisible by length of node_fields.`,
+      `Invalid snapshot. Number of elements in edges is not divisible by length of edge_fields.`,
     );
   }
 
@@ -220,3 +226,6 @@ export function parseEdge(
     toNode,
   };
 }
+
+// TODO: what does this return?
+export function buildObjectGraph(nodes: Node[], edges: Edge[]): void {}
