@@ -95,7 +95,7 @@ export function parseNodes(heapSnapshot: HeapSnapshot): Node[] {
 
   if (numOfNodeFields !== NUM_OF_NODE_FIELDS) {
     throw new Error(
-      `Unexpected number of node fields. Expected ${NUM_OF_NODE_FIELDS}, got ${numOfNodeFields}`,
+      `Invalid snapshot. Expected ${NUM_OF_NODE_FIELDS} node fields, got ${numOfNodeFields}.`,
     );
   }
   if (nodes.length % numOfNodeFields !== 0) {
