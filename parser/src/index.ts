@@ -1,10 +1,25 @@
 import * as fs from "fs";
+import {
+  NodeFields,
+  NodeTypes,
+  NodeData,
+  NodeObjectType,
+  NODE_TYPES,
+  Node,
+  NUM_OF_NODE_FIELDS,
+} from "./node";
+import {
+  EdgeFields,
+  EdgeTypes,
+  EdgeData,
+  EDGE_TYPES,
+  EdgeObjectType,
+  Edge,
+  NUM_OF_EDGE_FIELDS,
+} from "./edge";
 
+// Reference(s):
 // https://learn.microsoft.com/en-us/microsoft-edge/devtools-guide-chromium/memory-problems/heap-snapshot-schema
-
-// These may change in the future, so we check the actual values when parsing.
-const NUM_OF_NODE_FIELDS = 7;
-const NUM_OF_EDGE_FIELDS = 3;
 
 interface HeapSnapshot {
   snapshot: Snapshot;
@@ -32,73 +47,6 @@ interface Meta {
   node_types: NodeTypes;
   edge_fields: EdgeFields;
   edge_types: EdgeTypes;
-}
-
-const NODE_FIELDS = [
-  "type",
-  "name",
-  "id",
-  "self_size",
-  "edge_count",
-  "trace_node_id",
-  "detachedness",
-] as const;
-type NodeFields = typeof NODE_FIELDS;
-
-const NODE_TYPES = [
-  [
-    "hidden",
-    "array",
-    "string",
-    "object",
-    "code",
-    "closure",
-    "regexp",
-    "number",
-    "native",
-    "synthetic",
-    "concatenated string",
-    "sliced string",
-    "symbol",
-    "bigint",
-    "object shape",
-  ],
-  "string",
-  "number",
-  "number",
-  "number",
-  "number",
-  "number",
-] as const;
-type NodeTypes = typeof NODE_TYPES;
-
-interface Node {
-  nodeIndex: number;
-  type: NodeObjectType;
-  name: string;
-  id: number;
-  selfSize: number;
-  edgeCount: number;
-  traceNodeId: number;
-  detached: boolean;
-}
-type NodeObjectType = keyof NodeTypes[0];
-
-const EDGE_FIELDS = ["type", "name_or_index", "to_node"];
-type EdgeFields = typeof EDGE_FIELDS;
-
-const EDGE_TYPES = [
-  ["context", "element", "property", "internal", "hidden", "shortcut", "weak"],
-  "string_or_number",
-  "node",
-] as const;
-type EdgeTypes = typeof EDGE_TYPES;
-type EdgeObjectType = keyof EdgeTypes[0];
-
-interface Edge {
-  type: EdgeObjectType;
-  name: string;
-  toNode: number;
 }
 
 async function main(): Promise<void> {
@@ -162,7 +110,7 @@ export function parseNode(
   const traceNodeId = values[5];
   const detached = Boolean(values[6]);
 
-  return {
+  const data: NodeData = {
     nodeIndex: index,
     type,
     name,
@@ -172,6 +120,7 @@ export function parseNode(
     traceNodeId,
     detached,
   };
+  return new Node(data);
 }
 
 export function parseEdges(heapSnapshot: HeapSnapshot): Edge[] {
@@ -220,12 +169,21 @@ export function parseEdge(
     name = strings[nameOrIndex];
   }
 
-  return {
+  const data: EdgeData = {
     type,
     name,
     toNode,
   };
+  return new Edge(data);
 }
 
-// TODO: what does this return?
-export function buildObjectGraph(nodes: Node[], edges: Edge[]): void {}
+// TODO: What does this return?
+export function buildObjectGraph(nodes: Node[], edges: Edge[]): void {
+  // TODO:
+  // How do we want to map nodes and edges?
+  // We need to iterate over nodes so we can get edgeCount and then grab
+  // the edges.
+
+  for (const node of nodes) {
+  }
+}
