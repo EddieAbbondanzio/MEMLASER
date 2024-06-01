@@ -42,7 +42,6 @@ export const NODE_TYPES = [
 export type NodeTypes = typeof NODE_TYPES;
 
 export interface NodeData {
-  nodeIndex: number;
   type: NodeObjectType;
   name: string;
   id: number;
@@ -50,6 +49,7 @@ export interface NodeData {
   edgeCount: number;
   traceNodeId: number;
   detached: boolean;
+  nodeIndex: number;
 }
 export type NodeObjectType = keyof NodeTypes[0];
 
@@ -57,16 +57,21 @@ export class Node {
   public type: NodeObjectType;
   public name: string;
   public id: number;
+  public edgeCount: number;
+  public nodeIndex: number;
   // Edges are set when we rebuild the graph tree.
   public edges!: Edge[];
 
+  // TODO: We may not need this.
   private data: NodeData;
 
   constructor(data: NodeData) {
-    const { type, name, id } = data;
+    const { type, name, id, edgeCount, nodeIndex } = data;
     this.type = type;
     this.name = name;
     this.id = id;
+    this.edgeCount = edgeCount;
+    this.nodeIndex = nodeIndex;
 
     this.data = data;
   }

@@ -23,16 +23,19 @@ export interface EdgeData {
 export class Edge {
   public type: EdgeObjectType;
   public name: string;
+  public toNode: number;
   // Nodes are set when we rebuild the the graph tree.
   public from!: Node;
   public to!: Node;
 
+  // TODO: We may not need this.
   private data: EdgeData;
 
   constructor(data: EdgeData) {
-    const { type, name } = data;
+    const { type, name, toNode } = data;
     this.type = type;
     this.name = name;
+    this.toNode = toNode;
 
     this.data = data;
   }

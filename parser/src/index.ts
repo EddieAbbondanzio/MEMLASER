@@ -50,7 +50,6 @@ interface Meta {
 }
 
 async function main(): Promise<void> {
-  console.log(process.cwd());
   await parseSnapshot("samples/reddit.heapsnapshot");
 }
 void main();
@@ -60,11 +59,11 @@ export async function parseSnapshot(filePath: string): Promise<void> {
   const rawContent = await fs.promises.readFile(filePath);
   const rawSnapshot: HeapSnapshot = JSON.parse(rawContent.toString());
 
-  const nodes = parseNodes(rawSnapshot);
-  const edges = parseEdges(rawSnapshot);
+  const parsedNodes = parseNodes(rawSnapshot);
+  const parsedEdges = parseEdges(rawSnapshot);
 
-  // TODO: What does this return?
-  buildObjectGraph(nodes, edges);
+  const nodes = buildObjectGraph(parsedNodes, parsedEdges);
+  console.log(nodes[0]);
 }
 
 export function parseNodes(heapSnapshot: HeapSnapshot): Node[] {
@@ -177,13 +176,36 @@ export function parseEdge(
   return new Edge(data);
 }
 
-// TODO: What does this return?
-export function buildObjectGraph(nodes: Node[], edges: Edge[]): void {
-  // TODO:
-  // How do we want to map nodes and edges?
-  // We need to iterate over nodes so we can get edgeCount and then grab
-  // the edges.
+export function buildObjectGraph(nodes: Node[], edges: Edge[]): Node[] {
+  const nodesByIndex: Record<number, Node | undefined> = {};
+  for (const node of nodes) {
+    if (nodesByIndex[node.nodeIndex] !== undefined) {
+      throw new Error(`Duplicate node id ${node.nodeIndex}.`);
+    }
+    nodesByIndex[node.nodeIndex] = node;
+  }
+
+  let edgeIndex = 0;
 
   for (const node of nodes) {
+    const { edgeCount } = node;
+    const currEdges = edges.slice(edgeIndex, edgeIndex + edgeCount);
+
+    for (const edge of currEdges) {
+      edge.from = node;
+      const to = nodesByIndex[edge.toNode];
+
+      if (to === undefined) {
+        throw new Error(
+          `No matching node found for edge.toNode (index: ${edge.toNode}`,
+        );
+      }
+      edge.to = to;
+    }
+
+    node.edges = currEdges;
+    edgeIndex += edgeCount;
   }
+
+  return nodes;
 }
