@@ -15,7 +15,6 @@ export async function up(db: Kysely<any>): Promise<void> {
     .addColumn("id", "integer", col => col.primaryKey())
     .addColumn("type", "text", col => col.notNull())
     .addColumn("name", "text", col => col.notNull())
-    .addColumn("id", "integer", col => col.notNull())
     .addColumn("self_size", "integer", col => col.notNull())
     .addColumn("edge_count", "integer", col => col.notNull())
     .addColumn("trace_node_id", "integer", col => col.notNull())

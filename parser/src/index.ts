@@ -131,7 +131,6 @@ export function parseNode(
     traceNodeId,
     detached,
   };
-  console.log({ traceNodeId });
   return new Node(data);
 }
 

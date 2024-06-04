@@ -1,9 +1,26 @@
-import { FileMigrationProvider, Kysely, Migrator, SqliteDialect } from "kysely";
+import {
+  CamelCasePlugin,
+  FileMigrationProvider,
+  Kysely,
+  Migrator,
+  SqliteDialect,
+} from "kysely";
 import SQLiteDatabase from "better-sqlite3";
 import * as path from "path";
 import * as fs from "fs";
 
-interface Database {}
+interface Database {
+  // N.B. Keys must match table names.
+  snapshots: SnapshotsTable;
+  nodes: NodesTable;
+  edges: EdgesTable;
+  nodeEdges: NodeEdgesTable;
+}
+
+interface SnapshotsTable {}
+interface NodesTable {}
+interface EdgesTable {}
+interface NodeEdgesTable {}
 
 export async function initializeSQLiteDB(
   outputPath: string,
@@ -14,6 +31,7 @@ export async function initializeSQLiteDB(
 
   const db = new Kysely<Database>({
     dialect,
+    plugins: [new CamelCasePlugin()],
   });
   await migrate(db);
   return db;
