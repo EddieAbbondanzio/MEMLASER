@@ -17,6 +17,7 @@ import {
   Edge,
   NUM_OF_EDGE_FIELDS,
 } from "./edge";
+import { initializeSQLiteDB } from "./sqlite";
 
 // Reference(s):
 // https://learn.microsoft.com/en-us/microsoft-edge/devtools-guide-chromium/memory-problems/heap-snapshot-schema
@@ -50,20 +51,31 @@ interface Meta {
 }
 
 async function main(): Promise<void> {
-  await parseSnapshot("samples/reddit.heapsnapshot");
+  await parseSnapshotToSQLite({
+    snapshotPath: "samples/reddit.heapsnapshot",
+    outputPath: "samples/reddit.sqlite",
+  });
 }
 void main();
 
-// TODO: What does this return?
-export async function parseSnapshot(filePath: string): Promise<void> {
-  const rawContent = await fs.promises.readFile(filePath);
-  const rawSnapshot: HeapSnapshot = JSON.parse(rawContent.toString());
+interface ParseSnapshotToSQLiteOptions {
+  snapshotPath: string;
+  outputPath: string;
+}
 
-  const parsedNodes = parseNodes(rawSnapshot);
-  const parsedEdges = parseEdges(rawSnapshot);
+export async function parseSnapshotToSQLite(
+  options: ParseSnapshotToSQLiteOptions,
+): Promise<void> {
+  const { snapshotPath, outputPath } = options;
+  const rawSnapshot = await fs.promises.readFile(snapshotPath);
+  const jsonSnapshot: HeapSnapshot = JSON.parse(rawSnapshot.toString());
+
+  const parsedNodes = parseNodes(jsonSnapshot);
+  const parsedEdges = parseEdges(jsonSnapshot);
 
   const nodes = buildObjectGraph(parsedNodes, parsedEdges);
-  console.log(nodes[0]);
+
+  const db = await initializeSQLiteDB(outputPath);
 }
 
 export function parseNodes(heapSnapshot: HeapSnapshot): Node[] {
@@ -119,6 +131,7 @@ export function parseNode(
     traceNodeId,
     detached,
   };
+  console.log({ traceNodeId });
   return new Node(data);
 }
 
