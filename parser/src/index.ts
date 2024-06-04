@@ -67,6 +67,8 @@ export async function parseSnapshotToSQLite(
   options: ParseSnapshotToSQLiteOptions,
 ): Promise<void> {
   const { snapshotPath, outputPath } = options;
+  const db = await initializeSQLiteDB(outputPath);
+
   const rawSnapshot = await fs.promises.readFile(snapshotPath);
   const jsonSnapshot: HeapSnapshot = JSON.parse(rawSnapshot.toString());
 
@@ -74,8 +76,6 @@ export async function parseSnapshotToSQLite(
   const parsedEdges = parseEdges(jsonSnapshot);
 
   const nodes = buildObjectGraph(parsedNodes, parsedEdges);
-
-  const db = await initializeSQLiteDB(outputPath);
 }
 
 export function parseNodes(heapSnapshot: HeapSnapshot): Node[] {

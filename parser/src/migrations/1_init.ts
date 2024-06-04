@@ -3,7 +3,7 @@ import { Kysely } from "kysely";
 export async function up(db: Kysely<any>): Promise<void> {
   await db.schema
     .createTable("snapshots")
-    .addColumn("id", "integer", col => col.primaryKey())
+    .addColumn("id", "integer", col => col.primaryKey().autoIncrement())
     .addColumn("meta", "text", col => col.notNull())
     .addColumn("node_count", "integer", col => col.notNull())
     .addColumn("edge_count", "integer", col => col.notNull())
@@ -12,7 +12,7 @@ export async function up(db: Kysely<any>): Promise<void> {
 
   await db.schema
     .createTable("nodes")
-    .addColumn("id", "integer", col => col.primaryKey())
+    .addColumn("id", "integer", col => col.primaryKey().autoIncrement())
     .addColumn("type", "text", col => col.notNull())
     .addColumn("name", "text", col => col.notNull())
     .addColumn("self_size", "integer", col => col.notNull())
@@ -25,7 +25,7 @@ export async function up(db: Kysely<any>): Promise<void> {
 
   await db.schema
     .createTable("edges")
-    .addColumn("id", "integer", col => col.primaryKey())
+    .addColumn("id", "integer", col => col.primaryKey().autoIncrement())
     .addColumn("type", "text", col => col.notNull())
     .addColumn("name", "text", col => col.notNull())
     .addColumn("to_node", "integer", col => col.notNull())
