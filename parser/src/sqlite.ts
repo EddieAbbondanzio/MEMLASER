@@ -38,7 +38,7 @@ export async function initializeSQLiteDB(
 }
 
 async function migrate(db: Kysely<Database>): Promise<void> {
-  // Must be an absolute path.
+  // N.B. Must be an absolute path.
   const migrationFolder = path.join(__dirname, "migrations");
 
   const migrator = new Migrator({
