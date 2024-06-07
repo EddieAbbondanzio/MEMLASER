@@ -22,6 +22,9 @@ import {
 } from "./utils";
 import { TokenQueue } from "./tokenQueue";
 
+// N.B. The parser doesn't account for nullValue, trueValue, or falseValue tokens
+// and could crash if the heapsnapshot file format is ever changed.
+
 interface WalkTokenCallbacks {
   onSnapshot: (snapshot: HeapSnapshot["snapshot"]) => Promise<void>;
   onNodeBatch: (nodes: HeapSnapshot["nodes"]) => Promise<void>;

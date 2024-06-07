@@ -13,11 +13,6 @@ export async function buildKey<K extends string>(
     throw new TokenParsingError("Failed to build key.", keyTokens);
   }
 
-  console.log(
-    "BUILD KEY: ",
-    keyTokens.map(t => t.name),
-  );
-
   let key = [];
   const keyChunks = keyTokens.slice(1, -1);
   for (const chunk of keyChunks) {
@@ -58,7 +53,6 @@ export async function* batchBuildNumberArray(
   queue: TokenQueue,
   batchSize: number = 1000,
 ): AsyncGenerator<number[], void, void> {
-  console.log("batchBuildNumberArray");
   let numbers = [];
   let nextToken: Token | null = null;
   do {
@@ -78,8 +72,6 @@ export async function* batchBuildNumberArray(
 }
 
 export async function buildStringArray(queue: TokenQueue): Promise<string[]> {
-  console.log("buildStringArray()");
-
   const startArray = await queue.take();
   if (startArray?.name !== "startArray") {
     throw new TokenParsingError(
@@ -91,7 +83,6 @@ export async function buildStringArray(queue: TokenQueue): Promise<string[]> {
   const strings = [];
   let nextToken: Token | null = null;
   do {
-    console.log("string!");
     const string = await buildString(queue);
     strings.push(string);
     nextToken = await queue.peek();
@@ -107,8 +98,6 @@ export async function* batchBuildStringArray(
   queue: TokenQueue,
   batchSize: number = 1000,
 ): AsyncGenerator<string[], void, void> {
-  console.log("batchBuildStringArray()");
-
   let strings = [];
   let nextToken: Token | null = null;
   do {
@@ -136,11 +125,6 @@ export async function buildString(queue: TokenQueue): Promise<string> {
     throw new TokenParsingError("Failed to build string.", stringTokens);
   }
 
-  console.log(
-    "String tokens: ",
-    stringTokens.map(t => t.name),
-  );
-
   const stringChunks = stringTokens.slice(1, -1);
   const string = [];
   for (const chunk of stringChunks) {
@@ -154,13 +138,22 @@ export async function buildString(queue: TokenQueue): Promise<string> {
     string.push(chunk.value);
   }
 
+  if ((await queue.peek())?.name === "stringValue") {
+    console.warn(
+      "Detected a stingValue token. Please set `packStrings: false` on the parser for better performance.",
+    );
+
+    // Remove it.
+    await queue.take();
+  }
+
   return string.join("");
 }
 
 export async function buildNumber(queue: TokenQueue): Promise<number> {
   const numberTokens = await queue.takeUntil(t => t.name === "endNumber");
   if (
-    numberTokens[0].name !== "startNumber" &&
+    numberTokens[0].name !== "startNumber" ||
     numberTokens[numberTokens.length - 1].name !== "endNumber"
   ) {
     throw new TokenParsingError("Failed to build number.", numberTokens);
@@ -175,8 +168,19 @@ export async function buildNumber(queue: TokenQueue): Promise<number> {
     rawNumber.push(chunk.value);
   }
 
-  console.log("Number chunks: ", numberChunks);
+  if (rawNumber.length === 0) {
+    throw new TokenParsingError("Failed to build number. No chunks.");
+  }
+
+  if ((await queue.peek())?.name === "numberValue") {
+    console.warn(
+      "Detected a numberValue token. Please set `packNumbers: false` on the parser for better performance.",
+    );
+
+    // Remove it.
+    await queue.take();
+  }
+
   const stringNumber = rawNumber.join("");
-  console.log("NUMBER: ", stringNumber);
   return Number(stringNumber);
 }
