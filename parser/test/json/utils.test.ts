@@ -13,6 +13,11 @@ afterEach(() => {
 // Test buildArray
 // Test batchBuildArray
 
+test("buildArray missing startArray", async () => {});
+test("buildArray missing endArray", async () => {});
+test("buildArray missing startArray", async () => {});
+test("buildArray missing startArray", async () => {});
+
 test("buildKey missing startKey", async () => {
   const queue = createTokenQueue(
     [{ name: "stringChunk", value: "abc" }, { name: "endKey" }],
@@ -134,15 +139,14 @@ test("buildString invalid chunks", async () => {
   }).rejects.toThrow(/Failed to build string/);
 });
 
-test("buildString no chunks", async () => {
+test("buildString no chunks (empty string)", async () => {
   const queue = createTokenQueue(
     [{ name: "startString" }, { name: "endString" }],
     { isDraining: true },
   );
 
-  await expect(async () => {
-    await buildString(queue);
-  }).rejects.toThrow(/Failed to build string/);
+  const str = await buildString(queue);
+  expect(str).toBe("");
 });
 
 test("buildString detected stringValue", async () => {

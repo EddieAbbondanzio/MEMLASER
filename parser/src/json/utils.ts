@@ -98,9 +98,8 @@ export async function buildString(queue: TokenQueue): Promise<string> {
   }
   await assertNextToken(queue, "endString", "Failed to build string.");
 
-  if (stringChunks.length === 0) {
-    throw new TokenParsingError("Failed to build string. No chunks.");
-  }
+  // N.B. Empty strings may have no chunks.
+
   if ((await queue.peek())?.name === "stringValue") {
     console.warn(
       `Detected a stringValue token. Please set \`packStrings: false\` on the parser for better performance.`,
