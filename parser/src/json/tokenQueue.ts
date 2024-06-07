@@ -48,22 +48,6 @@ export class TokenQueue {
     return this.#tokenCache.shift()!;
   }
 
-  async takeUntil(until: (t: Token) => boolean): Promise<Token[]> {
-    const tokens: Token[] = [];
-
-    while (!this.isEmpty()) {
-      let next = (await this.peek())!;
-      if (until(next)) {
-        tokens.push((await this.take())!);
-        break;
-      }
-
-      tokens.push((await this.take())!);
-    }
-
-    return tokens;
-  }
-
   isEmpty(): boolean {
     if (this.#isDraining) {
       return this.#tokenCache.length === 0;

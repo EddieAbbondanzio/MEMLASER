@@ -5,26 +5,23 @@ import { Token } from "./tokens";
 export async function buildKey<K extends string>(
   queue: TokenQueue,
 ): Promise<K> {
-  const keyTokens = await queue.takeUntil(t => t.name === "endKey");
-  if (
-    keyTokens[0].name !== "startKey" ||
-    keyTokens[keyTokens.length - 1].name !== "endKey"
-  ) {
-    throw new TokenParsingError("Failed to build key.", keyTokens);
-  }
+  await assertNextToken(queue, "startKey", "Failed to build key.");
 
-  const keyChunks = keyTokens.slice(1, -1);
-  const keyData = [];
-  for (const chunk of keyChunks) {
-    if (chunk.name !== "stringChunk") {
+  const keyChunks = [];
+  let nextToken: Token | null = await queue.peek();
+  while (nextToken !== null && nextToken.name !== "endKey") {
+    const token = await queue.take();
+    if (token === null || token.name !== "stringChunk") {
       throw new TokenParsingError(
         "Failed to build key, got bad string chunk.",
-        keyChunks,
+        [token],
       );
     }
 
-    keyData.push(chunk.value);
+    keyChunks.push(token.value);
+    nextToken = await queue.peek();
   }
+  await assertNextToken(queue, "endKey", "Failed to build key.");
 
   if (keyChunks.length === 0) {
     throw new TokenParsingError("Failed to build key. No chunks.");
@@ -36,7 +33,7 @@ export async function buildKey<K extends string>(
     await queue.take();
   }
 
-  return keyData.join("") as K;
+  return keyChunks.join("") as K;
 }
 
 export async function buildArray<I>(
@@ -83,70 +80,67 @@ export async function* batchBuildArray<I>(
 }
 
 export async function buildString(queue: TokenQueue): Promise<string> {
-  const stringTokens = await queue.takeUntil(t => t.name === "endString");
-  if (
-    stringTokens[0].name !== "startString" ||
-    stringTokens[stringTokens.length - 1].name !== "endString"
-  ) {
-    throw new TokenParsingError("Failed to build string.", stringTokens);
-  }
+  await assertNextToken(queue, "startString", "Failed to build string.");
 
-  const stringChunks = stringTokens.slice(1, -1);
-  const stringData = [];
-  for (const chunk of stringChunks) {
-    if (chunk.name !== "stringChunk") {
+  const stringChunks = [];
+  let nextToken: Token | null = await queue.peek();
+  while (nextToken !== null && nextToken.name !== "endString") {
+    const token = await queue.take();
+    if (token === null || token.name !== "stringChunk") {
       throw new TokenParsingError(
-        "Failed to build string. Bad chunks.",
-        stringChunks,
+        "Failed to build string, got bad string chunk.",
+        [token],
       );
     }
 
-    stringData.push(chunk.value);
+    stringChunks.push(token.value);
+    nextToken = await queue.peek();
   }
+  await assertNextToken(queue, "endString", "Failed to build string.");
 
-  if (stringData.length === 0) {
+  if (stringChunks.length === 0) {
     throw new TokenParsingError("Failed to build string. No chunks.");
   }
   if ((await queue.peek())?.name === "stringValue") {
     console.warn(
-      "Detected a stringValue token. Please set `packStrings: false` on the parser for better performance.",
+      `Detected a stringValue token. Please set \`packStrings: false\` on the parser for better performance.`,
     );
     await queue.take();
   }
 
-  return stringData.join("");
+  return stringChunks.join("");
 }
 
 export async function buildNumber(queue: TokenQueue): Promise<number> {
-  const numberTokens = await queue.takeUntil(t => t.name === "endNumber");
-  if (
-    numberTokens[0].name !== "startNumber" ||
-    numberTokens[numberTokens.length - 1].name !== "endNumber"
-  ) {
-    throw new TokenParsingError("Failed to build number.", numberTokens);
-  }
+  await assertNextToken(queue, "startNumber", "Failed to build number.");
 
-  const numberChunks = numberTokens.slice(1, -1);
-  const numberData = [];
-  for (const chunk of numberChunks) {
-    if (chunk.name !== "numberChunk") {
-      throw new TokenParsingError("Failed to build number.", numberChunks);
+  const numberChunks = [];
+  let nextToken: Token | null = await queue.peek();
+  while (nextToken !== null && nextToken.name !== "endNumber") {
+    const token = await queue.take();
+    if (token === null || token.name !== "numberChunk") {
+      throw new TokenParsingError(
+        "Failed to build number, got bad number chunk.",
+        [token],
+      );
     }
-    numberData.push(chunk.value);
-  }
 
-  if (numberData.length === 0) {
+    numberChunks.push(token.value);
+    nextToken = await queue.peek();
+  }
+  await assertNextToken(queue, "endNumber", "Failed to build number.");
+
+  if (numberChunks.length === 0) {
     throw new TokenParsingError("Failed to build number. No chunks.");
   }
-
   if ((await queue.peek())?.name === "numberValue") {
     console.warn(
-      "Detected a numberValue token. Please set `packNumbers: false` on the parser for better performance.",
+      `Detected a numberValue token. Please set \`packNumbers: false\` on the parser for better performance.`,
     );
     await queue.take();
   }
 
-  const stringNumber = numberData.join("");
+  const stringNumber = numberChunks.join("");
   return Number(stringNumber);
 }
 
