@@ -18,6 +18,7 @@ import {
   buildString,
   buildArray,
   batchBuildArray,
+  assertNextToken,
 } from "./utils";
 import { TokenQueue } from "./tokenQueue";
 
@@ -77,6 +78,7 @@ async function walkTokens(
           case "snapshot":
             await buildSnapshot(queue, onSnapshot);
             break;
+
           case "nodes":
             for await (let nodes of batchBuildArray(queue, buildNumber)) {
               await onNodeBatch(nodes);
@@ -254,63 +256,25 @@ function isMeta(obj: Partial<Meta>): obj is Meta {
 }
 
 export async function buildNodeTypes(queue: TokenQueue): Promise<NodeTypes> {
-  console.log("buildNodeTypes()");
+  const nodeTypes = await buildArray(queue, async (q, i) => {
+    if (i === 0) {
+      return buildArray(q, buildString);
+    } else {
+      return buildString(q);
+    }
+  });
 
-  const startArray = await queue.take();
-  if (startArray?.name !== "startArray") {
-    throw new TokenParsingError(
-      "Failed to build node types. Array didn't start with startArray token.",
-      [startArray],
-    );
-  }
-
-  let nodeTypes: any = [];
-
-  // First element is a nested array
-  const nested = await buildArray(queue, buildString);
-  nodeTypes.push(nested);
-
-  let nextToken: Token | null = null;
-  do {
-    console.log("string!");
-    const string = await buildString(queue);
-    nodeTypes.push(string);
-    nextToken = await queue.peek();
-  } while (nextToken !== null && nextToken.name !== "endArray");
-
-  // Remove endArray token from queue.
-  await queue.take();
-
-  return nodeTypes;
+  return nodeTypes as unknown as NodeTypes;
 }
 
 export async function buildEdgeTypes(queue: TokenQueue): Promise<EdgeTypes> {
-  console.log("buildEdgeTypes()");
+  const edgeTypes = await buildArray(queue, async (q, i) => {
+    if (i === 0) {
+      return buildArray(q, buildString);
+    } else {
+      return buildString(q);
+    }
+  });
 
-  const startArray = await queue.take();
-  if (startArray?.name !== "startArray") {
-    throw new TokenParsingError(
-      "Failed to build node types. Array didn't start with startArray token.",
-      [startArray],
-    );
-  }
-
-  let edgeTypes: any = [];
-
-  // First element is a nested array
-  const nested = await buildArray(queue, buildString);
-  edgeTypes.push(nested);
-
-  let nextToken: Token | null = null;
-  do {
-    console.log("string!");
-    const string = await buildString(queue);
-    edgeTypes.push(string);
-    nextToken = await queue.peek();
-  } while (nextToken !== null && nextToken.name !== "endArray");
-
-  // Remove endArray token from queue.
-  await queue.take();
-
-  return edgeTypes;
+  return edgeTypes as unknown as EdgeTypes;
 }

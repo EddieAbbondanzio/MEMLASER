@@ -38,14 +38,14 @@ export async function buildKey<K extends string>(
 
 export async function buildArray<I>(
   queue: TokenQueue,
-  itemBuilder: (queue: TokenQueue) => Promise<I>,
+  itemBuilder: (queue: TokenQueue, index: number) => Promise<I>,
 ): Promise<I[]> {
   await assertNextToken(queue, "startArray", "Failed to build array.");
 
   const items = [];
   let nextToken: Token | null = await queue.peek();
   while (nextToken !== null && nextToken.name !== "endArray") {
-    const item = await itemBuilder(queue);
+    const item = await itemBuilder(queue, items.length);
     items.push(item);
     nextToken = await queue.peek();
   }
@@ -146,7 +146,7 @@ export async function buildNumber(queue: TokenQueue): Promise<number> {
   return Number(stringNumber);
 }
 
-async function assertNextToken(
+export async function assertNextToken(
   queue: TokenQueue,
   name: Token["name"],
   message: string,
