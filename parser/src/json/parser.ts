@@ -48,7 +48,6 @@ export async function parseSnapshotFile(
     token => tokenQueue.onToken(token),
   ]);
 
-  console.log("start walking tokens");
   pipeline.on("end", () => tokenQueue.setIsDraining());
   await walkTokens(tokenQueue, callbacks);
 }
@@ -85,14 +84,14 @@ async function walkTokens(
             break;
 
           case "edges":
-            for await (let nodes of batchBuildArray(queue, buildNumber)) {
-              await onEdgeBatch(nodes);
+            for await (let edges of batchBuildArray(queue, buildNumber)) {
+              await onEdgeBatch(edges);
             }
             break;
 
           case "strings":
-            for await (let nodes of batchBuildArray(queue, buildString)) {
-              await onStringBatch(nodes);
+            for await (let strings of batchBuildArray(queue, buildString)) {
+              await onStringBatch(strings);
             }
             break;
 
