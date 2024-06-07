@@ -1,5 +1,6 @@
 import { initializeSQLiteDB } from "./sqlite";
-import { parseSnapshot } from "./json";
+import { parseSnapshotFile } from "./json/parser";
+import { Snapshot } from "./json/snapshot";
 
 // Reference(s):
 // https://learn.microsoft.com/en-us/microsoft-edge/devtools-guide-chromium/memory-problems/heap-snapshot-schema
@@ -23,7 +24,11 @@ export async function parseSnapshotToSQLite(
   const { snapshotPath, outputPath } = options;
   const db = await initializeSQLiteDB(outputPath);
 
-  await parseSnapshot(snapshotPath);
+  const onSnapshot = async (snapshot: Snapshot): Promise<void> => {
+    await db.insertInto("snapshots").values(snapshot).executeTakeFirst();
+  };
+  // TODO: Add callbacks to insert nodes / edges into the db too!
+  await parseSnapshotFile(snapshotPath, { onSnapshot } as any);
 
   // TODO: Replace this with stream async!
 

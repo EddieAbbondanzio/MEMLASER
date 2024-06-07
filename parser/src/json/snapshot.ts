@@ -26,6 +26,7 @@ export interface Meta {
   edge_types: EdgeTypes;
 }
 
+// TODO: Prob want to move this elsewhere. It's not really JSON
 export interface Node {
   type: NodeObjectType;
   name: string;
@@ -93,6 +94,7 @@ export const EDGE_TYPES = [
 export type EdgeTypes = typeof EDGE_TYPES;
 export type EdgeObjectType = keyof EdgeTypes[0];
 
+// TODO: Prob want to move this elsewhere. It's not really JSON
 export interface Edge {
   type: EdgeObjectType;
   name: string;
