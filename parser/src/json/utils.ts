@@ -119,7 +119,7 @@ export async function* batchBuildStringArray(
 export async function buildString(queue: TokenQueue): Promise<string> {
   const stringTokens = await queue.takeUntil(t => t.name === "endString");
   if (
-    stringTokens[0].name !== "startString" &&
+    stringTokens[0].name !== "startString" ||
     stringTokens[stringTokens.length - 1].name !== "endString"
   ) {
     throw new TokenParsingError("Failed to build string.", stringTokens);
@@ -138,9 +138,13 @@ export async function buildString(queue: TokenQueue): Promise<string> {
     string.push(chunk.value);
   }
 
+  if (string.length === 0) {
+    throw new TokenParsingError("Failed to build string. No chunks.");
+  }
+
   if ((await queue.peek())?.name === "stringValue") {
     console.warn(
-      "Detected a stingValue token. Please set `packStrings: false` on the parser for better performance.",
+      "Detected a stringValue token. Please set `packStrings: false` on the parser for better performance.",
     );
 
     // Remove it.
