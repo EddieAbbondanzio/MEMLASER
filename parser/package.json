@@ -6,7 +6,8 @@
   "scripts": {
     "start": "nodemon src/index.ts",
     "test": "jest",
-    "build": "tsc --project tsconfig.build.json"
+    "build": "tsc",
+    "buildProd": "tsc --project tsconfig.build.json"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.10",

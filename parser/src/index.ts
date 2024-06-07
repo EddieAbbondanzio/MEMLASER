@@ -6,6 +6,7 @@ import { Snapshot } from "./json/snapshot";
 // https://learn.microsoft.com/en-us/microsoft-edge/devtools-guide-chromium/memory-problems/heap-snapshot-schema
 
 async function main(): Promise<void> {
+  console.log("main()");
   await parseSnapshotToSQLite({
     snapshotPath: "samples/reddit.heapsnapshot",
     outputPath: "samples/reddit.sqlite",
@@ -21,14 +22,27 @@ interface ParseSnapshotToSQLiteOptions {
 export async function parseSnapshotToSQLite(
   options: ParseSnapshotToSQLiteOptions,
 ): Promise<void> {
+  console.log("parseSnapshotToSQLite()");
   const { snapshotPath, outputPath } = options;
   const db = await initializeSQLiteDB(outputPath);
 
   const onSnapshot = async (snapshot: Snapshot): Promise<void> => {
+    console.log("Got snapshot: ", snapshot);
     await db.insertInto("snapshots").values(snapshot).executeTakeFirst();
   };
-  // TODO: Add callbacks to insert nodes / edges into the db too!
-  await parseSnapshotFile(snapshotPath, { onSnapshot } as any);
+  console.log("parseSnapshotFile");
+  await parseSnapshotFile(snapshotPath, {
+    onSnapshot,
+    onEdgeBatch: async edges => {
+      console.log("Got edges: ", edges);
+    },
+    onNodeBatch: async nodes => {
+      console.log("Got nodes: ", nodes);
+    },
+    onStringBatch: async strings => {
+      console.log("Got strings: ", strings);
+    },
+  });
 
   // TODO: Replace this with stream async!
 
