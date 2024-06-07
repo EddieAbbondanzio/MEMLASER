@@ -14,11 +14,10 @@ import { Token } from "./tokens";
 import { InvalidJSONError, TokenParsingError } from "./errors";
 import {
   buildKey,
-  batchBuildNumberArray,
-  batchBuildStringArray,
   buildNumber,
-  buildStringArray,
   buildString,
+  buildArray,
+  batchBuildArray,
 } from "./utils";
 import { TokenQueue } from "./tokenQueue";
 
@@ -82,21 +81,21 @@ async function walkTokens(
             break;
           case "nodes":
             await assertKeyValueToken(queue, "nodes");
-            for await (let nodes of batchBuildNumberArray(queue)) {
+            for await (let nodes of batchBuildArray(queue, buildNumber)) {
               await onNodeBatch(nodes);
             }
             break;
 
           case "edges":
             await assertKeyValueToken(queue, "edges");
-            for await (let nodes of batchBuildNumberArray(queue)) {
+            for await (let nodes of batchBuildArray(queue, buildNumber)) {
               await onEdgeBatch(nodes);
             }
             break;
 
           case "strings":
             await assertKeyValueToken(queue, "strings");
-            for await (let nodes of batchBuildStringArray(queue)) {
+            for await (let nodes of batchBuildArray(queue, buildString)) {
               await onStringBatch(nodes);
             }
             break;
@@ -207,7 +206,7 @@ async function buildMeta(queue: TokenQueue): Promise<Meta> {
     switch (key) {
       case "node_fields":
         await assertKeyValueToken(queue, "node_fields");
-        meta.node_fields = (await buildStringArray(queue)) as NodeFields;
+        meta.node_fields = (await buildArray(queue, buildString)) as NodeFields;
         break;
       case "node_types":
         await assertKeyValueToken(queue, "node_types");
@@ -216,7 +215,7 @@ async function buildMeta(queue: TokenQueue): Promise<Meta> {
 
       case "edge_fields":
         await assertKeyValueToken(queue, "edge_fields");
-        meta.edge_fields = (await buildStringArray(queue)) as EdgeFields;
+        meta.edge_fields = (await buildArray(queue, buildString)) as EdgeFields;
         break;
 
       case "edge_types":
@@ -226,22 +225,22 @@ async function buildMeta(queue: TokenQueue): Promise<Meta> {
 
       case "trace_function_info_fields":
         await assertKeyValueToken(queue, "trace_function_info_fields");
-        meta.trace_function_info_fields = await buildStringArray(queue);
+        meta.trace_function_info_fields = await buildArray(queue, buildString);
         break;
 
       case "trace_node_fields":
         await assertKeyValueToken(queue, "trace_node_fields");
-        meta.trace_node_fields = await buildStringArray(queue);
+        meta.trace_node_fields = await buildArray(queue, buildString);
         break;
 
       case "sample_fields":
         await assertKeyValueToken(queue, "sample_fields");
-        meta.trace_node_fields = await buildStringArray(queue);
+        meta.trace_node_fields = await buildArray(queue, buildString);
         break;
 
       case "location_fields":
         await assertKeyValueToken(queue, "location_fields");
-        meta.trace_node_fields = await buildStringArray(queue);
+        meta.trace_node_fields = await buildArray(queue, buildString);
         break;
 
       default:
@@ -297,7 +296,7 @@ export async function buildNodeTypes(queue: TokenQueue): Promise<NodeTypes> {
   let nodeTypes: any = [];
 
   // First element is a nested array
-  const nested = await buildStringArray(queue);
+  const nested = await buildArray(queue, buildString);
   nodeTypes.push(nested);
 
   let nextToken: Token | null = null;
@@ -328,7 +327,7 @@ export async function buildEdgeTypes(queue: TokenQueue): Promise<EdgeTypes> {
   let edgeTypes: any = [];
 
   // First element is a nested array
-  const nested = await buildStringArray(queue);
+  const nested = await buildArray(queue, buildString);
   edgeTypes.push(nested);
 
   let nextToken: Token | null = null;

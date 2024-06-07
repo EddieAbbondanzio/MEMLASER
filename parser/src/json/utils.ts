@@ -29,91 +29,69 @@ export async function buildKey<K extends string>(
   return key.join("") as K;
 }
 
-export async function buildNumberArray(queue: TokenQueue): Promise<number[]> {
+export async function buildArray<I>(
+  queue: TokenQueue,
+  itemBuilder: (queue: TokenQueue) => Promise<I>,
+): Promise<I[]> {
   const startArray = await queue.take();
   if (startArray === null || startArray.name !== "startArray") {
-    throw new TokenParsingError("Failed to parse number array.", [startArray]);
+    throw new TokenParsingError("Failed to build array. No startArray token.", [
+      startArray,
+    ]);
   }
 
-  const numbers = [];
+  const items = [];
   let nextToken: Token | null = null;
   do {
-    const stringNumber = await buildNumber(queue);
-    numbers.push(Number(stringNumber));
+    const item = await itemBuilder(queue);
+    items.push(item);
+
     nextToken = await queue.peek();
   } while (nextToken !== null && nextToken.name !== "endArray");
 
-  // Remove endArray token from queue.
-  await queue.take();
+  const endArray = await queue.take();
+  if (endArray === null || endArray.name !== "endArray") {
+    throw new TokenParsingError("Failed to build array. No endArray token.", [
+      endArray,
+    ]);
+  }
 
-  return numbers;
+  return items;
 }
 
-export async function* batchBuildNumberArray(
+export async function* batchBuildArray<I>(
   queue: TokenQueue,
+  itemBuilder: (queue: TokenQueue) => Promise<I>,
   batchSize: number = 1000,
-): AsyncGenerator<number[], void, void> {
-  let numbers = [];
+): AsyncGenerator<I[], void, void> {
+  const startArray = await queue.take();
+  if (startArray === null || startArray.name !== "startArray") {
+    throw new TokenParsingError("Failed to build array. No startArray token.", [
+      startArray,
+    ]);
+  }
+
+  let items = [];
   let nextToken: Token | null = null;
   do {
-    const number = await buildNumber(queue);
-    numbers.push(number);
+    const item = await itemBuilder(queue);
+    items.push(item);
 
-    if (numbers.length >= batchSize) {
-      yield numbers;
-      numbers = [];
+    if (items.length >= batchSize) {
+      yield items;
+      items = [];
     }
 
     nextToken = await queue.peek();
   } while (nextToken !== null && nextToken.name !== "endArray");
 
-  // Remove endArray token from queue.
-  await queue.take();
-}
-
-export async function buildStringArray(queue: TokenQueue): Promise<string[]> {
-  const startArray = await queue.take();
-  if (startArray?.name !== "startArray") {
+  const endArray = await queue.take();
+  if (endArray === null || endArray.name !== "endArray") {
     throw new TokenParsingError(
-      "Failed to build string array. Array didn't start with startArray token.",
-      [startArray],
+      "Failed to batch build array. No endArray token.",
+      [endArray],
     );
   }
-
-  const strings = [];
-  let nextToken: Token | null = null;
-  do {
-    const string = await buildString(queue);
-    strings.push(string);
-    nextToken = await queue.peek();
-  } while (nextToken !== null && nextToken.name !== "endArray");
-
-  // Remove endArray token from queue.
-  await queue.take();
-
-  return strings;
-}
-
-export async function* batchBuildStringArray(
-  queue: TokenQueue,
-  batchSize: number = 1000,
-): AsyncGenerator<string[], void, void> {
-  let strings = [];
-  let nextToken: Token | null = null;
-  do {
-    const string = await buildString(queue);
-    strings.push(string);
-
-    if (strings.length >= batchSize) {
-      yield strings;
-      strings = [];
-    }
-
-    nextToken = await queue.peek();
-  } while (nextToken !== null && nextToken.name !== "endArray");
-
-  // Remove endArray token from queue.
-  await queue.take();
 }
 
 export async function buildString(queue: TokenQueue): Promise<string> {
