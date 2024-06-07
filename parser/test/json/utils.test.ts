@@ -1,4 +1,10 @@
-import { buildKey, buildNumber, buildString } from "../../src/json/utils";
+import {
+  batchBuildArray,
+  buildArray,
+  buildKey,
+  buildNumber,
+  buildString,
+} from "../../src/json/utils";
 import { createTokenQueue } from "../_factories/tokenQueue";
 
 beforeEach(() => {
@@ -8,15 +14,6 @@ beforeEach(() => {
 afterEach(() => {
   jest.resetAllMocks();
 });
-
-// TODO:
-// Test buildArray
-// Test batchBuildArray
-
-test("buildArray missing startArray", async () => {});
-test("buildArray missing endArray", async () => {});
-test("buildArray missing startArray", async () => {});
-test("buildArray missing startArray", async () => {});
 
 test("buildKey missing startKey", async () => {
   const queue = createTokenQueue(
@@ -100,6 +97,140 @@ test("buildKey", async () => {
 
   const key = await buildKey(queue);
   expect(key).toBe("abcdef");
+});
+
+test("buildArray missing startArray", async () => {
+  const queue = createTokenQueue(
+    [
+      { name: "startString" },
+      { name: "stringChunk", value: "abc" },
+      { name: "endString" },
+      { name: "endArray" },
+    ],
+    { isDraining: true },
+  );
+
+  await expect(async () => {
+    await buildArray(queue, buildString);
+  }).rejects.toThrow(/Failed to build array/);
+});
+
+test("buildArray missing endArray", async () => {
+  const queue = createTokenQueue(
+    [
+      { name: "startArray" },
+      { name: "startString" },
+      { name: "stringChunk", value: "abc" },
+      { name: "endString" },
+    ],
+    { isDraining: true },
+  );
+
+  await expect(async () => {
+    await buildArray(queue, buildString);
+  }).rejects.toThrow(/Failed to build array/);
+});
+
+test("buildArray empty array", async () => {
+  const queue = createTokenQueue(
+    [{ name: "startArray" }, { name: "endArray" }],
+    { isDraining: true },
+  );
+
+  const arr = await buildArray(queue, buildString);
+  expect(arr).toEqual([]);
+});
+
+test("buildArray", async () => {
+  const queue = createTokenQueue(
+    [
+      { name: "startArray" },
+      { name: "startString" },
+      { name: "stringChunk", value: "abc" },
+      { name: "endString" },
+      { name: "startString" },
+      { name: "stringChunk", value: "def" },
+      { name: "endString" },
+      { name: "endArray" },
+    ],
+    { isDraining: true },
+  );
+
+  const arr = await buildArray(queue, buildString);
+  expect(arr).toEqual(["abc", "def"]);
+});
+
+test("batchBuildArray missing startArray", async () => {
+  const queue = createTokenQueue(
+    [
+      { name: "startString" },
+      { name: "stringChunk", value: "abc" },
+      { name: "endString" },
+      { name: "endArray" },
+    ],
+    { isDraining: true },
+  );
+
+  await expect(async () => {
+    for await (let _ of batchBuildArray(queue, buildString)) {
+    }
+  }).rejects.toThrow(/Failed to batch build array/);
+});
+
+test("batchBuildArray missing endArray", async () => {
+  const queue = createTokenQueue(
+    [
+      { name: "startArray" },
+      { name: "startString" },
+      { name: "stringChunk", value: "abc" },
+      { name: "endString" },
+    ],
+    { isDraining: true },
+  );
+
+  await expect(async () => {
+    for await (let _ of batchBuildArray(queue, buildString)) {
+    }
+  }).rejects.toThrow(/Failed to batch build array/);
+});
+
+test("buildArray empty array", async () => {
+  const queue = createTokenQueue(
+    [{ name: "startArray" }, { name: "endArray" }],
+    { isDraining: true },
+  );
+
+  const arr = [];
+  for await (let items of batchBuildArray(queue, buildString, 1)) {
+    arr.push(...items);
+  }
+  expect(arr).toEqual([]);
+});
+
+test("batchBuildArray", async () => {
+  const queue = createTokenQueue(
+    [
+      { name: "startArray" },
+      { name: "startString" },
+      { name: "stringChunk", value: "abc" },
+      { name: "endString" },
+      { name: "startString" },
+      { name: "stringChunk", value: "def" },
+      { name: "endString" },
+      { name: "startString" },
+      { name: "stringChunk", value: "ghi" },
+      { name: "endString" },
+      { name: "endArray" },
+    ],
+    { isDraining: true },
+  );
+
+  const arr = [];
+  for await (let items of batchBuildArray(queue, buildString, 2)) {
+    arr.push(...items);
+  }
+
+  expect(arr).toEqual(["abc", "def", "ghi"]);
 });
 
 test("buildString missing startString", async () => {

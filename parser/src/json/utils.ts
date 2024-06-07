@@ -43,13 +43,12 @@ export async function buildArray<I>(
   await assertNextToken(queue, "startArray", "Failed to build array.");
 
   const items = [];
-  let nextToken: Token | null = null;
-  do {
+  let nextToken: Token | null = await queue.peek();
+  while (nextToken !== null && nextToken.name !== "endArray") {
     const item = await itemBuilder(queue);
     items.push(item);
-
     nextToken = await queue.peek();
-  } while (nextToken !== null && nextToken.name !== "endArray");
+  }
 
   await assertNextToken(queue, "endArray", "Failed to build array.");
   return items;
@@ -60,11 +59,11 @@ export async function* batchBuildArray<I>(
   itemBuilder: (queue: TokenQueue) => Promise<I>,
   batchSize: number = 1000,
 ): AsyncGenerator<I[], void, void> {
-  await assertNextToken(queue, "startArray", "Failed to build array.");
+  await assertNextToken(queue, "startArray", "Failed to batch build array.");
 
   let items = [];
-  let nextToken: Token | null = null;
-  do {
+  let nextToken: Token | null = await queue.peek();
+  while (nextToken !== null && nextToken.name !== "endArray") {
     const item = await itemBuilder(queue);
     items.push(item);
 
@@ -74,9 +73,13 @@ export async function* batchBuildArray<I>(
     }
 
     nextToken = await queue.peek();
-  } while (nextToken !== null && nextToken.name !== "endArray");
+  }
+  await assertNextToken(queue, "endArray", "Failed to batch build array.");
 
-  await assertNextToken(queue, "endArray", "Failed to build array.");
+  // Clean up any stragglers.
+  if (items.length > 0) {
+    yield items;
+  }
 }
 
 export async function buildString(queue: TokenQueue): Promise<string> {
