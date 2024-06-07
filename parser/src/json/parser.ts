@@ -44,7 +44,7 @@ export async function parseSnapshotFile(
 
   const pipeline = chain([
     fs.createReadStream(path),
-    parser({ packStrings: false, packNumbers: false }),
+    parser({ packKeys: false, packStrings: false, packNumbers: false }),
     token => tokenQueue.onToken(token),
   ]);
 
@@ -76,25 +76,21 @@ async function walkTokens(
 
         switch (key) {
           case "snapshot":
-            await assertKeyValueToken(queue, "snapshot");
             await buildSnapshot(queue, onSnapshot);
             break;
           case "nodes":
-            await assertKeyValueToken(queue, "nodes");
             for await (let nodes of batchBuildArray(queue, buildNumber)) {
               await onNodeBatch(nodes);
             }
             break;
 
           case "edges":
-            await assertKeyValueToken(queue, "edges");
             for await (let nodes of batchBuildArray(queue, buildNumber)) {
               await onEdgeBatch(nodes);
             }
             break;
 
           case "strings":
-            await assertKeyValueToken(queue, "strings");
             for await (let nodes of batchBuildArray(queue, buildString)) {
               await onStringBatch(nodes);
             }
@@ -152,7 +148,6 @@ export async function buildSnapshot(
         switch (key) {
           case "meta":
             console.log("Start meta");
-            await assertKeyValueToken(queue, "meta");
             snapshot.meta = await buildMeta(queue);
             console.log("keep goiong");
             break;
@@ -160,7 +155,6 @@ export async function buildSnapshot(
           case "node_count":
           case "edge_count":
           case "trace_function_count":
-            await assertKeyValueToken(queue, key);
             snapshot[key] = await buildNumber(queue);
             break;
 
@@ -205,41 +199,33 @@ async function buildMeta(queue: TokenQueue): Promise<Meta> {
 
     switch (key) {
       case "node_fields":
-        await assertKeyValueToken(queue, "node_fields");
         meta.node_fields = (await buildArray(queue, buildString)) as NodeFields;
         break;
       case "node_types":
-        await assertKeyValueToken(queue, "node_types");
         meta.node_types = await buildNodeTypes(queue);
         break;
 
       case "edge_fields":
-        await assertKeyValueToken(queue, "edge_fields");
         meta.edge_fields = (await buildArray(queue, buildString)) as EdgeFields;
         break;
 
       case "edge_types":
-        await assertKeyValueToken(queue, "edge_types");
         meta.edge_types = await buildEdgeTypes(queue);
         break;
 
       case "trace_function_info_fields":
-        await assertKeyValueToken(queue, "trace_function_info_fields");
         meta.trace_function_info_fields = await buildArray(queue, buildString);
         break;
 
       case "trace_node_fields":
-        await assertKeyValueToken(queue, "trace_node_fields");
         meta.trace_node_fields = await buildArray(queue, buildString);
         break;
 
       case "sample_fields":
-        await assertKeyValueToken(queue, "sample_fields");
         meta.trace_node_fields = await buildArray(queue, buildString);
         break;
 
       case "location_fields":
-        await assertKeyValueToken(queue, "location_fields");
         meta.trace_node_fields = await buildArray(queue, buildString);
         break;
 
@@ -266,20 +252,6 @@ function isMeta(obj: Partial<Meta>): obj is Meta {
     obj.edge_fields !== undefined &&
     obj.edge_types !== undefined
   );
-}
-
-export async function assertKeyValueToken(
-  queue: TokenQueue,
-  key: string,
-): Promise<void> {
-  const keyValueToken = await queue.take();
-  if (
-    keyValueToken === null ||
-    keyValueToken.name !== "keyValue" ||
-    keyValueToken.value !== key
-  ) {
-    throw new Error(`Missing key value token ${key}.`);
-  }
 }
 
 export async function buildNodeTypes(queue: TokenQueue): Promise<NodeTypes> {

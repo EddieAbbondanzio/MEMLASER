@@ -7,7 +7,7 @@ export async function buildKey<K extends string>(
 ): Promise<K> {
   const keyTokens = await queue.takeUntil(t => t.name === "endKey");
   if (
-    keyTokens[0].name !== "startKey" &&
+    keyTokens[0].name !== "startKey" ||
     keyTokens[keyTokens.length - 1].name !== "endKey"
   ) {
     throw new TokenParsingError("Failed to build key.", keyTokens);
@@ -26,7 +26,20 @@ export async function buildKey<K extends string>(
     key.push(chunk.value);
   }
 
-  return key.join("") as K;
+  if (keyChunks.length === 0) {
+    throw new TokenParsingError("Failed to build key. No chunks.");
+  }
+
+  const fullKey = key.join("") as K;
+
+  if ((await queue.peek())?.name === "keyValue") {
+    console.warn(
+      `Detected a keyValue token for key "${fullKey}". Please set \`packKeys: false\` on the parser for better performance.`,
+    );
+    await queue.take();
+  }
+
+  return fullKey;
 }
 
 export async function buildArray<I>(
@@ -124,8 +137,6 @@ export async function buildString(queue: TokenQueue): Promise<string> {
     console.warn(
       "Detected a stringValue token. Please set `packStrings: false` on the parser for better performance.",
     );
-
-    // Remove it.
     await queue.take();
   }
 
@@ -158,8 +169,6 @@ export async function buildNumber(queue: TokenQueue): Promise<number> {
     console.warn(
       "Detected a numberValue token. Please set `packNumbers: false` on the parser for better performance.",
     );
-
-    // Remove it.
     await queue.take();
   }
 
