@@ -1,7 +1,6 @@
 import { chain } from "stream-chain";
 import * as fs from "fs";
 import { parser } from "stream-json";
-import { pick } from "stream-json/filters/Pick";
 import {
   EdgeFields,
   EdgeTypes,
@@ -12,7 +11,16 @@ import {
   Snapshot,
 } from "./snapshot";
 import { Token } from "./tokens";
-import { EventEmitter } from "stream";
+import { InvalidJSONError, TokenParsingError } from "./errors";
+import {
+  buildKey,
+  batchBuildNumberArray,
+  batchBuildStringArray,
+  buildNumber,
+  buildStringArray,
+  buildString,
+} from "./utils";
+import { TokenQueue } from "./tokenQueue";
 
 interface WalkTokenCallbacks {
   onSnapshot: (snapshot: HeapSnapshot["snapshot"]) => Promise<void>;
@@ -32,96 +40,15 @@ export async function parseSnapshotFile(
 ): Promise<void> {
   const tokenQueue = new TokenQueue();
 
-  console.log("Prep pipeline!");
   const pipeline = chain([
     fs.createReadStream(path),
-    parser({ packStrings: false }),
+    parser({ packStrings: false, packNumbers: false }),
     token => tokenQueue.onToken(token),
   ]);
 
   console.log("start walking tokens");
   pipeline.on("end", () => tokenQueue.setIsDraining());
   await walkTokens(tokenQueue, callbacks);
-}
-
-export class TokenQueue {
-  #isDraining: boolean;
-  #tokenCache: Token[];
-  #eventEmitter: EventEmitter;
-
-  constructor() {
-    this.#isDraining = false;
-    this.#tokenCache = [];
-    this.#eventEmitter = new EventEmitter();
-  }
-
-  async onToken(token: Token): Promise<void> {
-    this.#tokenCache.push(token);
-    this.#eventEmitter.emit("token", token);
-  }
-
-  async peek(): Promise<Token | null> {
-    if (this.isEmpty()) {
-      return null;
-    }
-
-    // Wait for a token to come in if there's nothing in the cache.
-    if (this.#tokenCache.length === 0) {
-      await new Promise(res => {
-        this.#eventEmitter.once("token", res);
-      });
-    }
-
-    return this.#tokenCache[0]!;
-  }
-
-  async take(): Promise<Token | null> {
-    if (this.isEmpty()) {
-      console.log("Queue is empty! Return null.");
-      return null;
-    }
-
-    // Wait for a token to come in if there's nothing in the cache.
-    if (this.#tokenCache.length === 0) {
-      await new Promise(res => {
-        this.#eventEmitter.once("token", res);
-      });
-    }
-
-    return this.#tokenCache.shift()!;
-  }
-
-  async takeUntil(until: (t: Token) => boolean): Promise<Token[]> {
-    const tokens: Token[] = [];
-
-    while (!this.isEmpty()) {
-      let next = (await this.peek())!;
-      if (until(next)) {
-        tokens.push((await this.take())!);
-        break;
-      }
-
-      tokens.push((await this.take())!);
-    }
-
-    return tokens;
-  }
-
-  isEmpty(): boolean {
-    if (this.#isDraining) {
-      return this.#tokenCache.length === 0;
-    }
-
-    return false;
-  }
-
-  setIsDraining(): void {
-    if (this.#isDraining) {
-      throw new Error("Cannot mark draining token queue as draining.");
-    }
-
-    this.#isDraining = true;
-  }
 }
 
 async function walkTokens(
@@ -135,7 +62,7 @@ async function walkTokens(
     throw new Error("Bad heap snapshot file. Root object is invalid.");
   }
 
-  while (!queue.isEmpty()) {
+  while (!queue.isEmpty() && (await queue.peek())?.name !== "endObject") {
     const nextToken = await queue.peek();
     if (nextToken === null) {
       throw new Error("Next token was null.");
@@ -185,6 +112,9 @@ async function walkTokens(
         break;
     }
   }
+
+  //Remove endObject token from queue.
+  await queue.take();
 }
 
 export async function buildSnapshot(
@@ -193,15 +123,23 @@ export async function buildSnapshot(
 ): Promise<void> {
   let firstToken = await queue.take();
   if (firstToken === null || firstToken.name !== "startObject") {
-    throw new Error("Bad snapshot file. Snapshot object is invalid.");
+    throw new TokenParsingError(
+      "Bad snapshot file. Snapshot object is invalid.",
+      [firstToken],
+    );
   }
 
   const snapshot: Partial<Snapshot> = {};
 
-  while (!queue.isEmpty()) {
+  while (!queue.isEmpty() && (await queue.peek())?.name !== "endObject") {
     const nextToken = await queue.peek();
     if (nextToken === null) {
       throw new Error("Next token was null.");
+    }
+    if (nextToken.name !== "startKey") {
+      throw new TokenParsingError("Expected startKey token within object", [
+        nextToken,
+      ]);
     }
 
     switch (nextToken.name) {
@@ -211,8 +149,10 @@ export async function buildSnapshot(
 
         switch (key) {
           case "meta":
+            console.log("Start meta");
             await assertKeyValueToken(queue, "meta");
             snapshot.meta = await buildMeta(queue);
+            console.log("keep goiong");
             break;
 
           case "node_count":
@@ -230,8 +170,11 @@ export async function buildSnapshot(
     }
   }
 
+  //Remove endObject token from queue.
+  await queue.take();
+
   if (!isSnapshot(snapshot)) {
-    throw new Error("Failed to build snapshot.");
+    throw new InvalidJSONError("Failed to build snapshot.", snapshot);
   }
 
   console.log("Done building snapshot");
@@ -254,36 +197,48 @@ async function buildMeta(queue: TokenQueue): Promise<Meta> {
   // Remove "startObject" token off queue.
   await queue.take();
 
-  while (!queue.isEmpty()) {
+  while (!queue.isEmpty() && (await queue.peek())?.name !== "endObject") {
     const key = await buildKey<keyof Meta>(queue);
     console.log(`buildMeta. key: "${key}"`, key);
 
     switch (key) {
       case "node_fields":
         await assertKeyValueToken(queue, "node_fields");
-        meta.node_fields = (await buildStringArray(
-          queue,
-        )) as unknown as NodeFields;
+        meta.node_fields = (await buildStringArray(queue)) as NodeFields;
         break;
       case "node_types":
         await assertKeyValueToken(queue, "node_types");
-        meta.node_types = (await buildStringArray(
-          queue,
-        )) as unknown as NodeTypes;
+        meta.node_types = await buildNodeTypes(queue);
         break;
 
       case "edge_fields":
         await assertKeyValueToken(queue, "edge_fields");
-        meta.edge_fields = (await buildStringArray(
-          queue,
-        )) as unknown as EdgeFields;
+        meta.edge_fields = (await buildStringArray(queue)) as EdgeFields;
         break;
 
       case "edge_types":
         await assertKeyValueToken(queue, "edge_types");
-        meta.edge_types = (await buildStringArray(
-          queue,
-        )) as unknown as EdgeTypes;
+        meta.edge_types = await buildEdgeTypes(queue);
+        break;
+
+      case "trace_function_info_fields":
+        await assertKeyValueToken(queue, "trace_function_info_fields");
+        meta.trace_function_info_fields = await buildStringArray(queue);
+        break;
+
+      case "trace_node_fields":
+        await assertKeyValueToken(queue, "trace_node_fields");
+        meta.trace_node_fields = await buildStringArray(queue);
+        break;
+
+      case "sample_fields":
+        await assertKeyValueToken(queue, "sample_fields");
+        meta.trace_node_fields = await buildStringArray(queue);
+        break;
+
+      case "location_fields":
+        await assertKeyValueToken(queue, "location_fields");
+        meta.trace_node_fields = await buildStringArray(queue);
         break;
 
       default:
@@ -291,10 +246,14 @@ async function buildMeta(queue: TokenQueue): Promise<Meta> {
     }
   }
 
+  //Remove endObject token from queue.
+  await queue.take();
+
   if (!isMeta(meta)) {
-    throw new Error("Failed to build meta.");
+    throw new InvalidJSONError("Failed to build meta.", meta);
   }
 
+  console.log("Finished meta!");
   return meta;
 }
 
@@ -305,30 +264,6 @@ function isMeta(obj: Partial<Meta>): obj is Meta {
     obj.edge_fields !== undefined &&
     obj.edge_types !== undefined
   );
-}
-
-export async function buildKey<K extends string>(
-  queue: TokenQueue,
-): Promise<K> {
-  const keyTokens = await queue.takeUntil(t => t.name === "endKey");
-  if (
-    keyTokens[0].name !== "startKey" &&
-    keyTokens[keyTokens.length - 1].name !== "endKey"
-  ) {
-    throw new UnexpectedTokensError("Failed to build key.", keyTokens);
-  }
-
-  let key = [];
-  const keyChunks = keyTokens.slice(1, -1);
-  for (const chunk of keyChunks) {
-    if (chunk.name !== "stringChunk") {
-      throw new UnexpectedTokensError("Failed to build key", keyChunks);
-    }
-
-    key.push(chunk.value);
-  }
-
-  return key.join() as K;
 }
 
 export async function assertKeyValueToken(
@@ -345,131 +280,64 @@ export async function assertKeyValueToken(
   }
 }
 
-export async function buildNumberArray(queue: TokenQueue): Promise<number[]> {
-  const startArray = await queue.take();
-  if (startArray === null || startArray.name !== "startArray") {
-    throw new Error("Failed to parse number array.");
-  }
+export async function buildNodeTypes(queue: TokenQueue): Promise<NodeTypes> {
+  console.log("buildNodeTypes()");
 
-  const numbers = [];
-  let nextToken: Token | null = null;
-  do {
-    const stringNumber = await buildNumber(queue);
-    numbers.push(Number(stringNumber));
-    nextToken = await queue.peek();
-  } while (nextToken !== null && nextToken.name !== "endArray");
-
-  return numbers;
-}
-
-export async function* batchBuildNumberArray(
-  queue: TokenQueue,
-  batchSize: number = 1000,
-): AsyncGenerator<number[], void, void> {
-  let numbers = [];
-  let nextToken: Token | null = null;
-  do {
-    const stringNumber = await buildString(queue);
-    numbers.push(Number(stringNumber));
-
-    if (numbers.length >= batchSize) {
-      yield numbers;
-      numbers = [];
-    }
-
-    nextToken = await queue.peek();
-  } while (nextToken !== null && nextToken.name !== "endArray");
-}
-
-export async function buildStringArray(queue: TokenQueue): Promise<string[]> {
   const startArray = await queue.take();
   if (startArray?.name !== "startArray") {
-    throw new Error(
-      "Failed to build string array. Array didn't start with startArray token.",
+    throw new TokenParsingError(
+      "Failed to build node types. Array didn't start with startArray token.",
+      [startArray],
     );
   }
 
-  const strings = [];
+  let nodeTypes: any = [];
+
+  // First element is a nested array
+  const nested = await buildStringArray(queue);
+  nodeTypes.push(nested);
+
   let nextToken: Token | null = null;
   do {
+    console.log("string!");
     const string = await buildString(queue);
-    strings.push(string);
+    nodeTypes.push(string);
     nextToken = await queue.peek();
   } while (nextToken !== null && nextToken.name !== "endArray");
 
-  console.log("DONE: ", strings);
-  return strings;
+  // Remove endArray token from queue.
+  await queue.take();
+
+  return nodeTypes;
 }
 
-export async function* batchBuildStringArray(
-  queue: TokenQueue,
-  batchSize: number = 1000,
-): AsyncGenerator<string[], void, void> {
-  let strings = [];
+export async function buildEdgeTypes(queue: TokenQueue): Promise<EdgeTypes> {
+  console.log("buildEdgeTypes()");
+
+  const startArray = await queue.take();
+  if (startArray?.name !== "startArray") {
+    throw new TokenParsingError(
+      "Failed to build node types. Array didn't start with startArray token.",
+      [startArray],
+    );
+  }
+
+  let edgeTypes: any = [];
+
+  // First element is a nested array
+  const nested = await buildStringArray(queue);
+  edgeTypes.push(nested);
+
   let nextToken: Token | null = null;
   do {
+    console.log("string!");
     const string = await buildString(queue);
-    strings.push(string);
-
-    if (strings.length >= batchSize) {
-      yield strings;
-      strings = [];
-    }
-
+    edgeTypes.push(string);
     nextToken = await queue.peek();
   } while (nextToken !== null && nextToken.name !== "endArray");
-}
 
-export async function buildString(queue: TokenQueue): Promise<string> {
-  const stringTokens = await queue.takeUntil(t => t.name === "endString");
-  if (
-    stringTokens[0].name !== "startString" &&
-    stringTokens[stringTokens.length - 1].name !== "endString"
-  ) {
-    throw new UnexpectedTokensError("Failed to build string.", stringTokens);
-  }
+  // Remove endArray token from queue.
+  await queue.take();
 
-  const stringChunks = stringTokens.slice(1, -1);
-  const string = [];
-  for (const chunk of stringChunks) {
-    if (chunk.name !== "stringChunk") {
-      throw new UnexpectedTokensError(
-        "Failed to build string. Bad chunks.",
-        stringChunks,
-      );
-    }
-
-    string.push(chunk.value);
-  }
-
-  return string.join();
-}
-
-export async function buildNumber(queue: TokenQueue): Promise<number> {
-  const numberTokens = await queue.takeUntil(t => t.name === "endNumber");
-  if (
-    numberTokens[0].name !== "startNumber" &&
-    numberTokens[numberTokens.length - 1].name !== "endNumber"
-  ) {
-    throw new Error("Failed to build number.");
-  }
-
-  const numberChunks = numberTokens.slice(1, -1);
-  for (const chunk of numberChunks) {
-    if (chunk.name !== "stringChunk") {
-      throw new Error("Failed to build string.");
-    }
-  }
-
-  const stringNumber = numberChunks.join();
-  return Number(stringNumber);
-}
-
-class UnexpectedTokensError extends Error {
-  constructor(message: string, tokens: Token[]) {
-    const fullMessage = `${message} Tokens: [${tokens
-      .map(t => t.name)
-      .join(", ")}]`;
-    super(fullMessage);
-  }
+  return edgeTypes;
 }

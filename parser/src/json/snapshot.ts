@@ -24,6 +24,11 @@ export interface Meta {
   node_types: NodeTypes;
   edge_fields: EdgeFields;
   edge_types: EdgeTypes;
+  // TODO: What are these? The MS docs didn't mention them.
+  trace_function_info_fields: string[];
+  trace_node_fields: string[];
+  sample_fields: string[];
+  location_fields: string[];
 }
 
 // TODO: Prob want to move this elsewhere. It's not really JSON
@@ -49,7 +54,7 @@ export const NODE_FIELDS = [
   "edge_count",
   "trace_node_id",
   "detachedness",
-] as const;
+];
 export type NodeFields = typeof NODE_FIELDS;
 
 export const NODE_TYPES = [
