@@ -1,6 +1,6 @@
 import { initializeSQLiteDB } from "./sqlite";
 import { parseSnapshotFile } from "./json/parser";
-import { Snapshot } from "./json/snapshot";
+import { Snapshot } from "./json/schema";
 
 // Reference(s):
 // https://learn.microsoft.com/en-us/microsoft-edge/devtools-guide-chromium/memory-problems/heap-snapshot-schema
