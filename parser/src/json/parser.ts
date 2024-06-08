@@ -66,13 +66,10 @@ async function buildHeapSnapshot(
     "Failed to build heap snapshot. Invalid root object.",
   );
 
+  // TODO: Add validation!
+
   let nextToken: Token | null = await queue.peek();
   while (nextToken !== null && nextToken.name !== "endObject") {
-    const nextToken = await queue.peek();
-    if (nextToken === null) {
-      throw new Error("Next token was null.");
-    }
-
     switch (nextToken.name) {
       case "startKey":
         const key = await buildKey<keyof HeapSnapshot>(queue);
