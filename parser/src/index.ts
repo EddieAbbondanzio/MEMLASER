@@ -196,3 +196,20 @@ export async function parseSnapshotToSQLite(
 
 //   return nodes;
 // }
+
+// export interface Node {
+//   type: NodeObjectType;
+//   name: string;
+//   id: number;
+//   selfSize: number;
+//   edgeCount: number;
+//   traceNodeId: number;
+//   detached: boolean;
+//   nodeIndex: number;
+// }
+
+// export interface Edge {
+//   type: EdgeObjectType;
+//   name: string;
+//   toNode: number;
+// }

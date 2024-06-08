@@ -31,21 +31,6 @@ export interface Meta {
   location_fields: string[];
 }
 
-// TODO: Prob want to move this elsewhere. It's not really JSON
-export interface Node {
-  type: NodeObjectType;
-  name: string;
-  id: number;
-  selfSize: number;
-  edgeCount: number;
-  traceNodeId: number;
-  detached: boolean;
-  nodeIndex: number;
-}
-
-// These may change in the future, so we check the actual values when parsing.
-export const NUM_OF_NODE_FIELDS = 7;
-
 export const NODE_FIELDS = [
   "type",
   "name",
@@ -85,9 +70,6 @@ export const NODE_TYPES = [
 export type NodeTypes = typeof NODE_TYPES;
 export type NodeObjectType = keyof NodeTypes[0];
 
-// These may change in the future, so we check the actual values when parsing.
-export const NUM_OF_EDGE_FIELDS = 3;
-
 export const EDGE_FIELDS = ["type", "name_or_index", "to_node"];
 export type EdgeFields = typeof EDGE_FIELDS;
 
@@ -98,10 +80,3 @@ export const EDGE_TYPES = [
 ] as const;
 export type EdgeTypes = typeof EDGE_TYPES;
 export type EdgeObjectType = keyof EdgeTypes[0];
-
-// TODO: Prob want to move this elsewhere. It's not really JSON
-export interface Edge {
-  type: EdgeObjectType;
-  name: string;
-  toNode: number;
-}

@@ -139,6 +139,7 @@ async function buildMeta(queue: TokenQueue): Promise<Meta> {
     switch (key) {
       case "node_types":
       case "edge_types":
+        // TODO: Add validation!
         return await buildStringArrayWithNestedArray(q);
       case "trace_function_info_fields":
       case "trace_node_fields":
