@@ -52,19 +52,6 @@
       "options": {
         "cwd": "parser"
       }
-    },
-    {
-      "label": "parser:lint",
-      "command": "yarn -s run lint",
-      "type": "shell",
-      "args": [],
-      "problemMatcher": ["$tsc"],
-      "presentation": {
-        "reveal": "always"
-      },
-      "options": {
-        "cwd": "parser"
-      }
     }
   ]
 }
