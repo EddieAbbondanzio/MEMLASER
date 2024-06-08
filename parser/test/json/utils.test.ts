@@ -3,6 +3,7 @@ import {
   buildArray,
   buildKey,
   buildNumber,
+  buildObject,
   buildString,
 } from "../../src/json/utils";
 import { createTokenQueue } from "../_factories/tokenQueue";
@@ -15,88 +16,104 @@ afterEach(() => {
   jest.resetAllMocks();
 });
 
-test("buildKey missing startKey", async () => {
-  const queue = createTokenQueue(
-    [{ name: "stringChunk", value: "abc" }, { name: "endKey" }],
-    { isDraining: true },
-  );
-
-  await expect(async () => {
-    await buildKey(queue);
-  }).rejects.toThrow(/Failed to build key/);
-});
-
-test("buildKey missing endKey", async () => {
-  const queue = createTokenQueue(
-    [{ name: "startKey" }, { name: "stringChunk", value: "abc" }],
-    { isDraining: true },
-  );
-
-  await expect(async () => {
-    await buildKey(queue);
-  }).rejects.toThrow(/Failed to build key/);
-});
-
-test("buildKey invalid chunks", async () => {
+test("buildObject missing startObject", async () => {
   const queue = createTokenQueue(
     [
       { name: "startKey" },
-      { name: "numberChunk", value: "123" },
+      { name: "stringChunk", value: "foo" },
       { name: "endKey" },
+      { name: "startNumber" },
+      { name: "numberChunk", value: "1" },
+      { name: "endNumber" },
+      { name: "endObject" },
     ],
     { isDraining: true },
   );
 
   await expect(async () => {
-    await buildKey(queue);
+    await buildObject(queue, buildNumber);
+  }).rejects.toThrow(/Failed to build object/);
+});
+
+test("buildObject missing endObject", async () => {
+  const queue = createTokenQueue(
+    [
+      { name: "startObject" },
+      { name: "startKey" },
+      { name: "stringChunk", value: "foo" },
+      { name: "endKey" },
+      { name: "startNumber" },
+      { name: "numberChunk", value: "1" },
+      { name: "endNumber" },
+    ],
+    { isDraining: true },
+  );
+
+  await expect(async () => {
+    await buildObject(queue, buildNumber);
+  }).rejects.toThrow(/Failed to build object/);
+});
+
+test("buildObject missing key", async () => {
+  const queue = createTokenQueue(
+    [
+      { name: "startObject" },
+      { name: "startNumber" },
+      { name: "numberChunk", value: "1" },
+      { name: "endNumber" },
+      { name: "endObject" },
+    ],
+    { isDraining: true },
+  );
+
+  await expect(async () => {
+    await buildObject(queue, buildNumber);
   }).rejects.toThrow(/Failed to build key/);
 });
 
-test("buildKey no chunks", async () => {
-  const queue = createTokenQueue([{ name: "startKey" }, { name: "endKey" }], {
-    isDraining: true,
+test("buildObject missing value", async () => {
+  const queue = createTokenQueue(
+    [
+      { name: "startObject" },
+      { name: "startKey" },
+      { name: "stringChunk", value: "foo" },
+      { name: "endKey" },
+      { name: "endObject" },
+    ],
+    { isDraining: true },
+  );
+
+  await expect(async () => {
+    await buildObject(queue, buildNumber);
+  }).rejects.toThrow(/Failed to build number/);
+});
+
+test("buildObject", async () => {
+  const queue = createTokenQueue(
+    [
+      { name: "startObject" },
+      { name: "startKey" },
+      { name: "stringChunk", value: "foo" },
+      { name: "endKey" },
+      { name: "startNumber" },
+      { name: "numberChunk", value: "1" },
+      { name: "endNumber" },
+      { name: "startKey" },
+      { name: "stringChunk", value: "bar" },
+      { name: "endKey" },
+      { name: "startNumber" },
+      { name: "numberChunk", value: "2" },
+      { name: "endNumber" },
+      { name: "endObject" },
+    ],
+    { isDraining: true },
+  );
+
+  const obj = await buildObject(queue, buildNumber);
+  expect(obj).toEqual({
+    foo: 1,
+    bar: 2,
   });
-
-  await expect(async () => {
-    await buildKey(queue);
-  }).rejects.toThrow(/Failed to build key\. No chunks\./);
-});
-
-test("buildKey detected keyValue", async () => {
-  const queue = createTokenQueue(
-    [
-      { name: "startKey" },
-      { name: "stringChunk", value: "abc" },
-      { name: "endKey" },
-      { name: "keyValue", value: "abc" },
-    ],
-    {
-      isDraining: true,
-    },
-  );
-
-  const key = await buildKey(queue);
-  expect(console.warn).toHaveBeenCalledWith(
-    expect.stringMatching(/Detected a keyValue token/),
-  );
-  expect(key).toBe("abc");
-});
-
-test("buildKey", async () => {
-  const queue = createTokenQueue(
-    [
-      { name: "startKey" },
-      { name: "stringChunk", value: "abc" },
-      { name: "stringChunk", value: "def" },
-      { name: "endKey" },
-    ],
-    {
-      isDraining: true,
-    },
-  );
-
-  const key = await buildKey(queue);
-  expect(key).toBe("abcdef");
 });
 
 test("buildArray missing startArray", async () => {
@@ -231,6 +248,90 @@ test("batchBuildArray", async () => {
   }
 
   expect(arr).toEqual(["abc", "def", "ghi"]);
+});
+
+test("buildKey missing startKey", async () => {
+  const queue = createTokenQueue(
+    [{ name: "stringChunk", value: "abc" }, { name: "endKey" }],
+    { isDraining: true },
+  );
+
+  await expect(async () => {
+    await buildKey(queue);
+  }).rejects.toThrow(/Failed to build key/);
+});
+
+test("buildKey missing endKey", async () => {
+  const queue = createTokenQueue(
+    [{ name: "startKey" }, { name: "stringChunk", value: "abc" }],
+    { isDraining: true },
+  );
+
+  await expect(async () => {
+    await buildKey(queue);
+  }).rejects.toThrow(/Failed to build key/);
+});
+
+test("buildKey invalid chunks", async () => {
+  const queue = createTokenQueue(
+    [
+      { name: "startKey" },
+      { name: "numberChunk", value: "123" },
+      { name: "endKey" },
+    ],
+    { isDraining: true },
+  );
+
+  await expect(async () => {
+    await buildKey(queue);
+  }).rejects.toThrow(/Failed to build key/);
+});
+
+test("buildKey no chunks", async () => {
+  const queue = createTokenQueue([{ name: "startKey" }, { name: "endKey" }], {
+    isDraining: true,
+  });
+
+  await expect(async () => {
+    await buildKey(queue);
+  }).rejects.toThrow(/Failed to build key\. No chunks\./);
+});
+
+test("buildKey detected keyValue", async () => {
+  const queue = createTokenQueue(
+    [
+      { name: "startKey" },
+      { name: "stringChunk", value: "abc" },
+      { name: "endKey" },
+      { name: "keyValue", value: "abc" },
+    ],
+    {
+      isDraining: true,
+    },
+  );
+
+  const key = await buildKey(queue);
+  expect(console.warn).toHaveBeenCalledWith(
+    expect.stringMatching(/Detected a keyValue token/),
+  );
+  expect(key).toBe("abc");
+});
+
+test("buildKey", async () => {
+  const queue = createTokenQueue(
+    [
+      { name: "startKey" },
+      { name: "stringChunk", value: "abc" },
+      { name: "stringChunk", value: "def" },
+      { name: "endKey" },
+    ],
+    {
+      isDraining: true,
+    },
+  );
+
+  const key = await buildKey(queue);
+  expect(key).toBe("abcdef");
 });
 
 test("buildString missing startString", async () => {
