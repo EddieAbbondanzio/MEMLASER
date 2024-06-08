@@ -132,8 +132,8 @@ export async function buildSnapshot(queue: TokenQueue): Promise<Snapshot> {
     }
   });
 
-  const parsed = await snapshotSchema.parseAsync(raw);
-  return parsed;
+  const validated = await snapshotSchema.parseAsync(raw);
+  return validated;
 }
 
 async function buildMeta(queue: TokenQueue): Promise<Meta> {
@@ -154,8 +154,8 @@ async function buildMeta(queue: TokenQueue): Promise<Meta> {
     }
   });
 
-  const parsed = await metaSchema.parseAsync(raw);
-  return parsed;
+  const validated = await metaSchema.parseAsync(raw);
+  return validated;
 }
 
 async function buildStringArrayWithNestedArray(
