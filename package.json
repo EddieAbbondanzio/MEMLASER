@@ -1,7 +1,6 @@
 {
   "name": "memlaser",
   "private": true,
-  "type": "module",
   "workspaces": [
     "app",
     "heapsnapshot-paser"

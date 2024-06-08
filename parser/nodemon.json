@@ -1,9 +1,0 @@
-{
-  "watch": ["src"],
-  "execMap": {
-    "ts": "ts-node"
-  },
-  "events": {
-    "start": "clear || cls"
-  }
-}
