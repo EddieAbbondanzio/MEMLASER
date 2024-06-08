@@ -19,6 +19,7 @@ import {
   buildArray,
   batchBuildArray,
   assertNextToken,
+  buildObject,
 } from "./utils";
 import { TokenQueue } from "./tokenQueue";
 
@@ -50,21 +51,23 @@ export async function parseSnapshotFile(
   ]);
 
   pipeline.on("end", () => tokenQueue.setIsDraining());
-  await walkTokens(tokenQueue, callbacks);
+  await buildHeapSnapshot(tokenQueue, callbacks);
 }
 
-async function walkTokens(
+async function buildHeapSnapshot(
   queue: TokenQueue,
   callbacks: WalkTokenCallbacks,
 ): Promise<void> {
   const { onSnapshot, onNodeBatch, onEdgeBatch, onStringBatch } = callbacks;
 
-  let firstToken = await queue.take();
-  if (firstToken === null || firstToken.name !== "startObject") {
-    throw new Error("Bad heap snapshot file. Root object is invalid.");
-  }
+  await assertNextToken(
+    queue,
+    "startObject",
+    "Failed to build heap snapshot. Invalid root object.",
+  );
 
-  while (!queue.isEmpty() && (await queue.peek())?.name !== "endObject") {
+  let nextToken: Token | null = await queue.peek();
+  while (nextToken !== null && nextToken.name !== "endObject") {
     const nextToken = await queue.peek();
     if (nextToken === null) {
       throw new Error("Next token was null.");
@@ -76,7 +79,8 @@ async function walkTokens(
 
         switch (key) {
           case "snapshot":
-            await buildSnapshot(queue, onSnapshot);
+            const snapshot = await buildSnapshot(queue);
+            await onSnapshot(snapshot);
             break;
 
           case "nodes":
@@ -112,151 +116,59 @@ async function walkTokens(
     }
   }
 
-  //Remove endObject token from queue.
-  await queue.take();
-}
-
-export async function buildSnapshot(
-  queue: TokenQueue,
-  callback: WalkTokenCallbacks["onSnapshot"],
-): Promise<void> {
-  let firstToken = await queue.take();
-  if (firstToken === null || firstToken.name !== "startObject") {
-    throw new TokenParsingError(
-      "Bad snapshot file. Snapshot object is invalid.",
-      [firstToken],
-    );
-  }
-
-  const snapshot: Partial<Snapshot> = {};
-
-  while (!queue.isEmpty() && (await queue.peek())?.name !== "endObject") {
-    const nextToken = await queue.peek();
-    if (nextToken === null) {
-      throw new Error("Next token was null.");
-    }
-    if (nextToken.name !== "startKey") {
-      throw new TokenParsingError("Expected startKey token within object", [
-        nextToken,
-      ]);
-    }
-
-    switch (nextToken.name) {
-      case "startKey":
-        const key = await buildKey<keyof Snapshot>(queue);
-        console.log("buildSnapshot. Key: ", key);
-
-        switch (key) {
-          case "meta":
-            console.log("Start meta");
-            snapshot.meta = await buildMeta(queue);
-            console.log("keep goiong");
-            break;
-
-          case "node_count":
-          case "edge_count":
-          case "trace_function_count":
-            snapshot[key] = await buildNumber(queue);
-            break;
-
-          default:
-            throw new Error(`Unexpected snapshot key: ${key}`);
-        }
-
-        break;
-    }
-  }
-
-  //Remove endObject token from queue.
-  await queue.take();
-
-  if (!isSnapshot(snapshot)) {
-    throw new InvalidJSONError("Failed to build snapshot.", snapshot);
-  }
-
-  console.log("Done building snapshot");
-  await callback(snapshot);
-}
-
-function isSnapshot(obj: Partial<Snapshot>): obj is Snapshot {
-  return (
-    obj.meta !== undefined &&
-    obj.node_count !== undefined &&
-    obj.edge_count !== undefined &&
-    obj.trace_function_count !== undefined
+  await assertNextToken(
+    queue,
+    "endObject",
+    "Failed to build heap snapshot. Invalid root object.",
   );
+}
+
+export async function buildSnapshot(queue: TokenQueue): Promise<Snapshot> {
+  const obj = await buildObject(queue, async (q, key) => {
+    switch (key) {
+      case "meta":
+        return await buildMeta(queue);
+      case "node_count":
+      case "edge_count":
+      case "trace_function_count":
+        return await buildNumber(queue);
+      default:
+        throw new Error(`Unexpected snapshot key: ${key}`);
+    }
+  });
+
+  // TODO: Add validation!
+
+  return obj as unknown as Snapshot;
 }
 
 async function buildMeta(queue: TokenQueue): Promise<Meta> {
-  console.log("buildMeta");
-  const meta: Partial<Meta> = {};
-
-  // Remove "startObject" token off queue.
-  await queue.take();
-
-  while (!queue.isEmpty() && (await queue.peek())?.name !== "endObject") {
-    const key = await buildKey<keyof Meta>(queue);
-    console.log(`buildMeta. key: "${key}"`, key);
-
+  const obj = await buildObject(queue, async (q, key) => {
     switch (key) {
-      case "node_fields":
-        meta.node_fields = (await buildArray(queue, buildString)) as NodeFields;
-        break;
       case "node_types":
-        meta.node_types = await buildNodeTypes(queue);
-        break;
-
-      case "edge_fields":
-        meta.edge_fields = (await buildArray(queue, buildString)) as EdgeFields;
-        break;
-
       case "edge_types":
-        meta.edge_types = await buildEdgeTypes(queue);
-        break;
-
+        return await buildStringArrayWithNestedArray(q);
       case "trace_function_info_fields":
-        meta.trace_function_info_fields = await buildArray(queue, buildString);
-        break;
-
       case "trace_node_fields":
-        meta.trace_node_fields = await buildArray(queue, buildString);
-        break;
-
       case "sample_fields":
-        meta.trace_node_fields = await buildArray(queue, buildString);
-        break;
-
       case "location_fields":
-        meta.trace_node_fields = await buildArray(queue, buildString);
-        break;
-
+      case "node_fields":
+      case "edge_fields":
+        return await buildArray(q, buildString);
       default:
         throw new Error(`Unexpected meta key: ${key}`);
     }
-  }
+  });
 
-  //Remove endObject token from queue.
-  await queue.take();
+  // TODO: Add validation!
 
-  if (!isMeta(meta)) {
-    throw new InvalidJSONError("Failed to build meta.", meta);
-  }
-
-  console.log("Finished meta!");
-  return meta;
+  return obj as unknown as Meta;
 }
 
-function isMeta(obj: Partial<Meta>): obj is Meta {
-  return (
-    obj.node_fields !== undefined &&
-    obj.node_types !== undefined &&
-    obj.edge_fields !== undefined &&
-    obj.edge_types !== undefined
-  );
-}
-
-export async function buildNodeTypes(queue: TokenQueue): Promise<NodeTypes> {
-  const nodeTypes = await buildArray(queue, async (q, i) => {
+export async function buildStringArrayWithNestedArray(
+  queue: TokenQueue,
+): Promise<[string[], ...string[]]> {
+  const array = await buildArray(queue, async (q, i) => {
     if (i === 0) {
       return buildArray(q, buildString);
     } else {
@@ -264,17 +176,5 @@ export async function buildNodeTypes(queue: TokenQueue): Promise<NodeTypes> {
     }
   });
 
-  return nodeTypes as unknown as NodeTypes;
-}
-
-export async function buildEdgeTypes(queue: TokenQueue): Promise<EdgeTypes> {
-  const edgeTypes = await buildArray(queue, async (q, i) => {
-    if (i === 0) {
-      return buildArray(q, buildString);
-    } else {
-      return buildString(q);
-    }
-  });
-
-  return edgeTypes as unknown as EdgeTypes;
+  return array as [string[], ...string[]];
 }

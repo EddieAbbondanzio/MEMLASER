@@ -36,6 +36,27 @@ export async function buildKey<K extends string>(
   return keyChunks.join("") as K;
 }
 
+// TODO: How can we improve the types here?
+export async function buildObject<O extends Record<string, unknown>>(
+  queue: TokenQueue,
+  valueBuilder: (queue: TokenQueue, key: string) => Promise<unknown>,
+): Promise<O> {
+  await assertNextToken(queue, "startObject", "Failed to build object.");
+
+  const obj: any = {};
+  let nextToken: Token | null = await queue.peek();
+  while (nextToken !== null && nextToken.name !== "endObject") {
+    const key = await buildKey(queue);
+    const value = await valueBuilder(queue, key);
+    obj[key] = value;
+
+    nextToken = await queue.peek();
+  }
+
+  await assertNextToken(queue, "endObject", "Failed to build object.");
+  return obj;
+}
+
 export async function buildArray<I>(
   queue: TokenQueue,
   itemBuilder: (queue: TokenQueue, index: number) => Promise<I>,
@@ -101,7 +122,7 @@ export async function buildString(queue: TokenQueue): Promise<string> {
   }
   await assertNextToken(queue, "endString", "Failed to build string.");
 
-  // N.B. Empty strings may have no chunks.
+  // N.B. Empty strings can have no chunks.
 
   if ((await queue.peek())?.name === "stringValue") {
     console.warn(

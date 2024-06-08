@@ -48,19 +48,19 @@ export class TokenQueue {
     return this.#tokenCache.shift()!;
   }
 
-  isEmpty(): boolean {
-    if (this.#isDraining) {
-      return this.#tokenCache.length === 0;
-    }
-
-    return false;
-  }
-
   setIsDraining(): void {
     if (this.#isDraining) {
       throw new Error("Cannot mark draining token queue as draining.");
     }
 
     this.#isDraining = true;
+  }
+
+  private isEmpty(): boolean {
+    if (this.#isDraining) {
+      return this.#tokenCache.length === 0;
+    }
+
+    return false;
   }
 }
