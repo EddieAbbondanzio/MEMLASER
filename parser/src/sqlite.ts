@@ -1,13 +1,17 @@
 import {
   CamelCasePlugin,
   FileMigrationProvider,
+  JSONColumnType,
   Kysely,
   Migrator,
+  ParseJSONResultsPlugin,
   SqliteDialect,
+  Generated,
 } from "kysely";
 import SQLiteDatabase from "better-sqlite3";
 import * as path from "path";
 import * as fs from "fs";
+import { MetaJSON } from "./json/schema";
 
 interface Database {
   // N.B. Keys must match table names.
@@ -17,7 +21,14 @@ interface Database {
   nodeEdges: NodeEdgesTable;
 }
 
-interface SnapshotsTable {}
+interface SnapshotsTable {
+  id: Generated<number>;
+  meta: JSONColumnType<MetaJSON>;
+  nodeCount: number;
+  edgeCount: number;
+  traceFunctionCount: number;
+}
+
 interface NodesTable {}
 interface EdgesTable {}
 interface NodeEdgesTable {}
@@ -31,7 +42,8 @@ export async function initializeSQLiteDB(
 
   const db = new Kysely<Database>({
     dialect,
-    plugins: [new CamelCasePlugin()],
+    plugins: [new CamelCasePlugin(), new ParseJSONResultsPlugin()],
+    log: console.log,
   });
   await migrate(db);
   return db;

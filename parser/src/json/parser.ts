@@ -2,16 +2,17 @@ import { chain } from "stream-chain";
 import * as fs from "fs";
 import { parser } from "stream-json";
 import {
-  Edges,
-  Meta,
-  Nodes,
-  Snapshot,
-  Strings,
-  heapSnapshotKeySchema,
-  metaSchema,
-  numberArray,
-  snapshotSchema,
-  stringArray,
+  EdgesJSON,
+  MetaJSON,
+  NodesJSON,
+  SnapshotJSON,
+  StringsJSON,
+  edgesJSONSchema,
+  heapSnapshotJSONKeySchema,
+  metaJSONSchema,
+  nodesJSONSchema,
+  snapshotJSONSchema,
+  stringsJSONSchema,
 } from "./schema";
 import { Token } from "./tokens";
 import {
@@ -29,10 +30,10 @@ import { TokenQueue } from "./tokenQueue";
 // tokens and could crash if the heapsnapshot file format is ever changed.
 
 interface WalkTokenCallbacks {
-  onSnapshot: (snapshot: Snapshot) => Promise<void>;
-  onNodeBatch: (nodes: Nodes) => Promise<void>;
-  onEdgeBatch: (edges: Edges) => Promise<void>;
-  onStringBatch: (strings: Strings) => Promise<void>;
+  onSnapshot: (snapshot: SnapshotJSON) => Promise<void>;
+  onNodeBatch: (nodes: NodesJSON) => Promise<void>;
+  onEdgeBatch: (edges: EdgesJSON) => Promise<void>;
+  onStringBatch: (strings: StringsJSON) => Promise<void>;
   // TODO: Implement callbacks for:
   //   - trace_function_infos
   //   - trace_tree
@@ -70,7 +71,9 @@ async function buildHeapSnapshot(
 
   let nextToken: Token | null = await queue.peek();
   while (nextToken !== null && nextToken.name !== "endObject") {
-    const key = await heapSnapshotKeySchema.parseAsync(await buildKey(queue));
+    const key = await heapSnapshotJSONKeySchema.parseAsync(
+      await buildKey(queue),
+    );
 
     switch (key) {
       case "snapshot": {
@@ -81,21 +84,21 @@ async function buildHeapSnapshot(
 
       case "nodes":
         for await (const nodes of batchBuildArray(queue, buildNumber)) {
-          const validatedNodes = await numberArray.parseAsync(nodes);
+          const validatedNodes = await nodesJSONSchema.parseAsync(nodes);
           await onNodeBatch(validatedNodes);
         }
         break;
 
       case "edges":
         for await (const edges of batchBuildArray(queue, buildNumber)) {
-          const validatedEdges = await numberArray.parseAsync(edges);
+          const validatedEdges = await edgesJSONSchema.parseAsync(edges);
           await onEdgeBatch(validatedEdges);
         }
         break;
 
       case "strings":
         for await (const strings of batchBuildArray(queue, buildString)) {
-          const validatedStrings = await stringArray.parseAsync(strings);
+          const validatedStrings = await stringsJSONSchema.parseAsync(strings);
           await onStringBatch(validatedStrings);
         }
         break;
@@ -118,7 +121,7 @@ async function buildHeapSnapshot(
   );
 }
 
-export async function buildSnapshot(queue: TokenQueue): Promise<Snapshot> {
+export async function buildSnapshot(queue: TokenQueue): Promise<SnapshotJSON> {
   const raw = await buildObject(queue, async (q, key) => {
     switch (key) {
       case "meta":
@@ -132,11 +135,11 @@ export async function buildSnapshot(queue: TokenQueue): Promise<Snapshot> {
     }
   });
 
-  const validated = await snapshotSchema.parseAsync(raw);
+  const validated = await snapshotJSONSchema.parseAsync(raw);
   return validated;
 }
 
-async function buildMeta(queue: TokenQueue): Promise<Meta> {
+async function buildMeta(queue: TokenQueue): Promise<MetaJSON> {
   const raw = await buildObject(queue, async (q, key) => {
     switch (key) {
       case "node_types":
@@ -154,7 +157,7 @@ async function buildMeta(queue: TokenQueue): Promise<Meta> {
     }
   });
 
-  const validated = await metaSchema.parseAsync(raw);
+  const validated = await metaJSONSchema.parseAsync(raw);
   return validated;
 }
 

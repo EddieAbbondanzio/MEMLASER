@@ -1,13 +1,15 @@
 import { z } from "zod";
 
-export const numberArray = z.array(z.number());
-export const stringArray = z.array(z.string());
+export const nodesJSONSchema = z.array(z.number());
+export type NodesJSON = z.infer<typeof nodesJSONSchema>;
 
-export type Nodes = z.infer<typeof numberArray>;
-export type Edges = z.infer<typeof numberArray>;
-export type Strings = z.infer<typeof stringArray>;
+export const edgesJSONSchema = z.array(z.number());
+export type EdgesJSON = z.infer<typeof edgesJSONSchema>;
 
-export const heapSnapshotKeySchema = z.enum([
+export const stringsJSONSchema = z.array(z.string());
+export type StringsJSON = z.infer<typeof stringsJSONSchema>;
+
+export const heapSnapshotJSONKeySchema = z.enum([
   "snapshot",
   "nodes",
   "edges",
@@ -17,10 +19,9 @@ export const heapSnapshotKeySchema = z.enum([
   "locations",
   "strings",
 ]);
+export type HeapSnapshotJSONKey = z.infer<typeof heapSnapshotJSONKeySchema>;
 
-export type HeapSnapshotKey = z.infer<typeof heapSnapshotKeySchema>;
-
-export const metaSchema = z.object({
+export const metaJSONSchema = z.object({
   node_fields: z.array(z.string()),
   node_types: z.tuple([z.array(z.string())]).rest(z.string()),
   edge_fields: z.array(z.string()),
@@ -31,14 +32,12 @@ export const metaSchema = z.object({
   sample_fields: z.array(z.string()),
   location_fields: z.array(z.string()),
 });
+export type MetaJSON = z.infer<typeof metaJSONSchema>;
 
-export type Meta = z.infer<typeof metaSchema>;
-
-export const snapshotSchema = z.object({
-  meta: metaSchema,
+export const snapshotJSONSchema = z.object({
+  meta: metaJSONSchema,
   node_count: z.number(),
   edge_count: z.number(),
   trace_function_count: z.number(),
 });
-
-export type Snapshot = z.infer<typeof snapshotSchema>;
+export type SnapshotJSON = z.infer<typeof snapshotJSONSchema>;
