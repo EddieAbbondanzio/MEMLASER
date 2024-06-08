@@ -22,7 +22,6 @@ interface ParseSnapshotToSQLiteOptions {
 export async function parseSnapshotToSQLite(
   options: ParseSnapshotToSQLiteOptions,
 ): Promise<void> {
-  console.log("parseSnapshotToSQLite()");
   const { snapshotPath, outputPath } = options;
   const db = await initializeSQLiteDB(outputPath);
 
@@ -30,7 +29,6 @@ export async function parseSnapshotToSQLite(
     console.log("Got snapshot: ", snapshot);
     await db.insertInto("snapshots").values(snapshot).executeTakeFirst();
   };
-  console.log("parseSnapshotFile");
   await parseSnapshotFile(snapshotPath, {
     onSnapshot,
     onEdgeBatch: async edges => {

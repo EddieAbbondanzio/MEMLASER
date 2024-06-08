@@ -8,7 +8,7 @@ export async function buildObject<O extends Record<string, unknown>>(
 ): Promise<O> {
   await assertNextToken(queue, "startObject", "Failed to build object.");
 
-  const obj: any = {};
+  const obj: Record<string, unknown> = {};
   let nextToken: Token | null = await queue.peek();
   while (nextToken !== null && nextToken.name !== "endObject") {
     const key = await buildKey(queue);
@@ -19,7 +19,7 @@ export async function buildObject<O extends Record<string, unknown>>(
   }
 
   await assertNextToken(queue, "endObject", "Failed to build object.");
-  return obj;
+  return obj as O;
 }
 
 export async function buildArray<I>(

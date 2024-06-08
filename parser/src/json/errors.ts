@@ -14,7 +14,7 @@ export class TokenParsingError extends Error {
 }
 
 export class InvalidJSONError extends Error {
-  constructor(message: string, json: any) {
+  constructor(message: string, json: unknown) {
     const fullMessage = `${message} JSON: ${JSON.stringify(json)}`;
     super(fullMessage);
   }

@@ -189,7 +189,8 @@ test("batchBuildArray missing startArray", async () => {
   );
 
   await expect(async () => {
-    for await (let _ of batchBuildArray(queue, buildString)) {
+    // eslint-disable-next-line no-empty
+    for await (const _ of batchBuildArray(queue, buildString)) {
     }
   }).rejects.toThrow(/Failed to batch build array/);
 });
@@ -206,7 +207,8 @@ test("batchBuildArray missing endArray", async () => {
   );
 
   await expect(async () => {
-    for await (let _ of batchBuildArray(queue, buildString)) {
+    // eslint-disable-next-line no-empty
+    for await (const _ of batchBuildArray(queue, buildString)) {
     }
   }).rejects.toThrow(/Failed to batch build array/);
 });
@@ -218,7 +220,7 @@ test("buildArray empty array", async () => {
   );
 
   const arr = [];
-  for await (let items of batchBuildArray(queue, buildString, 1)) {
+  for await (const items of batchBuildArray(queue, buildString, 1)) {
     arr.push(...items);
   }
   expect(arr).toEqual([]);
@@ -243,7 +245,7 @@ test("batchBuildArray", async () => {
   );
 
   const arr = [];
-  for await (let items of batchBuildArray(queue, buildString, 2)) {
+  for await (const items of batchBuildArray(queue, buildString, 2)) {
     arr.push(...items);
   }
 

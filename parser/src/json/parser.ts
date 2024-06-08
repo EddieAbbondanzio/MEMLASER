@@ -1,17 +1,8 @@
 import { chain } from "stream-chain";
 import * as fs from "fs";
 import { parser } from "stream-json";
-import {
-  EdgeFields,
-  EdgeTypes,
-  HeapSnapshot,
-  Meta,
-  NodeFields,
-  NodeTypes,
-  Snapshot,
-} from "./snapshot";
+import { HeapSnapshot, Meta, Snapshot } from "./snapshot";
 import { Token } from "./tokens";
-import { InvalidJSONError, TokenParsingError } from "./errors";
 import {
   buildKey,
   buildNumber,
@@ -23,8 +14,8 @@ import {
 } from "./utils";
 import { TokenQueue } from "./tokenQueue";
 
-// N.B. The parser doesn't account for nullValue, trueValue, or falseValue tokens
-// and could crash if the heapsnapshot file format is ever changed.
+// N.B. The parser doesn't account for nullValue, trueValue, or falseValue
+// tokens and could crash if the heapsnapshot file format is ever changed.
 
 interface WalkTokenCallbacks {
   onSnapshot: (snapshot: HeapSnapshot["snapshot"]) => Promise<void>;
@@ -71,34 +62,35 @@ async function buildHeapSnapshot(
   let nextToken: Token | null = await queue.peek();
   while (nextToken !== null && nextToken.name !== "endObject") {
     switch (nextToken.name) {
-      case "startKey":
+      case "startKey": {
         const key = await buildKey<keyof HeapSnapshot>(queue);
 
         switch (key) {
-          case "snapshot":
+          case "snapshot": {
             const snapshot = await buildSnapshot(queue);
             await onSnapshot(snapshot);
             break;
+          }
 
           case "nodes":
-            for await (let nodes of batchBuildArray(queue, buildNumber)) {
+            for await (const nodes of batchBuildArray(queue, buildNumber)) {
               await onNodeBatch(nodes);
             }
             break;
 
           case "edges":
-            for await (let edges of batchBuildArray(queue, buildNumber)) {
+            for await (const edges of batchBuildArray(queue, buildNumber)) {
               await onEdgeBatch(edges);
             }
             break;
 
           case "strings":
-            for await (let strings of batchBuildArray(queue, buildString)) {
+            for await (const strings of batchBuildArray(queue, buildString)) {
               await onStringBatch(strings);
             }
             break;
 
-          // TODO: Implement these
+          // TODO: Implement these once we understand them better.
           case "trace_function_infos":
           case "trace_tree":
           case "locations":
@@ -110,7 +102,10 @@ async function buildHeapSnapshot(
         }
 
         break;
+      }
     }
+
+    nextToken = await queue.take();
   }
 
   await assertNextToken(
@@ -124,11 +119,11 @@ export async function buildSnapshot(queue: TokenQueue): Promise<Snapshot> {
   const obj = await buildObject(queue, async (q, key) => {
     switch (key) {
       case "meta":
-        return await buildMeta(queue);
+        return await buildMeta(q);
       case "node_count":
       case "edge_count":
       case "trace_function_count":
-        return await buildNumber(queue);
+        return await buildNumber(q);
       default:
         throw new Error(`Unexpected snapshot key: ${key}`);
     }

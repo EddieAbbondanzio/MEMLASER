@@ -3,11 +3,13 @@
   "version": "1.0.0",
   "main": "index.js",
   "license": "GPL-3.0-only",
+  "type": "module",
   "scripts": {
     "start": "nodemon src/index.ts",
     "test": "jest",
     "build": "tsc",
-    "buildProd": "tsc --project tsconfig.build.json"
+    "buildProd": "tsc --project tsconfig.build.json",
+    "lint": "eslint ."
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.10",
