@@ -34,7 +34,6 @@ export class TokenQueue {
 
   async take(): Promise<Token | null> {
     if (this.isEmpty()) {
-      console.log("Queue is empty! Return null.");
       return null;
     }
 
@@ -50,7 +49,7 @@ export class TokenQueue {
 
   setIsDraining(): void {
     if (this.#isDraining) {
-      throw new Error("Cannot mark draining token queue as draining.");
+      throw new Error("Cannot mark already draining token queue as draining.");
     }
 
     this.#isDraining = true;
