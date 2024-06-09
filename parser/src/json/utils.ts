@@ -44,9 +44,10 @@ export async function* batchBuildArray<I>(
   queue: TokenQueue,
   itemBuilder: (queue: TokenQueue) => Promise<I>,
   batchSize: number = 1000,
-): AsyncGenerator<I[], void, void> {
+): AsyncGenerator<[I[], number], void, void> {
   await assertNextToken(queue, "startArray", "Failed to batch build array.");
 
+  let offset = 0;
   let items = [];
   let nextToken: Token | null = await queue.peek();
   while (nextToken !== null && nextToken.name !== "endArray") {
@@ -54,7 +55,8 @@ export async function* batchBuildArray<I>(
     items.push(item);
 
     if (items.length >= batchSize) {
-      yield items;
+      yield [items, offset];
+      offset += items.length;
       items = [];
     }
 
@@ -64,7 +66,7 @@ export async function* batchBuildArray<I>(
 
   // Clean up any stragglers.
   if (items.length > 0) {
-    yield items;
+    yield [items, offset];
   }
 }
 

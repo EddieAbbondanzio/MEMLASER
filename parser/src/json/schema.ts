@@ -1,10 +1,10 @@
 import { z } from "zod";
 
-export const nodesJSONSchema = z.array(z.number());
-export type NodesJSON = z.infer<typeof nodesJSONSchema>;
+export const nodeJSONSchema = z.array(z.number());
+export type NodeJSON = z.infer<typeof nodeJSONSchema>;
 
-export const edgesJSONSchema = z.array(z.number());
-export type EdgesJSON = z.infer<typeof edgesJSONSchema>;
+export const edgeJSONSchema = z.array(z.number());
+export type EdgeJSON = z.infer<typeof edgeJSONSchema>;
 
 export const stringsJSONSchema = z.array(z.string());
 export type StringsJSON = z.infer<typeof stringsJSONSchema>;

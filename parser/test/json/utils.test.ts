@@ -244,12 +244,13 @@ test("batchBuildArray", async () => {
     { isDraining: true },
   );
 
-  const arr = [];
-  for await (const items of batchBuildArray(queue, buildString, 2)) {
-    arr.push(...items);
+  const batches = [];
+  for await (const [items, offset] of batchBuildArray(queue, buildString, 2)) {
+    batches.push([items, offset]);
   }
 
-  expect(arr).toEqual(["abc", "def", "ghi"]);
+  expect(batches[0]).toEqual([["abc", "def"], 0]);
+  expect(batches[1]).toEqual([["ghi"], 2]);
 });
 
 test("buildKey missing startKey", async () => {

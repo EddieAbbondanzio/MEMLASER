@@ -1,6 +1,6 @@
 import { initializeSQLiteDB } from "./sqlite";
 import { parseSnapshotFile } from "./json/parser";
-import { SnapshotJSON } from "./json/schema";
+import { EdgeJSON, NodeJSON, SnapshotJSON } from "./json/schema";
 
 // Reference(s):
 // https://learn.microsoft.com/en-us/microsoft-edge/devtools-guide-chromium/memory-problems/heap-snapshot-schema
@@ -26,7 +26,6 @@ export async function parseSnapshotToSQLite(
   const db = await initializeSQLiteDB(outputPath);
 
   const onSnapshot = async (snapshot: SnapshotJSON): Promise<void> => {
-    console.log("Got snapshot: ", snapshot);
     await db
       .insertInto("snapshots")
       .values({
@@ -38,28 +37,57 @@ export async function parseSnapshotToSQLite(
       .executeTakeFirst();
   };
 
+  const onNodeBatch = async (
+    nodes: NodeJSON[],
+    offset: number,
+  ): Promise<void> => {
+    await db
+      .insertInto("nodeData")
+      .values(
+        nodes.map((n, i) => ({
+          index: offset + i,
+          fieldValues: JSON.stringify(n),
+        })),
+      )
+      .execute();
+  };
+
+  const onEdgeBatch = async (
+    edges: EdgeJSON[],
+    offset: number,
+  ): Promise<void> => {
+    await db
+      .insertInto("edgeData")
+      .values(
+        edges.map((e, i) => ({
+          index: offset + i,
+          fieldValues: JSON.stringify(e),
+        })),
+      )
+      .execute();
+  };
+
+  const onStringBatch = async (
+    strings: string[],
+    offset: number,
+  ): Promise<void> => {
+    await db
+      .insertInto("strings")
+      .values(
+        strings.map((s, i) => ({
+          index: offset + i,
+          value: s,
+        })),
+      )
+      .execute();
+  };
+
   await parseSnapshotFile(snapshotPath, {
     onSnapshot,
-    onEdgeBatch: async edges => {
-      console.log("Got edges: ", edges);
-    },
-    onNodeBatch: async nodes => {
-      console.log("Got nodes: ", nodes);
-    },
-    onStringBatch: async strings => {
-      console.log("Got strings: ", strings);
-    },
+    onNodeBatch,
+    onEdgeBatch,
+    onStringBatch,
   });
-
-  // TODO: Replace this with stream async!
-
-  // const rawSnapshot = await fs.promises.readFile(snapshotPath);
-  // const jsonSnapshot: HeapSnapshot = JSON.parse(rawSnapshot.toString());
-
-  // const parsedNodes = parseNodes(jsonSnapshot);
-  // const parsedEdges = parseEdges(jsonSnapshot);
-
-  // const nodes = buildObjectGraph(parsedNodes, parsedEdges);
 }
 
 // export function parseNodes(heapSnapshot: HeapSnapshot): Node[] {

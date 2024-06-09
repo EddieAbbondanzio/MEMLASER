@@ -11,6 +11,30 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .execute();
 
   await db.schema
+    .createTable("node_data")
+    .addColumn("id", "integer", col => col.primaryKey().autoIncrement())
+    .addColumn("index", "integer", col => col.notNull())
+    .addColumn("field_values", "text", col => col.notNull())
+    .addColumn("processed", "boolean", col => col.notNull().defaultTo(false))
+    .execute();
+
+  await db.schema
+    .createTable("edge_data")
+    .addColumn("id", "integer", col => col.primaryKey().autoIncrement())
+    .addColumn("index", "integer", col => col.notNull())
+    .addColumn("field_values", "text", col => col.notNull())
+    .addColumn("processed", "boolean", col => col.notNull().defaultTo(false))
+    .execute();
+
+  await db.schema
+    .createTable("strings")
+    .addColumn("id", "integer", col => col.primaryKey().autoIncrement())
+    .addColumn("index", "integer", col => col.notNull())
+    .addColumn("value", "text", col => col.notNull())
+    .execute();
+
+  // Not used (yet)
+  await db.schema
     .createTable("nodes")
     .addColumn("id", "integer", col => col.primaryKey().autoIncrement())
     .addColumn("type", "text", col => col.notNull())
@@ -18,11 +42,10 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn("self_size", "integer", col => col.notNull())
     .addColumn("edge_count", "integer", col => col.notNull())
     .addColumn("trace_node_id", "integer", col => col.notNull())
-    .addColumn("node_index", "integer", col => col.notNull())
     .addColumn("detached", "boolean", col => col.notNull())
-    .addColumn("processed", "boolean", col => col.notNull().defaultTo(false))
     .execute();
 
+  // Not used (yet)
   await db.schema
     .createTable("edges")
     .addColumn("id", "integer", col => col.primaryKey().autoIncrement())
@@ -32,6 +55,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn("processed", "boolean", col => col.notNull().defaultTo(false))
     .execute();
 
+  // Not used (yet)
   await db.schema
     .createTable("node_edges")
     .addColumn("id", "integer", col => col.primaryKey())

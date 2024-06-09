@@ -7,18 +7,21 @@ import {
   ParseJSONResultsPlugin,
   SqliteDialect,
   Generated,
+  ColumnType,
 } from "kysely";
 import SQLiteDatabase from "better-sqlite3";
 import * as path from "path";
 import * as fs from "fs";
 import { MetaJSON } from "./json/schema";
 
+export type WithDefault<S> = ColumnType<S, S | undefined, S>;
+
 interface Database {
   // N.B. Keys must match table names.
   snapshots: SnapshotsTable;
-  nodes: NodesTable;
-  edges: EdgesTable;
-  nodeEdges: NodeEdgesTable;
+  nodeData: NodeDataTable;
+  edgeData: EdgeDataTable;
+  strings: StringsTable;
 }
 
 interface SnapshotsTable {
@@ -29,9 +32,29 @@ interface SnapshotsTable {
   traceFunctionCount: number;
 }
 
-interface NodesTable {}
-interface EdgesTable {}
-interface NodeEdgesTable {}
+// Raw node data from the snapshot file. They get processed into actual
+// nodes later on when the object graph is rebuilt.
+interface NodeDataTable {
+  id: Generated<number>;
+  index: number;
+  fieldValues: JSONColumnType<string[]>;
+  processed: WithDefault<boolean>;
+}
+
+// Raw edge data from the snapshot file. They get processed into actual
+// edge later on when the object graph is rebuilt.
+interface EdgeDataTable {
+  id: Generated<number>;
+  index: number;
+  fieldValues: JSONColumnType<string[]>;
+  processed: WithDefault<boolean>;
+}
+
+interface StringsTable {
+  id: Generated<number>;
+  index: number;
+  value: string;
+}
 
 export async function initializeSQLiteDB(
   outputPath: string,
@@ -43,7 +66,6 @@ export async function initializeSQLiteDB(
   const db = new Kysely<Database>({
     dialect,
     plugins: [new CamelCasePlugin(), new ParseJSONResultsPlugin()],
-    log: console.log,
   });
   await migrate(db);
   return db;
