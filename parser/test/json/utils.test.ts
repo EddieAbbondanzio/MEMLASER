@@ -17,7 +17,7 @@ afterEach(() => {
 });
 
 test("buildObject missing startObject", async () => {
-  const queue = createTokenQueue(
+  const queue = await createTokenQueue(
     [
       { name: "startKey" },
       { name: "stringChunk", value: "foo" },
@@ -36,7 +36,7 @@ test("buildObject missing startObject", async () => {
 });
 
 test("buildObject missing endObject", async () => {
-  const queue = createTokenQueue(
+  const queue = await createTokenQueue(
     [
       { name: "startObject" },
       { name: "startKey" },
@@ -55,7 +55,7 @@ test("buildObject missing endObject", async () => {
 });
 
 test("buildObject missing key", async () => {
-  const queue = createTokenQueue(
+  const queue = await createTokenQueue(
     [
       { name: "startObject" },
       { name: "startNumber" },
@@ -72,7 +72,7 @@ test("buildObject missing key", async () => {
 });
 
 test("buildObject missing value", async () => {
-  const queue = createTokenQueue(
+  const queue = await createTokenQueue(
     [
       { name: "startObject" },
       { name: "startKey" },
@@ -89,7 +89,7 @@ test("buildObject missing value", async () => {
 });
 
 test("buildObject", async () => {
-  const queue = createTokenQueue(
+  const queue = await createTokenQueue(
     [
       { name: "startObject" },
       { name: "startKey" },
@@ -117,7 +117,7 @@ test("buildObject", async () => {
 });
 
 test("buildArray missing startArray", async () => {
-  const queue = createTokenQueue(
+  const queue = await createTokenQueue(
     [
       { name: "startString" },
       { name: "stringChunk", value: "abc" },
@@ -133,7 +133,7 @@ test("buildArray missing startArray", async () => {
 });
 
 test("buildArray missing endArray", async () => {
-  const queue = createTokenQueue(
+  const queue = await createTokenQueue(
     [
       { name: "startArray" },
       { name: "startString" },
@@ -149,7 +149,7 @@ test("buildArray missing endArray", async () => {
 });
 
 test("buildArray empty array", async () => {
-  const queue = createTokenQueue(
+  const queue = await createTokenQueue(
     [{ name: "startArray" }, { name: "endArray" }],
     { isDraining: true },
   );
@@ -159,7 +159,7 @@ test("buildArray empty array", async () => {
 });
 
 test("buildArray", async () => {
-  const queue = createTokenQueue(
+  const queue = await createTokenQueue(
     [
       { name: "startArray" },
       { name: "startString" },
@@ -178,7 +178,7 @@ test("buildArray", async () => {
 });
 
 test("batchBuildArray missing startArray", async () => {
-  const queue = createTokenQueue(
+  const queue = await createTokenQueue(
     [
       { name: "startString" },
       { name: "stringChunk", value: "abc" },
@@ -196,7 +196,7 @@ test("batchBuildArray missing startArray", async () => {
 });
 
 test("batchBuildArray missing endArray", async () => {
-  const queue = createTokenQueue(
+  const queue = await createTokenQueue(
     [
       { name: "startArray" },
       { name: "startString" },
@@ -214,7 +214,7 @@ test("batchBuildArray missing endArray", async () => {
 });
 
 test("buildArray empty array", async () => {
-  const queue = createTokenQueue(
+  const queue = await createTokenQueue(
     [{ name: "startArray" }, { name: "endArray" }],
     { isDraining: true },
   );
@@ -227,7 +227,7 @@ test("buildArray empty array", async () => {
 });
 
 test("batchBuildArray", async () => {
-  const queue = createTokenQueue(
+  const queue = await createTokenQueue(
     [
       { name: "startArray" },
       { name: "startString" },
@@ -254,7 +254,7 @@ test("batchBuildArray", async () => {
 });
 
 test("buildKey missing startKey", async () => {
-  const queue = createTokenQueue(
+  const queue = await createTokenQueue(
     [{ name: "stringChunk", value: "abc" }, { name: "endKey" }],
     { isDraining: true },
   );
@@ -265,7 +265,7 @@ test("buildKey missing startKey", async () => {
 });
 
 test("buildKey missing endKey", async () => {
-  const queue = createTokenQueue(
+  const queue = await createTokenQueue(
     [{ name: "startKey" }, { name: "stringChunk", value: "abc" }],
     { isDraining: true },
   );
@@ -276,7 +276,7 @@ test("buildKey missing endKey", async () => {
 });
 
 test("buildKey invalid chunks", async () => {
-  const queue = createTokenQueue(
+  const queue = await createTokenQueue(
     [
       { name: "startKey" },
       { name: "numberChunk", value: "123" },
@@ -291,9 +291,12 @@ test("buildKey invalid chunks", async () => {
 });
 
 test("buildKey no chunks", async () => {
-  const queue = createTokenQueue([{ name: "startKey" }, { name: "endKey" }], {
-    isDraining: true,
-  });
+  const queue = await createTokenQueue(
+    [{ name: "startKey" }, { name: "endKey" }],
+    {
+      isDraining: true,
+    },
+  );
 
   await expect(async () => {
     await buildKey(queue);
@@ -301,7 +304,7 @@ test("buildKey no chunks", async () => {
 });
 
 test("buildKey detected keyValue", async () => {
-  const queue = createTokenQueue(
+  const queue = await createTokenQueue(
     [
       { name: "startKey" },
       { name: "stringChunk", value: "abc" },
@@ -321,7 +324,7 @@ test("buildKey detected keyValue", async () => {
 });
 
 test("buildKey", async () => {
-  const queue = createTokenQueue(
+  const queue = await createTokenQueue(
     [
       { name: "startKey" },
       { name: "stringChunk", value: "abc" },
@@ -338,7 +341,7 @@ test("buildKey", async () => {
 });
 
 test("buildString missing startString", async () => {
-  const queue = createTokenQueue(
+  const queue = await createTokenQueue(
     [{ name: "stringChunk", value: "abc" }, { name: "endString" }],
     { isDraining: true },
   );
@@ -349,7 +352,7 @@ test("buildString missing startString", async () => {
 });
 
 test("buildString missing endString", async () => {
-  const queue = createTokenQueue(
+  const queue = await createTokenQueue(
     [{ name: "startString" }, { name: "stringChunk", value: "abc" }],
     { isDraining: true },
   );
@@ -360,7 +363,7 @@ test("buildString missing endString", async () => {
 });
 
 test("buildString invalid chunks", async () => {
-  const queue = createTokenQueue(
+  const queue = await createTokenQueue(
     [
       { name: "startString" },
       { name: "keyValue", value: "abc" },
@@ -375,7 +378,7 @@ test("buildString invalid chunks", async () => {
 });
 
 test("buildString no chunks (empty string)", async () => {
-  const queue = createTokenQueue(
+  const queue = await createTokenQueue(
     [{ name: "startString" }, { name: "endString" }],
     { isDraining: true },
   );
@@ -385,7 +388,7 @@ test("buildString no chunks (empty string)", async () => {
 });
 
 test("buildString detected stringValue", async () => {
-  const queue = createTokenQueue(
+  const queue = await createTokenQueue(
     [
       { name: "startString" },
       { name: "stringChunk", value: "abc" },
@@ -403,7 +406,7 @@ test("buildString detected stringValue", async () => {
 });
 
 test("buildString", async () => {
-  const queue = createTokenQueue(
+  const queue = await createTokenQueue(
     [
       { name: "startString" },
       { name: "stringChunk", value: "abc" },
@@ -419,7 +422,7 @@ test("buildString", async () => {
 });
 
 test("buildNumber missing startNumber", async () => {
-  const queue = createTokenQueue(
+  const queue = await createTokenQueue(
     [{ name: "numberChunk", value: "123" }, { name: "endNumber" }],
     { isDraining: true },
   );
@@ -430,7 +433,7 @@ test("buildNumber missing startNumber", async () => {
 });
 
 test("buildNumber missing endNumber", async () => {
-  const queue = createTokenQueue(
+  const queue = await createTokenQueue(
     [{ name: "startNumber" }, { name: "numberChunk", value: "123" }],
     { isDraining: true },
   );
@@ -441,7 +444,7 @@ test("buildNumber missing endNumber", async () => {
 });
 
 test("buildNumber invalid chunks", async () => {
-  const queue = createTokenQueue(
+  const queue = await createTokenQueue(
     [
       { name: "startNumber" },
       { name: "keyValue", value: "key" },
@@ -456,7 +459,7 @@ test("buildNumber invalid chunks", async () => {
 });
 
 test("buildNumber no chunks", async () => {
-  const queue = createTokenQueue(
+  const queue = await createTokenQueue(
     [{ name: "startNumber" }, { name: "endNumber" }],
     { isDraining: true },
   );
@@ -467,7 +470,7 @@ test("buildNumber no chunks", async () => {
 });
 
 test("buildNumber detected numberValue token", async () => {
-  const queue = createTokenQueue(
+  const queue = await createTokenQueue(
     [
       { name: "startNumber" },
       { name: "numberChunk", value: "234" },
@@ -485,7 +488,7 @@ test("buildNumber detected numberValue token", async () => {
 });
 
 test("buildNumber integer", async () => {
-  const queue = createTokenQueue(
+  const queue = await createTokenQueue(
     [
       { name: "startNumber" },
       { name: "numberChunk", value: "100" },
@@ -501,7 +504,7 @@ test("buildNumber integer", async () => {
 });
 
 test("buildNumber float", async () => {
-  const queue = createTokenQueue(
+  const queue = await createTokenQueue(
     [
       { name: "startNumber" },
       { name: "numberChunk", value: "3.14" },

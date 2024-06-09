@@ -1,7 +1,7 @@
 import { createTokenQueue } from "../_factories/tokenQueue";
 
 test("tokenQueue peek leaves token in queue", async () => {
-  const tokenQueue = createTokenQueue(
+  const tokenQueue = await createTokenQueue(
     [{ name: "startArray" }, { name: "endArray" }],
     {
       isDraining: false,
@@ -13,7 +13,7 @@ test("tokenQueue peek leaves token in queue", async () => {
 });
 
 test("tokenQueue peek waits if not draining", async () => {
-  const tokenQueue = createTokenQueue([], {
+  const tokenQueue = await createTokenQueue([], {
     isDraining: false,
   });
 
@@ -23,7 +23,7 @@ test("tokenQueue peek waits if not draining", async () => {
 });
 
 test("tokenQueue peek returns null if draining and cache is empty", async () => {
-  const tokenQueue = createTokenQueue([], {
+  const tokenQueue = await createTokenQueue([], {
     isDraining: true,
   });
 
@@ -31,7 +31,7 @@ test("tokenQueue peek returns null if draining and cache is empty", async () => 
 });
 
 test("tokenQueue take removes token from queue", async () => {
-  const tokenQueue = createTokenQueue(
+  const tokenQueue = await createTokenQueue(
     [{ name: "startArray" }, { name: "endArray" }],
     {
       isDraining: false,
@@ -43,7 +43,7 @@ test("tokenQueue take removes token from queue", async () => {
 });
 
 test("tokenQueue take waits if not draining", async () => {
-  const tokenQueue = createTokenQueue([], {
+  const tokenQueue = await createTokenQueue([], {
     isDraining: false,
   });
 
@@ -53,7 +53,7 @@ test("tokenQueue take waits if not draining", async () => {
 });
 
 test("tokenQueue take returns null if draining and cache is empty", async () => {
-  const tokenQueue = createTokenQueue([], {
+  const tokenQueue = await createTokenQueue([], {
     isDraining: true,
   });
 

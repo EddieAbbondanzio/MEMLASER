@@ -216,7 +216,7 @@ export async function* buildNodeFieldValues(
   const nodeFieldCount = snapshot.meta.node_fields.length;
   if (snapshot.node_count % nodeFieldCount !== 0) {
     throw new Error(
-      "Unable to process nodes. Number of nodes is not divisible by field count.",
+      `Unable to process nodes. Number of nodes (${snapshot.node_count}) is not divisible by field count (${nodeFieldCount}).`,
     );
   }
 
