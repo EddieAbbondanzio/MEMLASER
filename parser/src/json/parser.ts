@@ -12,6 +12,7 @@ import {
   nodeJSONSchema,
   snapshotJSONSchema,
   stringsJSONSchema,
+  traceFunctionInfosJSONSchema,
 } from "./schema";
 import { Token } from "./tokens";
 import {
@@ -33,14 +34,15 @@ import { chunk } from "lodash";
 const NODE_BATCH_SIZE = 1000;
 const EDGE_BATCH_SIZE = 1000;
 const STRING_BATCH_SIZE = 1000;
+const TRACE_FUNCTION_INFO_BATCH_SIZE = 1000;
 
 interface WalkTokenCallbacks {
   onSnapshot: (snapshot: SnapshotJSON) => Promise<void>;
   onNodeBatch: (nodes: NodeJSON[], offset: number) => Promise<void>;
   onEdgeBatch: (edges: EdgeJSON[], offset: number) => Promise<void>;
   onStringBatch: (strings: string[], offset: number) => Promise<void>;
+  onTraceFunctionInfos: (strings: number[], offset: number) => Promise<void>;
   // TODO: Implement callbacks for:
-  //   - trace_function_infos
   //   - trace_tree
   //   - samples
   //   - locations
@@ -66,7 +68,13 @@ async function buildHeapSnapshot(
   queue: TokenQueue,
   callbacks: WalkTokenCallbacks,
 ): Promise<void> {
-  const { onSnapshot, onNodeBatch, onEdgeBatch, onStringBatch } = callbacks;
+  const {
+    onSnapshot,
+    onNodeBatch,
+    onEdgeBatch,
+    onStringBatch,
+    onTraceFunctionInfos,
+  } = callbacks;
   await assertNextToken(
     queue,
     "startObject",
@@ -80,11 +88,13 @@ async function buildHeapSnapshot(
     const key = await heapSnapshotJSONKeySchema.parseAsync(
       await buildKey(queue),
     );
+    console.log("Start ", key);
 
     switch (key) {
       case "snapshot": {
         snapshot = await buildSnapshot(queue);
         await onSnapshot(snapshot);
+        console.log("Snapshot is done"!);
         break;
       }
 
@@ -100,6 +110,7 @@ async function buildHeapSnapshot(
         )) {
           await onNodeBatch(nodeFieldValues, offset);
         }
+        console.log("NOdes are done!");
         break;
       }
 
@@ -115,6 +126,7 @@ async function buildHeapSnapshot(
         )) {
           await onEdgeBatch(edgeFieldValues, offset);
         }
+        console.log("Edges are done!");
         break;
       }
 
@@ -127,11 +139,25 @@ async function buildHeapSnapshot(
           const validatedStrings = await stringsJSONSchema.parseAsync(strings);
           await onStringBatch(validatedStrings, offset);
         }
+        console.log("Strings are done!");
+        break;
+      }
+
+      case "trace_function_infos": {
+        for await (const [traceFunctionInfos, offset] of batchBuildArray(
+          queue,
+          buildNumber,
+          TRACE_FUNCTION_INFO_BATCH_SIZE,
+        )) {
+          const validatedFunctionInfos =
+            await traceFunctionInfosJSONSchema.parseAsync(traceFunctionInfos);
+          await onTraceFunctionInfos(validatedFunctionInfos, offset);
+        }
+        console.log("Strings are done!");
         break;
       }
 
       // TODO: Implement these once we understand them better.
-      case "trace_function_infos":
       case "trace_tree":
       case "locations":
       case "samples":
@@ -146,6 +172,7 @@ async function buildHeapSnapshot(
     "endObject",
     "Failed to build heap snapshot. Invalid root object.",
   );
+  console.log("Done!");
 }
 
 export async function buildSnapshot(queue: TokenQueue): Promise<SnapshotJSON> {

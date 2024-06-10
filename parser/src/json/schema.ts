@@ -9,6 +9,11 @@ export type EdgeJSON = z.infer<typeof edgeJSONSchema>;
 export const stringsJSONSchema = z.array(z.string());
 export type StringsJSON = z.infer<typeof stringsJSONSchema>;
 
+export const traceFunctionInfosJSONSchema = z.array(z.number());
+export type TraceFunctionInfosJSON = z.infer<
+  typeof traceFunctionInfosJSONSchema
+>;
+
 export const heapSnapshotJSONKeySchema = z.enum([
   "snapshot",
   "nodes",

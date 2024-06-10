@@ -4,6 +4,7 @@ import { chain } from "stream-chain";
 import * as fs from "fs";
 import { parser } from "stream-json";
 
+// Pass a path to read a JSON file, pass a token array to simulate one.
 export async function createTokenQueue(path: string): Promise<TokenQueue>;
 export async function createTokenQueue(
   tokens: Token[],
