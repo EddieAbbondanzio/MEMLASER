@@ -166,7 +166,10 @@ export async function assertNextToken(
 ): Promise<void> {
   const nextToken = await queue.take();
   if (nextToken === null || nextToken.name !== name) {
-    throw new TokenParsingError(`${message} No ${name} token.`, [nextToken]);
+    throw new TokenParsingError(
+      `${message} Next token was not: ${name}. Next token:`,
+      [nextToken],
+    );
   }
 }
 

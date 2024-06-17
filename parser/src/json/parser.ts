@@ -88,13 +88,11 @@ async function buildHeapSnapshot(
     const key = await heapSnapshotJSONKeySchema.parseAsync(
       await buildKey(queue),
     );
-    console.log("Start ", key);
 
     switch (key) {
       case "snapshot": {
         snapshot = await buildSnapshot(queue);
         await onSnapshot(snapshot);
-        console.log("Snapshot is done"!);
         break;
       }
 
@@ -110,7 +108,6 @@ async function buildHeapSnapshot(
         )) {
           await onNodeBatch(nodeFieldValues, offset);
         }
-        console.log("NOdes are done!");
         break;
       }
 
@@ -126,7 +123,6 @@ async function buildHeapSnapshot(
         )) {
           await onEdgeBatch(edgeFieldValues, offset);
         }
-        console.log("Edges are done!");
         break;
       }
 
@@ -139,7 +135,6 @@ async function buildHeapSnapshot(
           const validatedStrings = await stringsJSONSchema.parseAsync(strings);
           await onStringBatch(validatedStrings, offset);
         }
-        console.log("Strings are done!");
         break;
       }
 
@@ -153,14 +148,15 @@ async function buildHeapSnapshot(
             await traceFunctionInfosJSONSchema.parseAsync(traceFunctionInfos);
           await onTraceFunctionInfos(validatedFunctionInfos, offset);
         }
-        console.log("Strings are done!");
         break;
       }
 
-      // TODO: Implement these once we understand them better.
       case "trace_tree":
       case "locations":
       case "samples":
+        for await (const _ of batchBuildArray(queue, buildNumber)) {
+          // Feels bad doing nothing, but we don't know how to process these yet.
+        }
         break;
     }
 
@@ -172,7 +168,6 @@ async function buildHeapSnapshot(
     "endObject",
     "Failed to build heap snapshot. Invalid root object.",
   );
-  console.log("Done!");
 }
 
 export async function buildSnapshot(queue: TokenQueue): Promise<SnapshotJSON> {
