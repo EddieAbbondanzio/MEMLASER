@@ -7,10 +7,10 @@ import { EdgeJSON, NodeJSON, SnapshotJSON } from "./json/schema";
 
 async function main(): Promise<void> {
   console.log("main()");
-  await parseSnapshotToSQLite({
-    snapshotPath: "samples/reddit.heapsnapshot",
-    outputPath: "samples/reddit.sqlite",
-  });
+  // await parseSnapshotToSQLite({
+  //   snapshotPath: "samples/reddit.heapsnapshot",
+  //   outputPath: "samples/reddit.sqlite",
+  // });
   console.log("-- Done!");
 }
 void main();

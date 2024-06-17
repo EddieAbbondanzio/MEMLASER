@@ -14,6 +14,15 @@ export type TraceFunctionInfosJSON = z.infer<
   typeof traceFunctionInfosJSONSchema
 >;
 
+export const traceTreesJSONSchema = z.array(z.number());
+export type TraceTreesJSON = z.infer<typeof traceTreesJSONSchema>;
+
+export const locationsJSONSchema = z.array(z.number());
+export type LocationsJSON = z.infer<typeof locationsJSONSchema>;
+
+export const samplesJSONSchema = z.array(z.number());
+export type SamplesJSON = z.infer<typeof samplesJSONSchema>;
+
 export const heapSnapshotJSONKeySchema = z.enum([
   "snapshot",
   "nodes",

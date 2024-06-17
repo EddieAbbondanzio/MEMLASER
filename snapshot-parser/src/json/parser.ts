@@ -8,11 +8,14 @@ import {
   SnapshotJSON,
   edgeJSONSchema,
   heapSnapshotJSONKeySchema,
+  locationsJSONSchema,
   metaJSONSchema,
   nodeJSONSchema,
+  samplesJSONSchema,
   snapshotJSONSchema,
   stringsJSONSchema,
   traceFunctionInfosJSONSchema,
+  traceTreesJSONSchema,
 } from "./schema";
 import { Token } from "./tokens";
 import {
@@ -35,17 +38,22 @@ const NODE_BATCH_SIZE = 1000;
 const EDGE_BATCH_SIZE = 1000;
 const STRING_BATCH_SIZE = 1000;
 const TRACE_FUNCTION_INFO_BATCH_SIZE = 1000;
+const TRACE_TREE_BATCH_SIZE = 1000;
+const SAMPLES_BATCH_SIZE = 1000;
+const LOCATIONS_BATCH_SIZE = 1000;
 
 interface WalkTokenCallbacks {
-  onSnapshot: (snapshot: SnapshotJSON) => Promise<void>;
-  onNodeBatch: (nodes: NodeJSON[], offset: number) => Promise<void>;
-  onEdgeBatch: (edges: EdgeJSON[], offset: number) => Promise<void>;
-  onStringBatch: (strings: string[], offset: number) => Promise<void>;
-  onTraceFunctionInfos: (strings: number[], offset: number) => Promise<void>;
-  // TODO: Implement callbacks for:
-  //   - trace_tree
-  //   - samples
-  //   - locations
+  onSnapshot?: (snapshot: SnapshotJSON) => Promise<void>;
+  onNodeBatch?: (nodes: NodeJSON[], offset: number) => Promise<void>;
+  onEdgeBatch?: (edges: EdgeJSON[], offset: number) => Promise<void>;
+  onStringBatch?: (strings: string[], offset: number) => Promise<void>;
+  onTraceFunctionInfoBatch?: (
+    traceFunctionInfos: number[],
+    offset: number,
+  ) => Promise<void>;
+  onTraceTreeBatch?: (traceTrees: number[], offset: number) => Promise<void>;
+  onSampleBatch?: (samples: number[], offset: number) => Promise<void>;
+  onLocationBatch?: (samples: number[], offset: number) => Promise<void>;
 }
 
 export async function parseSnapshotFile(
@@ -73,7 +81,10 @@ async function buildHeapSnapshot(
     onNodeBatch,
     onEdgeBatch,
     onStringBatch,
-    onTraceFunctionInfos,
+    onTraceFunctionInfoBatch: onTraceFunctionInfos,
+    onTraceTreeBatch: onTraceTrees,
+    onLocationBatch: onLocations,
+    onSampleBatch: onSamples,
   } = callbacks;
   await assertNextToken(
     queue,
@@ -92,7 +103,9 @@ async function buildHeapSnapshot(
     switch (key) {
       case "snapshot": {
         snapshot = await buildSnapshot(queue);
-        await onSnapshot(snapshot);
+        if (onSnapshot) {
+          await onSnapshot(snapshot);
+        }
         break;
       }
 
@@ -106,7 +119,9 @@ async function buildHeapSnapshot(
           snapshot,
           NODE_BATCH_SIZE,
         )) {
-          await onNodeBatch(nodeFieldValues, offset);
+          if (onNodeBatch) {
+            await onNodeBatch(nodeFieldValues, offset);
+          }
         }
         break;
       }
@@ -121,7 +136,9 @@ async function buildHeapSnapshot(
           snapshot,
           EDGE_BATCH_SIZE,
         )) {
-          await onEdgeBatch(edgeFieldValues, offset);
+          if (onEdgeBatch) {
+            await onEdgeBatch(edgeFieldValues, offset);
+          }
         }
         break;
       }
@@ -132,8 +149,12 @@ async function buildHeapSnapshot(
           buildString,
           STRING_BATCH_SIZE,
         )) {
-          const validatedStrings = await stringsJSONSchema.parseAsync(strings);
-          await onStringBatch(validatedStrings, offset);
+          if (onStringBatch) {
+            const validatedStrings = await stringsJSONSchema.parseAsync(
+              strings,
+            );
+            await onStringBatch(validatedStrings, offset);
+          }
         }
         break;
       }
@@ -144,21 +165,58 @@ async function buildHeapSnapshot(
           buildNumber,
           TRACE_FUNCTION_INFO_BATCH_SIZE,
         )) {
-          const validatedFunctionInfos =
-            await traceFunctionInfosJSONSchema.parseAsync(traceFunctionInfos);
-          await onTraceFunctionInfos(validatedFunctionInfos, offset);
+          if (onTraceFunctionInfos) {
+            const validatedFunctionInfos =
+              await traceFunctionInfosJSONSchema.parseAsync(traceFunctionInfos);
+            await onTraceFunctionInfos(validatedFunctionInfos, offset);
+          }
         }
         break;
       }
 
-      case "trace_tree":
-      case "locations":
-      case "samples":
-        for await (const _ of batchBuildArray(queue, buildNumber)) {
-          // TODO: Figure out how to parse these.
-          // Feels bad doing nothing...
+      case "trace_tree": {
+        for await (const [traceTrees, offset] of batchBuildArray(
+          queue,
+          buildNumber,
+          TRACE_TREE_BATCH_SIZE,
+        )) {
+          if (onTraceTrees) {
+            const validatedTraceTrees = await traceTreesJSONSchema.parseAsync(
+              traceTrees,
+            );
+            await onTraceTrees(validatedTraceTrees, offset);
+          }
         }
         break;
+      }
+
+      case "locations": {
+        for await (const [locations, offset] of batchBuildArray(
+          queue,
+          buildNumber,
+          LOCATIONS_BATCH_SIZE,
+        )) {
+          if (onLocations) {
+            const validatedLocations = await locationsJSONSchema.parseAsync(
+              locations,
+            );
+            await onLocations(validatedLocations, offset);
+          }
+        }
+        break;
+      }
+
+      case "samples": {
+        for await (const [samples, offset] of batchBuildArray(
+          queue,
+          buildNumber,
+          SAMPLES_BATCH_SIZE,
+        )) {
+          const validatedSamples = await samplesJSONSchema.parseAsync(samples);
+          await onSamples(validatedSamples, offset);
+        }
+        break;
+      }
     }
 
     nextToken = await queue.peek();
