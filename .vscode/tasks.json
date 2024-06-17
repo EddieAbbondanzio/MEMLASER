@@ -2,7 +2,7 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "parser:build",
+      "label": "snapshot-parser:build",
       "command": "yarn -s run build",
       "type": "shell",
       "args": [],
@@ -11,11 +11,11 @@
         "reveal": "always"
       },
       "options": {
-        "cwd": "parser"
+        "cwd": "snapshot-parser"
       }
     },
     {
-      "label": "parser:buildProd",
+      "label": "snapshot-parser:buildProd",
       "command": "yarn -s run buildProd",
       "type": "shell",
       "args": [],
@@ -24,11 +24,11 @@
         "reveal": "always"
       },
       "options": {
-        "cwd": "parser"
+        "cwd": "snapshot-parser"
       }
     },
     {
-      "label": "parser:dev",
+      "label": "snapshot-parser:dev",
       "command": "yarn -s run start",
       "type": "shell",
       "args": [],
@@ -37,11 +37,11 @@
         "reveal": "always"
       },
       "options": {
-        "cwd": "parser"
+        "cwd": "snapshot-parser"
       }
     },
     {
-      "label": "parser:test",
+      "label": "snapshot-parser:test",
       "command": "yarn -s run test",
       "type": "shell",
       "args": [],
@@ -50,7 +50,7 @@
         "reveal": "always"
       },
       "options": {
-        "cwd": "parser"
+        "cwd": "snapshot-parser"
       }
     }
   ]

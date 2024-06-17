@@ -11,6 +11,7 @@ async function main(): Promise<void> {
     snapshotPath: "samples/reddit.heapsnapshot",
     outputPath: "samples/reddit.sqlite",
   });
+  console.log("-- Done!");
 }
 void main();
 
