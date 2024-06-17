@@ -155,7 +155,8 @@ async function buildHeapSnapshot(
       case "locations":
       case "samples":
         for await (const _ of batchBuildArray(queue, buildNumber)) {
-          // Feels bad doing nothing, but we don't know how to process these yet.
+          // TODO: Figure out how to parse these.
+          // Feels bad doing nothing...
         }
         break;
     }
