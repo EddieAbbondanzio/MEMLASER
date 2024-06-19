@@ -295,12 +295,6 @@ export async function* buildNodeFieldValues(
   // be known so we can divide the array into chunks that represent individual
   // nodes.
   const nodeFieldCount = snapshot.meta.node_fields.length;
-  if (snapshot.node_count % nodeFieldCount !== 0) {
-    throw new Error(
-      `Unable to process nodes. Number of nodes (${snapshot.node_count}) is not divisible by field count (${nodeFieldCount}).`,
-    );
-  }
-
   const batchSize = nodeFieldCount * nodeBatchSize;
   for await (const [nodes, offset] of batchBuildArray(
     queue,
@@ -324,12 +318,6 @@ export async function* buildEdgeFieldValues(
   // pointing from node foo to bar). Like nodes they are stored in 1d array and
   // the array must be broken into chunks that represent a single edge.
   const edgeFieldCount = snapshot.meta.edge_fields.length;
-  if (snapshot.edge_count % edgeFieldCount !== 0) {
-    throw new Error(
-      "Unable to process edge. Number of edges is not divisible by field count.",
-    );
-  }
-
   const batchSize = edgeFieldCount * edgeBatchSize;
   for await (const [edges, offset] of batchBuildArray(
     queue,
