@@ -52,6 +52,32 @@
       "options": {
         "cwd": "snapshot-parser"
       }
+    },
+    {
+      "label": "snapshot-generator:dev",
+      "command": "yarn -s run start",
+      "type": "shell",
+      "args": [],
+      "problemMatcher": ["$tsc"],
+      "presentation": {
+        "reveal": "always"
+      },
+      "options": {
+        "cwd": "snapshot-generator"
+      }
+    },
+    {
+      "label": "snapshot-generator:test",
+      "command": "yarn -s run test",
+      "type": "shell",
+      "args": [],
+      "problemMatcher": ["$tsc"],
+      "presentation": {
+        "reveal": "always"
+      },
+      "options": {
+        "cwd": "snapshot-generator"
+      }
     }
   ]
 }

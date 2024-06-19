@@ -1,5 +1,5 @@
 import { parseSnapshotFile } from "./json/parser";
-import { EdgeJSON, NodeJSON, SnapshotJSON } from "./json/schema";
+import { EdgeJSON, NodeJSON, SnapshotJSON  } from "./json/schema";
 import { processNodes } from "./processing/nodes";
 import { Kysely } from "kysely";
 import { Database, initializeSQLiteDB } from "./sqlite/db";

@@ -5,5 +5,12 @@
     "app",
     "snapshot-paser",
     "snapshot-generator"
-  ]
+  ],
+  "devDependencies": {
+    "@eslint/js": "^9.5.0",
+    "@types/eslint__js": "^8.42.3",
+    "@typescript-eslint/eslint-plugin": "^7.13.1",
+    "eslint": "^9.5.0",
+    "typescript-eslint": "^7.13.1"
+  }
 }
