@@ -50,7 +50,9 @@ export type MetaJSON = z.infer<typeof metaJSONSchema>;
 
 export const snapshotJSONSchema = z.object({
   meta: metaJSONSchema,
+  // Number of actual nodes, and not the size of nodes array
   node_count: z.number(),
+  // Number of actual edges, and not the size of edges array
   edge_count: z.number(),
   trace_function_count: z.number(),
 });
