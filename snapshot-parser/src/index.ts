@@ -7,8 +7,8 @@ import { Database, initializeSQLiteDB } from "./sqlite/db";
 async function main(): Promise<void> {
   console.log("main()");
   const db = await parseSnapshotToSQLite({
-    snapshotPath: "samples/reddit.heapsnapshot",
-    outputPath: "out/reddit.sqlite",
+    snapshotPath: "samples/foo-bar.heapsnapshot",
+    outputPath: "out/foo-bar.sqlite",
   });
   // const db = await loadSQLiteDB("samples/reddit.sqlite");
   await processNodes(db);
@@ -25,6 +25,7 @@ export async function parseSnapshotToSQLite(
   options: ParseSnapshotToSQLiteOptions,
 ): Promise<Kysely<Database>> {
   const { snapshotPath, outputPath } = options;
+  console.log("output path: ", outputPath)
   const db = await initializeSQLiteDB(outputPath);
 
   const onSnapshot = async (snapshot: SnapshotJSON): Promise<void> => {
