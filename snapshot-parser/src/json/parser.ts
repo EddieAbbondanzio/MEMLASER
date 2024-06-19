@@ -213,7 +213,7 @@ async function buildHeapSnapshot(
           SAMPLES_BATCH_SIZE,
         )) {
           const validatedSamples = await samplesJSONSchema.parseAsync(samples);
-          await onSamples(validatedSamples, offset);
+          await onSamples?.(validatedSamples, offset);
         }
         break;
       }

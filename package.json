@@ -3,7 +3,7 @@
   "private": true,
   "workspaces": [
     "app",
-    "heapsnapshot-paser"
+    "snapshot-paser"
   ],
   "devDependencies": {
     "@eslint/js": "^9.4.0",
