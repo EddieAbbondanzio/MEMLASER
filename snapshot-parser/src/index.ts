@@ -2,16 +2,16 @@ import { parseSnapshotFile } from "./json/parser";
 import { EdgeJSON, NodeJSON, SnapshotJSON  } from "./json/schema";
 import { processNodes } from "./processing/nodes";
 import { Kysely } from "kysely";
-import { Database, initializeSQLiteDB } from "./sqlite/db";
+import { Database, initializeSQLiteDB, loadSQLiteDB } from "./sqlite/db";
 
 async function main(): Promise<void> {
   console.log("main()");
-  const db = await parseSnapshotToSQLite({
-    snapshotPath: "samples/foo-bar.heapsnapshot",
-    outputPath: "out/foo-bar.sqlite",
-  });
-  // const db = await loadSQLiteDB("samples/reddit.sqlite");
-  await processNodes(db);
+  // const db = await parseSnapshotToSQLite({
+  //   snapshotPath: "samples/foo-bar.heapsnapshot",
+  //   outputPath: "out/foo-bar.sqlite",
+  // });
+  const db = await loadSQLiteDB("samples/foo-bar.sqlite");
+  // await processNodes(db);
   console.log("-- Done!");
 }
 void main();
