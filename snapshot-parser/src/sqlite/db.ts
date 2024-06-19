@@ -4,7 +4,6 @@ import {
   JSONColumnType,
   Kysely,
   Migrator,
-  ParseJSONResultsPlugin,
   SqliteDialect,
   Generated,
   ColumnType,
@@ -12,21 +11,23 @@ import {
 import SQLiteDatabase from "better-sqlite3";
 import * as path from "path";
 import * as fs from "fs";
-import { MetaJSON } from "./json/schema";
+import { MetaJSON } from "../json/schema";
 
 export type WithDefault<S> = ColumnType<S, S | undefined, S>;
 
-interface Database {
+export interface Database {
   // N.B. Keys must match table names.
   snapshots: SnapshotsTable;
   nodeData: NodeDataTable;
+  nodes: NodesTable;
   edgeData: EdgeDataTable;
   strings: StringsTable;
 }
 
 interface SnapshotsTable {
   id: Generated<number>;
-  meta: JSONColumnType<MetaJSON>;
+  meta: string;
+  // meta: JSONColumnType<MetaJSON>;
   nodeCount: number;
   edgeCount: number;
   traceFunctionCount: number;
@@ -38,7 +39,19 @@ interface NodeDataTable {
   id: Generated<number>;
   index: number;
   fieldValues: JSONColumnType<string[]>;
-  processed: WithDefault<boolean>;
+}
+
+interface NodesTable {
+  id: Generated<number>;
+  index: number;
+  type: string;
+  name: string;
+  nodeId: number;
+  selfSize: number;
+  edgeCount: number;
+  traceNodeId: number;
+  // No boolean value in sqlite so we use 0 or 1.
+  detached: number;
 }
 
 // Raw edge data from the snapshot file. They get processed into actual
@@ -47,13 +60,27 @@ interface EdgeDataTable {
   id: Generated<number>;
   index: number;
   fieldValues: JSONColumnType<string[]>;
-  processed: WithDefault<boolean>;
 }
 
 interface StringsTable {
   id: Generated<number>;
   index: number;
   value: string;
+}
+
+export async function loadSQLiteDB(path: string): Promise<Kysely<Database>> {
+  const dialect = new SqliteDialect({
+    database: new SQLiteDatabase(path),
+  });
+
+  const db = new Kysely<Database>({
+    dialect,
+    // Kysely has a ParseJSONResultsPlugin but it was parsing random strings
+    // that contain JSON into JS objects so it was causing more trouble than
+    // worth to keep it.
+    plugins: [new CamelCasePlugin()],
+  });
+  return db;
 }
 
 export async function initializeSQLiteDB(
@@ -65,7 +92,10 @@ export async function initializeSQLiteDB(
 
   const db = new Kysely<Database>({
     dialect,
-    plugins: [new CamelCasePlugin(), new ParseJSONResultsPlugin()],
+    // Kysely has a ParseJSONResultsPlugin but it was parsing random strings
+    // that contain JSON into JS objects so it was causing more trouble than
+    // worth to keep it.
+    plugins: [new CamelCasePlugin()],
   });
   await migrate(db);
   return db;

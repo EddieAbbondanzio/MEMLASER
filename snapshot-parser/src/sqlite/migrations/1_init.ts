@@ -15,7 +15,6 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn("id", "integer", col => col.primaryKey().autoIncrement())
     .addColumn("index", "integer", col => col.notNull())
     .addColumn("field_values", "text", col => col.notNull())
-    .addColumn("processed", "boolean", col => col.notNull().defaultTo(false))
     .execute();
 
   await db.schema
@@ -23,7 +22,6 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn("id", "integer", col => col.primaryKey().autoIncrement())
     .addColumn("index", "integer", col => col.notNull())
     .addColumn("field_values", "text", col => col.notNull())
-    .addColumn("processed", "boolean", col => col.notNull().defaultTo(false))
     .execute();
 
   await db.schema
@@ -33,12 +31,13 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn("value", "text", col => col.notNull())
     .execute();
 
-  // Not used (yet)
   await db.schema
     .createTable("nodes")
     .addColumn("id", "integer", col => col.primaryKey().autoIncrement())
+    .addColumn("index", "integer", col => col.notNull())
     .addColumn("type", "text", col => col.notNull())
     .addColumn("name", "text", col => col.notNull())
+    .addColumn("node_id", "integer", col => col.notNull().unique())
     .addColumn("self_size", "integer", col => col.notNull())
     .addColumn("edge_count", "integer", col => col.notNull())
     .addColumn("trace_node_id", "integer", col => col.notNull())
@@ -52,7 +51,6 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn("type", "text", col => col.notNull())
     .addColumn("name", "text", col => col.notNull())
     .addColumn("to_node", "integer", col => col.notNull())
-    .addColumn("processed", "boolean", col => col.notNull().defaultTo(false))
     .execute();
 
   // Not used (yet)
