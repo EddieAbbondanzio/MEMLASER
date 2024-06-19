@@ -2,7 +2,7 @@ import { Kysely } from "kysely";
 import { Database } from "../sqlite/db";
 import { getSnapshot } from "../sqlite/utils";
 
-const NODE_BATCH_SIZE = 3;
+const NODE_BATCH_SIZE = 1000;
 
 export async function processNodes(db: Kysely<Database>): Promise<void> {
   const snapshot = await getSnapshot(db);
@@ -38,7 +38,8 @@ export async function processNodes(db: Kysely<Database>): Promise<void> {
       .execute();
 
     const nodes = [];
-    for (const { index, fieldValues } of currBatch) {
+    for (const { index, fieldValues: rawFieldValues } of currBatch) {
+      const fieldValues = JSON.parse(rawFieldValues);
       // N.B. Name field value can be a number or string. When it's a string,
       // it's the actual node name, but when it is a number we have to look up
       // the name from the strings table.
@@ -63,7 +64,7 @@ export async function processNodes(db: Kysely<Database>): Promise<void> {
       });
     }
 
-    console.log(nodes);
+    // console.log(nodes);
     await db.insertInto("nodes").values(nodes).execute();
   }
 }

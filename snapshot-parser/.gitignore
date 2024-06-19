@@ -1,3 +1,6 @@
 dist/
 
 .sqlite
+
+# Generated Sqlite files
+out/

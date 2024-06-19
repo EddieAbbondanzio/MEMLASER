@@ -1,7 +1,6 @@
 import {
   CamelCasePlugin,
   FileMigrationProvider,
-  JSONColumnType,
   Kysely,
   Migrator,
   SqliteDialect,
@@ -11,7 +10,6 @@ import {
 import SQLiteDatabase from "better-sqlite3";
 import * as path from "path";
 import * as fs from "fs";
-import { MetaJSON } from "../json/schema";
 
 export type WithDefault<S> = ColumnType<S, S | undefined, S>;
 
@@ -27,7 +25,6 @@ export interface Database {
 interface SnapshotsTable {
   id: Generated<number>;
   meta: string;
-  // meta: JSONColumnType<MetaJSON>;
   nodeCount: number;
   edgeCount: number;
   traceFunctionCount: number;
@@ -38,7 +35,7 @@ interface SnapshotsTable {
 interface NodeDataTable {
   id: Generated<number>;
   index: number;
-  fieldValues: JSONColumnType<string[]>;
+  fieldValues: string;
 }
 
 interface NodesTable {
@@ -59,7 +56,7 @@ interface NodesTable {
 interface EdgeDataTable {
   id: Generated<number>;
   index: number;
-  fieldValues: JSONColumnType<string[]>;
+  fieldValues: string;
 }
 
 interface StringsTable {
