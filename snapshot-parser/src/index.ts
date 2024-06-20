@@ -1,17 +1,17 @@
 import { parseSnapshotFile } from "./json/parser";
-import { EdgeJSON, NodeJSON, SnapshotJSON  } from "./json/schema";
+import { EdgeJSON, NodeJSON, SnapshotJSON } from "./json/schema";
 import { processNodes } from "./processing/nodes";
 import { Kysely } from "kysely";
 import { Database, initializeSQLiteDB, loadSQLiteDB } from "./sqlite/db";
 
 async function main(): Promise<void> {
   console.log("main()");
-  // const db = await parseSnapshotToSQLite({
-  //   snapshotPath: "samples/foo-bar.heapsnapshot",
-  //   outputPath: "out/foo-bar.sqlite",
-  // });
-  const db = await loadSQLiteDB("samples/foo-bar.sqlite");
-  // await processNodes(db);
+  const db = await parseSnapshotToSQLite({
+    snapshotPath: "samples/foo-bar.heapsnapshot",
+    outputPath: "out/foo-bar.sqlite",
+  });
+  // const db = await loadSQLiteDB("out/foo-bar.sqlite");
+  await processNodes(db);
   console.log("-- Done!");
 }
 void main();
@@ -25,7 +25,7 @@ export async function parseSnapshotToSQLite(
   options: ParseSnapshotToSQLiteOptions,
 ): Promise<Kysely<Database>> {
   const { snapshotPath, outputPath } = options;
-  console.log("output path: ", outputPath)
+  console.log("output path: ", outputPath);
   const db = await initializeSQLiteDB(outputPath);
 
   const onSnapshot = async (snapshot: SnapshotJSON): Promise<void> => {

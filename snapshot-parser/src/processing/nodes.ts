@@ -1,6 +1,6 @@
 import { Kysely } from "kysely";
 import { Database } from "../sqlite/db";
-import { getSnapshot } from "../sqlite/utils";
+import { buildNodeFieldLookup, getSnapshot } from "./snapshot";
 
 const NODE_BATCH_SIZE = 1000;
 
@@ -19,18 +19,12 @@ export async function processNodes(db: Kysely<Database>): Promise<void> {
     );
   }
 
-  const { node_fields: nodeFields } = snapshot.meta;
-  const typeIndex = nodeFields.findIndex(f => f === "type");
-  const nameIndex = nodeFields.findIndex(f => f === "name");
-  const nodeIdIndex = nodeFields.findIndex(f => f === "id");
-  const selfSizeIndex = nodeFields.findIndex(f => f === "self_size");
-  const edgeCountIndex = nodeFields.findIndex(f => f === "edge_count");
-  const detachednessIndex = nodeFields.findIndex(f => f === "detachedness");
-  const traceNodeIdIndex = nodeFields.findIndex(f => f === "trace_node_id");
+  const fieldLookup = buildNodeFieldLookup(snapshot);
 
   const getNodeDataBatchQuery = db.selectFrom("nodeData").selectAll();
   const getNodeName = (index: number) =>
     db.selectFrom("strings").select("value").where("index", "=", index);
+
   for (let i = 0; i < nodeCount; i += NODE_BATCH_SIZE) {
     const currBatch = await getNodeDataBatchQuery
       .limit(Math.min(NODE_BATCH_SIZE, nodeCount - i))
@@ -43,7 +37,7 @@ export async function processNodes(db: Kysely<Database>): Promise<void> {
       // N.B. Name field value can be a number or string. When it's a string,
       // it's the actual node name, but when it is a number we have to look up
       // the name from the strings table.
-      const nameFieldValue = fieldValues[nameIndex];
+      const nameFieldValue = fieldValues[fieldLookup["name"]];
       let name;
       if (typeof nameFieldValue === "string") {
         name = nameFieldValue;
@@ -52,19 +46,21 @@ export async function processNodes(db: Kysely<Database>): Promise<void> {
           .value;
       }
 
+      const nodeTypeIndex = fieldValues[fieldLookup["type"]];
+      const type = snapshot.meta.node_types[0][nodeTypeIndex];
+
       nodes.push({
         index,
-        type: fieldValues[typeIndex],
+        type,
         name,
-        nodeId: Number(fieldValues[nodeIdIndex]),
-        selfSize: Number(fieldValues[selfSizeIndex]),
-        edgeCount: Number(fieldValues[edgeCountIndex]),
-        detached: Number(fieldValues[detachednessIndex]),
-        traceNodeId: Number(fieldValues[traceNodeIdIndex]),
+        nodeId: Number(fieldValues[fieldLookup["id"]]),
+        selfSize: Number(fieldValues[fieldLookup["self_size"]]),
+        edgeCount: Number(fieldValues[fieldLookup["edge_count"]]),
+        detached: Number(fieldValues[fieldLookup["detachedness"]]),
+        traceNodeId: Number(fieldValues[fieldLookup["trace_node_id"]]),
       });
     }
 
-    // console.log(nodes);
     await db.insertInto("nodes").values(nodes).execute();
   }
 }

@@ -35,12 +35,42 @@ export const heapSnapshotJSONKeySchema = z.enum([
 ]);
 export type HeapSnapshotJSONKey = z.infer<typeof heapSnapshotJSONKeySchema>;
 
+export const nodeFieldJSONSchema = z.enum([
+  "type",
+  "name",
+  "id",
+  "self_size",
+  "edge_count",
+  "detachedness",
+  "trace_node_id",
+]);
+export type NodeFieldJSON = z.infer<typeof nodeFieldJSONSchema>;
+
+export const nodeTypeJSONSchema = z.enum([
+  "hidden",
+  "array",
+  "string",
+  "object",
+  "code",
+  "closure",
+  "regexp",
+  "number",
+  "native",
+  "synthetic",
+  "concatenated string",
+  "sliced string",
+  "symbol",
+  "bigint",
+  "object shape",
+]);
+export type NodeTypeJSON = z.infer<typeof nodeTypeJSONSchema>;
+
 export const metaJSONSchema = z.object({
-  node_fields: z.array(z.string()),
-  node_types: z.tuple([z.array(z.string())]).rest(z.string()),
+  node_fields: z.array(nodeFieldJSONSchema),
+  node_types: z.tuple([z.array(nodeTypeJSONSchema)]).rest(z.string()),
   edge_fields: z.array(z.string()),
   edge_types: z.tuple([z.array(z.string())]).rest(z.string()),
-  // TODO: What are these?
+  // TODO: What are the following?
   trace_function_info_fields: z.array(z.string()),
   trace_node_fields: z.array(z.string()),
   sample_fields: z.array(z.string()),
