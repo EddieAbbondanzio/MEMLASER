@@ -1,6 +1,12 @@
 import { Kysely } from "kysely";
 import { Database } from "../sqlite/db";
-import { Snapshot, buildNodeFieldLookup, getSnapshot } from "./snapshot";
+import {
+  NodeFieldLookup,
+  Snapshot,
+  buildNodeFieldLookup,
+  getSnapshot,
+} from "./snapshot";
+import { Dictionary, keyBy } from "lodash";
 
 const NODE_BATCH_SIZE = 1000;
 
@@ -8,43 +14,23 @@ export async function processNodes(db: Kysely<Database>): Promise<void> {
   const snapshot = await getSnapshot(db);
   const fieldLookup = buildNodeFieldLookup(snapshot);
 
-  const getNodeName = (index: number) =>
-    db.selectFrom("strings").select("value").where("index", "=", index);
-
-  for await (const currBatch of batchSelectAllNodeData(
+  for await (const currBatch of batchSelectNodeData(
     db,
     snapshot,
     NODE_BATCH_SIZE,
   )) {
-    const nodes = [];
-    for (const { index, fieldValues } of currBatch) {
-      // N.B. Name field value can be a number or string. When it's a string,
-      // it's the actual node name, but when it is a number we have to look up
-      // the name from the strings table.
-      const nameFieldValue = fieldValues[fieldLookup["name"]];
-      let name;
-      if (typeof nameFieldValue === "string") {
-        name = nameFieldValue;
-      } else {
-        name = (await getNodeName(nameFieldValue).executeTakeFirstOrThrow())
-          .value;
-      }
+    const nameLookup = await buildNodeNameLookup(db, fieldLookup, currBatch);
 
-      const nodeTypeIndex = fieldValues[fieldLookup["type"]];
-      const type = snapshot.meta.node_types[0][nodeTypeIndex as number];
-
-      nodes.push({
-        index,
-        type,
-        name,
-        nodeId: fieldValues[fieldLookup["id"]] as number,
-        selfSize: fieldValues[fieldLookup["self_size"]] as number,
-        edgeCount: fieldValues[fieldLookup["edge_count"]] as number,
-        detached: fieldValues[fieldLookup["detachedness"]] as number,
-        traceNodeId: fieldValues[fieldLookup["trace_node_id"]] as number,
-      });
-    }
-
+    const nodes = currBatch.map(({ index, fieldValues }) => ({
+      index,
+      type: snapshot.meta.node_types[0][fieldValues[fieldLookup["type"]]],
+      name: nameLookup[fieldValues[fieldLookup["name"]]].value,
+      nodeId: fieldValues[fieldLookup["id"]],
+      selfSize: fieldValues[fieldLookup["self_size"]],
+      edgeCount: fieldValues[fieldLookup["edge_count"]],
+      detached: fieldValues[fieldLookup["detachedness"]],
+      traceNodeId: fieldValues[fieldLookup["trace_node_id"]],
+    }));
     await db.insertInto("nodes").values(nodes).execute();
   }
 }
@@ -52,12 +38,10 @@ export async function processNodes(db: Kysely<Database>): Promise<void> {
 interface NodeData {
   id: number;
   index: number;
-  // Only name is actually number | string, but there's no easy way to improve
-  // this type so we role with the union.
-  fieldValues: Array<number | string>;
+  fieldValues: number[];
 }
 
-async function* batchSelectAllNodeData(
+async function* batchSelectNodeData(
   db: Kysely<Database>,
   snapshot: Snapshot,
   batchSize: number,
@@ -93,4 +77,21 @@ async function getNodeDataCount(db: Kysely<Database>): Promise<number> {
     .select([s => s.fn.count("id").as("nodeDataCount")])
     .executeTakeFirstOrThrow();
   return nodeDataCount as number;
+}
+
+async function buildNodeNameLookup(
+  db: Kysely<Database>,
+  fieldLookup: NodeFieldLookup,
+  nodes: NodeData[],
+): Promise<Dictionary<{ index: number; value: string }>> {
+  const names = await db
+    .selectFrom("strings")
+    .select(["index", "value"])
+    .where(
+      "index",
+      "in",
+      nodes.map(n => n.fieldValues[fieldLookup["name"]]),
+    )
+    .execute();
+  return keyBy(names, n => n.index);
 }

@@ -22,7 +22,7 @@ export async function getSnapshot(db: Kysely<Database>): Promise<Snapshot> {
   };
 }
 
-type NodeFieldLookup = Record<NodeFieldJSON, number>;
+export type NodeFieldLookup = Record<NodeFieldJSON, number>;
 export function buildNodeFieldLookup(snapshot: Snapshot): NodeFieldLookup {
   const { node_fields: nodeFields } = snapshot.meta;
 
