@@ -72,11 +72,11 @@ async function* batchSelectNodeData(
 }
 
 async function getNodeDataCount(db: Kysely<Database>): Promise<number> {
-  const { nodeDataCount } = await db
+  const { count } = await db
     .selectFrom("nodeData")
-    .select([s => s.fn.count("id").as("nodeDataCount")])
+    .select([s => s.fn.count("id").as("count")])
     .executeTakeFirstOrThrow();
-  return nodeDataCount as number;
+  return count as number;
 }
 
 async function buildNodeNameLookup(

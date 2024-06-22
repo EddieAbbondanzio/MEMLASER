@@ -1,93 +1,42 @@
-// export interface Edge {
-//   type: EdgeObjectType;
-//   name: string;
-//   toNode: number;
-// }
+import { Kysely } from "kysely";
+import { Dictionary, keyBy } from "lodash";
+import { EdgeFieldJSON } from "src/json/schema";
+import { Database } from "src/sqlite/db";
 
-// export function parseEdges(heapSnapshot: HeapSnapshot): Edge[] {
-//   const { snapshot, edges } = heapSnapshot;
-//   const totalEdgeCount = snapshot.edge_count;
-//   const edgeFields = snapshot.meta.edge_fields;
-//   const numOfEdgeFields = edgeFields.length;
+const EDGE_BATCH_SIZE = 1000;
 
-//   if (numOfEdgeFields !== NUM_OF_EDGE_FIELDS) {
-//     throw new Error(
-//       `Invalid snapshot. Expected ${NUM_OF_NODE_FIELDS} edge fields, got ${numOfEdgeFields}.`,
-//     );
-//   }
-//   if (edges.length % numOfEdgeFields !== 0) {
-//     throw new Error(
-//       `Invalid snapshot. Number of elements in edges is not divisible by length of edge_fields.`,
-//     );
-//   }
+export async function processEdges(db: Kysely<Database>): Promise<void> {}
 
-//   const parsedEdges = [];
-//   for (let i = 0; i < totalEdgeCount; i++) {
-//     const index = i * numOfEdgeFields;
-//     const node = parseEdge(heapSnapshot, index, numOfEdgeFields);
-//     parsedEdges.push(node);
-//   }
+interface EdgeData {
+  id: number;
+  index: number;
+  fieldValues: number[];
+}
 
-//   return parsedEdges;
-// }
+// TODO: Make a generic getTableSize and use it here / node file
+export async function getEdgeDataCount(db: Kysely<Database>): Promise<number> {
+  const { count } = await db
+    .selectFrom("edgeData")
+    .select([(s) => s.fn.count("id").as("count")])
+    .executeTakeFirstOrThrow();
+  return count as number;
+}
 
-// export function parseEdge(
-//   heapSnapshot: HeapSnapshot,
-//   index: number,
-//   numOfFields: number,
-// ): Edge {
-//   const { edges, strings } = heapSnapshot;
-//   const values = edges.slice(index, index + numOfFields);
+// TODO: Create a getStringsByIndex(db, indices: number[]) and use it here / node file.
+export type EdgeFieldLookup = Record<EdgeFieldJSON, number>;
+export async function buildEdgeNameLookup(
+  db: Kysely<Database>,
+  fieldLookup: EdgeFieldLookup,
+  edges: EdgeData[]
+): Promise<Dictionary<{ index: number; value: string }>> {
+  const indices = edges
+    .map((e) => e.fieldValues[fieldLookup["name_or_index"]])
+    .filter((nameOrIndex) => typeof nameOrIndex === "number");
 
-//   const type = EDGE_TYPES[0][values[0] as number] as EdgeObjectType;
-//   const nameOrIndex = values[1];
-//   const toNode = values[2] as number;
-
-//   let name;
-//   if (typeof nameOrIndex === "string") {
-//     name = nameOrIndex;
-//   } else {
-//     name = strings[nameOrIndex];
-//   }
-
-//   const data: EdgeData = {
-//     type,
-//     name,
-//     toNode,
-//   };
-//   return new Edge(data);
-// }
-
-// export function buildObjectGraph(nodes: Node[], edges: Edge[]): Node[] {
-//   const nodesByIndex: Record<number, Node | undefined> = {};
-//   for (const node of nodes) {
-//     if (nodesByIndex[node.nodeIndex] !== undefined) {
-//       throw new Error(`Duplicate node id ${node.nodeIndex}.`);
-//     }
-//     nodesByIndex[node.nodeIndex] = node;
-//   }
-
-//   let edgeIndex = 0;
-
-//   for (const node of nodes) {
-//     const { edgeCount } = node;
-//     const currEdges = edges.slice(edgeIndex, edgeIndex + edgeCount);
-
-//     for (const edge of currEdges) {
-//       edge.from = node;
-//       const to = nodesByIndex[edge.toNode];
-
-//       if (to === undefined) {
-//         throw new Error(
-//           `No matching node found for edge.toNode (index: ${edge.toNode}`,
-//         );
-//       }
-//       edge.to = to;
-//     }
-
-//     node.edges = currEdges;
-//     edgeIndex += edgeCount;
-//   }
-
-//   return nodes;
-// }
+  const names = await db
+    .selectFrom("strings")
+    .select(["index", "value"])
+    .where("index", "in", indices)
+    .execute();
+  return keyBy(names, (n) => n.index);
+}

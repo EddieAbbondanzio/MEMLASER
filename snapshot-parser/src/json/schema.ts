@@ -65,6 +65,24 @@ export const nodeTypeJSONSchema = z.enum([
 ]);
 export type NodeTypeJSON = z.infer<typeof nodeTypeJSONSchema>;
 
+export const edgeFieldJSONSchema = z.enum([
+  "type",
+  "name_or_index",
+  "to_node"
+])
+export type EdgeFieldJSON = z.infer<typeof edgeFieldJSONSchema>;
+
+export const edgeTypeJSONSchema = z.enum([
+    "context",
+    "element",
+    "property",
+    "internal",
+    "hidden",
+    "shortcut",
+    "weak"
+])
+export type EdgeTypeJSON = z.infer<typeof edgeTypeJSONSchema>;
+
 export const metaJSONSchema = z.object({
   node_fields: z.array(nodeFieldJSONSchema),
   node_types: z.tuple([z.array(nodeTypeJSONSchema)]).rest(z.string()),

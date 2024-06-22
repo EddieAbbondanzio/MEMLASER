@@ -2,17 +2,15 @@ import { parseSnapshotFile } from "./json/parser";
 import { EdgeJSON, NodeJSON, SnapshotJSON } from "./json/schema";
 import { processNodes } from "./processing/nodes";
 import { Kysely } from "kysely";
-import { Database, initializeSQLiteDB, loadSQLiteDB } from "./sqlite/db";
+import { Database, initializeSQLiteDB } from "./sqlite/db";
 
 async function main(): Promise<void> {
   console.log("main()");
-  const db = await parseSnapshotToSQLite({
+  await parseSnapshotToSQLite({
     snapshotPath: "samples/foo-bar.heapsnapshot",
     outputPath: "out/foo-bar.sqlite",
   });
-  // const db = await loadSQLiteDB("out/foo-bar.sqlite");
-  await processNodes(db);
-  console.log("-- Done!");
+  console.log("-- done!")
 }
 void main();
 
@@ -25,7 +23,6 @@ export async function parseSnapshotToSQLite(
   options: ParseSnapshotToSQLiteOptions,
 ): Promise<Kysely<Database>> {
   const { snapshotPath, outputPath } = options;
-  console.log("output path: ", outputPath);
   const db = await initializeSQLiteDB(outputPath);
 
   const onSnapshot = async (snapshot: SnapshotJSON): Promise<void> => {
@@ -91,6 +88,12 @@ export async function parseSnapshotToSQLite(
     onEdgeBatch,
     onStringBatch,
   });
+
+  await processNodes(db);
+  // TODO:
+  // Process edges here. We need to load in nodes and then query the # of edges
+  // based on edgeCount
+
 
   return db;
 }
