@@ -3,6 +3,7 @@ import { EdgeJSON, NodeJSON, SnapshotJSON } from "./json/schema";
 import { processNodes } from "./processing/nodes";
 import { Kysely } from "kysely";
 import { Database, initializeSQLiteDB } from "./sqlite/db";
+import { processEdges } from "./processing/edges";
 
 async function main(): Promise<void> {
   console.log("main()");
@@ -10,7 +11,7 @@ async function main(): Promise<void> {
     snapshotPath: "samples/foo-bar.heapsnapshot",
     outputPath: "out/foo-bar.sqlite",
   });
-  console.log("-- done!")
+  console.log("-- done!");
 }
 void main();
 
@@ -20,7 +21,7 @@ interface ParseSnapshotToSQLiteOptions {
 }
 
 export async function parseSnapshotToSQLite(
-  options: ParseSnapshotToSQLiteOptions,
+  options: ParseSnapshotToSQLiteOptions
 ): Promise<Kysely<Database>> {
   const { snapshotPath, outputPath } = options;
   const db = await initializeSQLiteDB(outputPath);
@@ -39,7 +40,7 @@ export async function parseSnapshotToSQLite(
 
   const onNodeBatch = async (
     nodes: NodeJSON[],
-    offset: number,
+    offset: number
   ): Promise<void> => {
     await db
       .insertInto("nodeData")
@@ -47,14 +48,14 @@ export async function parseSnapshotToSQLite(
         nodes.map((n, i) => ({
           index: offset + i,
           fieldValues: JSON.stringify(n),
-        })),
+        }))
       )
       .execute();
   };
 
   const onEdgeBatch = async (
     edges: EdgeJSON[],
-    offset: number,
+    offset: number
   ): Promise<void> => {
     await db
       .insertInto("edgeData")
@@ -62,14 +63,14 @@ export async function parseSnapshotToSQLite(
         edges.map((e, i) => ({
           index: offset + i,
           fieldValues: JSON.stringify(e),
-        })),
+        }))
       )
       .execute();
   };
 
   const onStringBatch = async (
     strings: string[],
-    offset: number,
+    offset: number
   ): Promise<void> => {
     await db
       .insertInto("strings")
@@ -77,7 +78,7 @@ export async function parseSnapshotToSQLite(
         strings.map((s, i) => ({
           index: offset + i,
           value: s,
-        })),
+        }))
       )
       .execute();
   };
@@ -90,10 +91,7 @@ export async function parseSnapshotToSQLite(
   });
 
   await processNodes(db);
-  // TODO:
-  // Process edges here. We need to load in nodes and then query the # of edges
-  // based on edgeCount
-
+  await processEdges(db);
 
   return db;
 }
