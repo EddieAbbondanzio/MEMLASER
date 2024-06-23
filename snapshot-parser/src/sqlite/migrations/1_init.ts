@@ -44,28 +44,19 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn("detached", "boolean", col => col.notNull())
     .execute();
 
-  // Not used (yet)
   await db.schema
     .createTable("edges")
     .addColumn("id", "integer", col => col.primaryKey().autoIncrement())
     .addColumn("type", "text", col => col.notNull())
     .addColumn("name", "text", col => col.notNull())
+    .addColumn("from_node", "integer", col => col.notNull())
     .addColumn("to_node", "integer", col => col.notNull())
-    .execute();
-
-  // Not used (yet)
-  await db.schema
-    .createTable("node_edges")
-    .addColumn("id", "integer", col => col.primaryKey())
-    .addColumn("to_node_id", "integer", col =>
-      col.references("nodes.id").onDelete("cascade").notNull(),
-    )
-    .addColumn("from_node_id", "integer", col =>
-      col.references("nodes.id").onDelete("cascade").notNull(),
-    )
-    .addColumn("edge_id", "integer", col =>
-      col.references("edges.id").onDelete("cascade").notNull(),
-    )
+    .addForeignKeyConstraint("from_node_foreign_key", ["from_node"], "nodes", [
+      "id",
+    ])
+    .addForeignKeyConstraint("to_node_foreign_key", ["to_node"], "nodes", [
+      "id",
+    ])
     .execute();
 }
 

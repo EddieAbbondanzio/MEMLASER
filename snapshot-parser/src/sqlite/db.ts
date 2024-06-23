@@ -19,6 +19,7 @@ export interface Database {
   nodeData: NodeDataTable;
   nodes: NodesTable;
   edgeData: EdgeDataTable;
+  edges: EdgesTable;
   strings: StringsTable;
 }
 
@@ -57,6 +58,15 @@ interface EdgeDataTable {
   id: Generated<number>;
   index: number;
   fieldValues: string;
+}
+
+interface EdgesTable {
+  id: Generated<number>;
+  index: number;
+  type: string;
+  name: string;
+  toNode: number;
+  fromNode: number;
 }
 
 interface StringsTable {

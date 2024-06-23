@@ -1,6 +1,6 @@
 import { Kysely } from "kysely";
 import { Database } from "../sqlite/db";
-import { MetaJSON, NodeFieldJSON } from "../json/schema";
+import { EdgeFieldJSON, MetaJSON, NodeFieldJSON } from "../json/schema";
 
 export interface Snapshot {
   id: number;
@@ -32,4 +32,16 @@ export function buildNodeFieldLookup(snapshot: Snapshot): NodeFieldLookup {
   }, {} as Partial<NodeFieldLookup>);
 
   return lookup as NodeFieldLookup;
+}
+
+export type EdgeFieldLookup = Record<EdgeFieldJSON, number>;
+export function buildEdgeFieldLookup(snapshot: Snapshot): EdgeFieldLookup {
+  const { edge_fields: edgeFields } = snapshot.meta;
+
+  const lookup = edgeFields.reduce((lookup, key, index) => {
+    lookup[key as EdgeFieldJSON] = index;
+    return lookup;
+  }, {} as Partial<EdgeFieldLookup>);
+
+  return lookup as EdgeFieldLookup;
 }

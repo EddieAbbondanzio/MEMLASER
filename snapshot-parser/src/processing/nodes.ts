@@ -1,12 +1,8 @@
 import { Kysely } from "kysely";
 import { Database } from "../sqlite/db";
-import {
-  NodeFieldLookup,
-  Snapshot,
-  buildNodeFieldLookup,
-  getSnapshot,
-} from "./snapshot";
-import { Dictionary, keyBy } from "lodash";
+import { Snapshot, buildNodeFieldLookup, getSnapshot } from "./snapshot";
+import { getTableSize } from "../sqlite/utils";
+import { getStringsByIndex } from "./strings";
 
 const NODE_BATCH_SIZE = 1000;
 
@@ -19,7 +15,10 @@ export async function processNodes(db: Kysely<Database>): Promise<void> {
     snapshot,
     NODE_BATCH_SIZE,
   )) {
-    const nameLookup = await buildNodeNameLookup(db, fieldLookup, currBatch);
+    const nameLookup = await getStringsByIndex(
+      db,
+      currBatch.map(n => n.fieldValues[fieldLookup["name"]]),
+    );
 
     const nodes = currBatch.map(({ index, fieldValues }) => ({
       index,
@@ -48,7 +47,7 @@ async function* batchSelectNodeData(
 ): AsyncGenerator<NodeData[], void, void> {
   // Sanity check to ensure the node_data rows were generated correctly.
   const { nodeCount } = snapshot;
-  const nodeDataCount = await getNodeDataCount(db);
+  const nodeDataCount = await getTableSize(db, "nodeData");
   if (nodeCount !== nodeDataCount) {
     throw new Error(
       `Size of node_data table (${nodeDataCount}) doesn't match nodeCount: ${nodeCount}`,
@@ -69,29 +68,4 @@ async function* batchSelectNodeData(
 
     yield nodeData;
   }
-}
-
-async function getNodeDataCount(db: Kysely<Database>): Promise<number> {
-  const { count } = await db
-    .selectFrom("nodeData")
-    .select([s => s.fn.count("id").as("count")])
-    .executeTakeFirstOrThrow();
-  return count as number;
-}
-
-async function buildNodeNameLookup(
-  db: Kysely<Database>,
-  fieldLookup: NodeFieldLookup,
-  nodes: NodeData[],
-): Promise<Dictionary<{ index: number; value: string }>> {
-  const names = await db
-    .selectFrom("strings")
-    .select(["index", "value"])
-    .where(
-      "index",
-      "in",
-      nodes.map(n => n.fieldValues[fieldLookup["name"]]),
-    )
-    .execute();
-  return keyBy(names, n => n.index);
 }
