@@ -1,6 +1,6 @@
 import { Kysely } from "kysely";
 import { Database } from "../sqlite/db";
-import { Snapshot, buildNodeFieldLookup, getSnapshot } from "./snapshot";
+import { Snapshot, buildNodeFieldIndices, getSnapshot } from "./snapshot";
 import { getTableSize } from "../sqlite/utils";
 import { getStringsByIndex } from "./strings";
 
@@ -8,7 +8,7 @@ const NODE_BATCH_SIZE = 1000;
 
 export async function processNodes(db: Kysely<Database>): Promise<void> {
   const snapshot = await getSnapshot(db);
-  const fieldLookup = buildNodeFieldLookup(snapshot);
+  const fieldIndices = buildNodeFieldIndices(snapshot);
 
   for await (const currBatch of batchSelectNodeData(
     db,
@@ -17,18 +17,18 @@ export async function processNodes(db: Kysely<Database>): Promise<void> {
   )) {
     const nameLookup = await getStringsByIndex(
       db,
-      currBatch.map(n => n.fieldValues[fieldLookup["name"]]),
+      currBatch.map(n => n.fieldValues[fieldIndices["name"]]),
     );
 
     const nodes = currBatch.map(({ index, fieldValues }) => ({
       index,
-      type: snapshot.meta.node_types[0][fieldValues[fieldLookup["type"]]],
-      name: nameLookup[fieldValues[fieldLookup["name"]]].value,
-      nodeId: fieldValues[fieldLookup["id"]],
-      selfSize: fieldValues[fieldLookup["self_size"]],
-      edgeCount: fieldValues[fieldLookup["edge_count"]],
-      detached: fieldValues[fieldLookup["detachedness"]],
-      traceNodeId: fieldValues[fieldLookup["trace_node_id"]],
+      type: snapshot.meta.node_types[0][fieldValues[fieldIndices["type"]]],
+      name: nameLookup[fieldValues[fieldIndices["name"]]].value,
+      nodeId: fieldValues[fieldIndices["id"]],
+      selfSize: fieldValues[fieldIndices["self_size"]],
+      edgeCount: fieldValues[fieldIndices["edge_count"]],
+      detached: fieldValues[fieldIndices["detachedness"]],
+      traceNodeId: fieldValues[fieldIndices["trace_node_id"]],
     }));
     await db.insertInto("nodes").values(nodes).execute();
   }

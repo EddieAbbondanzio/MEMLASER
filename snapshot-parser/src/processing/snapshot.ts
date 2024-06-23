@@ -22,26 +22,26 @@ export async function getSnapshot(db: Kysely<Database>): Promise<Snapshot> {
   };
 }
 
-export type NodeFieldLookup = Record<NodeFieldJSON, number>;
-export function buildNodeFieldLookup(snapshot: Snapshot): NodeFieldLookup {
+export type NodeFieldIndices = Record<NodeFieldJSON, number>;
+export function buildNodeFieldIndices(snapshot: Snapshot): NodeFieldIndices {
   const { node_fields: nodeFields } = snapshot.meta;
 
   const lookup = nodeFields.reduce((lookup, key, index) => {
     lookup[key as NodeFieldJSON] = index;
     return lookup;
-  }, {} as Partial<NodeFieldLookup>);
+  }, {} as Partial<NodeFieldIndices>);
 
-  return lookup as NodeFieldLookup;
+  return lookup as NodeFieldIndices;
 }
 
-export type EdgeFieldLookup = Record<EdgeFieldJSON, number>;
-export function buildEdgeFieldLookup(snapshot: Snapshot): EdgeFieldLookup {
+export type EdgeFieldIndices = Record<EdgeFieldJSON, number>;
+export function buildEdgeFieldIndices(snapshot: Snapshot): EdgeFieldIndices {
   const { edge_fields: edgeFields } = snapshot.meta;
 
   const lookup = edgeFields.reduce((lookup, key, index) => {
     lookup[key as EdgeFieldJSON] = index;
     return lookup;
-  }, {} as Partial<EdgeFieldLookup>);
+  }, {} as Partial<EdgeFieldIndices>);
 
-  return lookup as EdgeFieldLookup;
+  return lookup as EdgeFieldIndices;
 }

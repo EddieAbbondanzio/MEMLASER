@@ -1,4 +1,4 @@
-import { buildNodeFieldLookup } from "../../src/processing/snapshot";
+import { buildNodeFieldIndices } from "../../src/processing/snapshot";
 import { Snapshot } from "../../src/processing/snapshot";
 
 test("buildNodeFieldLookup", () => {
@@ -16,7 +16,7 @@ test("buildNodeFieldLookup", () => {
     },
   } as unknown as Snapshot;
 
-  const lookup = buildNodeFieldLookup(snapshot);
+  const lookup = buildNodeFieldIndices(snapshot);
   expect(lookup.type).toBe(0);
   expect(lookup.name).toBe(1);
   expect(lookup.id).toBe(2);
