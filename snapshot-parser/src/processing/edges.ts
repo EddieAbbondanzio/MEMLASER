@@ -1,103 +1,144 @@
 import { Kysely } from "kysely";
-import { Dictionary, keyBy } from "lodash";
 import { Database } from "src/sqlite/db";
-import {
-  EdgeFieldIndices,
-  Snapshot,
-  buildEdgeFieldIndices,
-  getSnapshot,
-} from "./snapshot";
-import { Model, getTableSize } from "../sqlite/utils";
+import { Model, batchSelectAll } from "../sqlite/utils";
+import { buildEdgeFieldIndices, getSnapshot } from "./snapshot";
 import { getStringsByIndex } from "./strings";
+import { chunk, keyBy } from "lodash";
 
-const EDGE_BATCH_SIZE = 1000;
+const NODE_BATCH_SIZE = 1000;
+const EDGE_DATA_BATCH_SIZE = 1000;
+
+// Sqlite has an upper bound on the number of query parameters allowed, so
+// we have to chunk the insert to avoid a `SqliteError: too many SQL
+// variables` error from being thrown.
+//
+// The limit (SQLITE_LIMIT_VARIABLE_NUMBER) is currently 32766.
+// 32766 / numOfEdgeColumns (5) = 6553 edges MAX.
+const EDGE_INSERT_BATCH_SIZE = 5000;
+
+interface EdgeProcessingData {
+  edgeIndex: number;
+  fieldValues: Array<string | number>;
+  fromNodeId: number;
+  name?: string;
+  toNodeId?: number;
+}
 
 export async function processEdges(db: Kysely<Database>): Promise<void> {
   const snapshot = await getSnapshot(db);
-  const fieldLookup = buildEdgeFieldIndices(snapshot);
+  const edgeTypes = snapshot.meta.edge_types[0];
+  const fieldIndices = buildEdgeFieldIndices(snapshot);
+  const edgeDataLoader = await createEdgeDataLoader(db);
 
-  // Algorithm for processing?
-  // Batch select 1000 nodes? Then what select a 1000 edges and associate them
-  // with the nodes in memory? We'd just have to keep selecting edges as we go.
+  for await (const nodeBatch of batchSelectAll(
+    db,
+    "nodes",
+    "index",
+    NODE_BATCH_SIZE,
+  )) {
+    const edgeProcessingData: EdgeProcessingData[] = [];
 
-  // for await (const currBatch of batchSelectEdgeData(
-  //   db,
-  //   snapshot,
-  //   EDGE_BATCH_SIZE,
-  // )) {
-  //   const nameLookup = await getStringsByIndex(
-  //     db,
-  //     currBatch
-  //       .map(e => e.fieldValues[fieldLookup["name_or_index"]])
-  //       .filter(nameOrIndex => typeof nameOrIndex === "number") as number[],
-  //   );
+    // Map edge data to their parent node.
+    for (const node of nodeBatch) {
+      const { edgeCount } = node;
+      const edgeData = await edgeDataLoader.getNext(edgeCount);
+      for (const edge of edgeData) {
+        edgeProcessingData.push({
+          edgeIndex: edge.index,
+          fieldValues: JSON.parse(edge.fieldValues),
+          fromNodeId: node.id,
+        });
+      }
+    }
 
-  //   for (const edge of currBatch) {
-  //     let name = edge.fieldValues[fieldLookup["name_or_index"]];
-  //     if (typeof name === "number") {
-  //       name = nameLookup[name].value;
-  //     }
-  //   }
-
-  // let name
-  // const edges = currBatch.map(({ index, fieldValues }) => ({
-  //   index,
-  //   name,
-  //   type: snapshot.meta.edge_types[0][fieldValues[fieldLookup["type"]]],
-  // }));
-  // await db.insertInto("edges").values(edges).execute();
-  // }
-}
-
-interface EdgeData {
-  id: number;
-  index: number;
-  fieldValues: Array<string | number>;
-}
-
-export async function buildEdgeNameLookup(
-  db: Kysely<Database>,
-  fieldLookup: EdgeFieldIndices,
-  edges: EdgeData[],
-): Promise<Dictionary<{ index: number; value: string }>> {
-  const indices = edges
-    .map(e => e.fieldValues[fieldLookup["name_or_index"]])
-    .filter(nameOrIndex => typeof nameOrIndex === "number") as number[];
-
-  const names = await db
-    .selectFrom("strings")
-    .select(["index", "value"])
-    .where("index", "in", indices)
-    .execute();
-  return keyBy(names, n => n.index);
-}
-
-async function* batchSelectNodes(
-  db: Kysely<Database>,
-  snapshot: Snapshot,
-  batchSize: number,
-): AsyncGenerator<Model<"edgeData">[], void, void> {
-  // Sanity check to ensure the edge_data rows were generated correctly.
-  const { edgeCount } = snapshot;
-  const edgeDataCount = await getTableSize(db, "edgeData");
-  if (edgeCount !== edgeDataCount) {
-    throw new Error(
-      `Size of edge_data table (${edgeDataCount}) doesn't match edgeCount: ${edgeCount}`,
+    // Find the names of the edges.
+    const nameLookup = await getStringsByIndex(
+      db,
+      edgeProcessingData
+        .map(e => e.fieldValues[fieldIndices["name_or_index"]])
+        .filter(e => typeof e === "number") as number[],
     );
-  }
+    for (const edge of edgeProcessingData) {
+      const nameOrIndex = edge.fieldValues[fieldIndices["name_or_index"]];
+      if (typeof nameOrIndex === "string") {
+        edge.name = nameOrIndex;
+      } else {
+        edge.name = nameLookup[nameOrIndex].value;
+      }
+    }
 
-  const getEdgeDataBatchQuery = db.selectFrom("edgeData").selectAll();
-  for (let i = 0; i < edgeCount; i += batchSize) {
-    const rawNodeData = await getEdgeDataBatchQuery
-      .limit(Math.min(batchSize, edgeCount - i))
-      .offset(i)
+    // Build map of node indices to ids for to_node
+    const nodeIndices = edgeProcessingData.map(
+      e => e.fieldValues[fieldIndices["to_node"]],
+    ) as number[];
+    const nodeIds = await db
+      .selectFrom("nodes")
+      .select(["id", "index"])
+      .where("index", "in", nodeIndices)
       .execute();
+    const nodesByIndex = keyBy(nodeIds, obj => obj.index);
 
-    const nodeData = rawNodeData.map(raw => ({
-      ...raw,
-      fieldValues: JSON.parse(raw.fieldValues),
-    }));
+    for (const edge of edgeProcessingData) {
+      const toNodeIndex = edge.fieldValues[fieldIndices["to_node"]];
+      edge.toNodeId = nodesByIndex[toNodeIndex].id;
+    }
 
-    yield nodeData;
+    // Build the actual edges.
+    const edges = [];
+    for (const e of edgeProcessingData) {
+      if (e.name === undefined) {
+        throw new Error(`Edge (index: ${e.edgeIndex}) is missing a name.`);
+      }
+      if (e.toNodeId === undefined) {
+        throw new Error(`Edge (index: ${e.edgeIndex}) is missing a to node.`);
+      }
+
+      edges.push({
+        index: e.edgeIndex,
+        type: edgeTypes[e.fieldValues[fieldIndices["type"]] as number],
+        name: e.name,
+        toNodeId: e.toNodeId,
+        fromNodeId: e.fromNodeId,
+      });
+    }
+
+    const chunks = chunk(edges, EDGE_INSERT_BATCH_SIZE);
+    for (const chunk of chunks) {
+      await db.insertInto("edges").values(chunk).execute();
+    }
   }
+}
+
+async function createEdgeDataLoader(db: Kysely<Database>): Promise<{
+  getNext(count: number): Promise<Model<"edgeData">[]>;
+}> {
+  const iterator = batchSelectAll(
+    db,
+    "edgeData",
+    "index",
+    EDGE_DATA_BATCH_SIZE,
+  );
+  const cache: Model<"edgeData">[] = [];
+  let isDraining = false;
+
+  return {
+    async getNext(count: number): Promise<Model<"edgeData">[]> {
+      // Empty.
+      if (cache.length === 0 && isDraining) {
+        return [];
+      }
+
+      // Cache needs to be refilled.
+      if (cache.length < count && !isDraining) {
+        const result = await iterator.next();
+        if (result.done) {
+          isDraining = true;
+        } else {
+          cache.push(...result.value);
+        }
+      }
+
+      return cache.splice(0, count);
+    },
+  };
 }

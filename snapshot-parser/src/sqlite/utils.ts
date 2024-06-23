@@ -1,4 +1,4 @@
-import { Kysely, SelectQueryBuilder } from "kysely";
+import { Kysely } from "kysely";
 import { Database } from "./db";
 import { AllSelection } from "kysely/dist/cjs/parser/select-parser";
 import { From } from "kysely/dist/cjs/parser/table-parser";
@@ -20,9 +20,10 @@ export async function getTableSize(
   return count as number;
 }
 
-// Only works with selectAll()
-export async function* batchSelect<T extends keyof Database>(
-  query: SelectQueryBuilder<Database, T, Model<T>>,
+export async function* batchSelectAll<T extends keyof Database & string>(
+  db: Kysely<Database>,
+  table: T,
+  orderBy: keyof Model<T>,
   batchSize: number,
 ): AsyncGenerator<Model<T>[], void, void> {
   // Repeat batches until we get a batch smaller than batchSize. That means
@@ -30,7 +31,14 @@ export async function* batchSelect<T extends keyof Database>(
 
   let offset = 0;
   while (true) {
-    const rows = await query.limit(batchSize).offset(offset).execute();
+    const rows = await db
+      .selectFrom(table)
+      .selectAll()
+      .limit(batchSize)
+      .offset(offset)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .orderBy(orderBy as any)
+      .execute();
     offset += batchSize;
 
     yield rows as Model<T>[];

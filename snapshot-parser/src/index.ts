@@ -21,12 +21,20 @@ interface ParseSnapshotToSQLiteOptions {
 }
 
 export async function parseSnapshotToSQLite(
-  options: ParseSnapshotToSQLiteOptions
+  options: ParseSnapshotToSQLiteOptions,
 ): Promise<Kysely<Database>> {
   const { snapshotPath, outputPath } = options;
   const db = await initializeSQLiteDB(outputPath);
 
+  // Snapshot will always be read before anything else so it's safe to use these
+  // variables in other callbacks such as onNodeBatch, onEdgeBatch.
+  let nodeFieldCount = 0;
+  let edgeFieldCount = 0;
+
   const onSnapshot = async (snapshot: SnapshotJSON): Promise<void> => {
+    nodeFieldCount = snapshot.meta.node_fields.length;
+    edgeFieldCount = snapshot.meta.edge_fields.length;
+
     await db
       .insertInto("snapshots")
       .values({
@@ -40,37 +48,43 @@ export async function parseSnapshotToSQLite(
 
   const onNodeBatch = async (
     nodes: NodeJSON[],
-    offset: number
+    offset: number,
   ): Promise<void> => {
     await db
       .insertInto("nodeData")
       .values(
         nodes.map((n, i) => ({
-          index: offset + i,
+          // Since nodes store field values in a flat array we have to multiply
+          // i by the number of fields to ensure it points to the first field of
+          // the node.
+          index: offset + i * nodeFieldCount,
           fieldValues: JSON.stringify(n),
-        }))
+        })),
       )
       .execute();
   };
 
   const onEdgeBatch = async (
     edges: EdgeJSON[],
-    offset: number
+    offset: number,
   ): Promise<void> => {
     await db
       .insertInto("edgeData")
       .values(
         edges.map((e, i) => ({
-          index: offset + i,
+          // Since edges store field values in a flat array we have to multiply
+          // i by the number of fields to ensure it points to the first field of
+          // the edge.
+          index: offset + i * edgeFieldCount,
           fieldValues: JSON.stringify(e),
-        }))
+        })),
       )
       .execute();
   };
 
   const onStringBatch = async (
     strings: string[],
-    offset: number
+    offset: number,
   ): Promise<void> => {
     await db
       .insertInto("strings")
@@ -78,7 +92,7 @@ export async function parseSnapshotToSQLite(
         strings.map((s, i) => ({
           index: offset + i,
           value: s,
-        }))
+        })),
       )
       .execute();
   };

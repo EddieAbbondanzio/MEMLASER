@@ -1,13 +1,14 @@
 import { Kysely } from "kysely";
 import { Database } from "../sqlite/db";
 import { buildNodeFieldIndices, getSnapshot } from "./snapshot";
-import { batchSelect, getTableSize } from "../sqlite/utils";
+import { batchSelectAll, getTableSize } from "../sqlite/utils";
 import { getStringsByIndex } from "./strings";
 
 const NODE_BATCH_SIZE = 1000;
 
 export async function processNodes(db: Kysely<Database>): Promise<void> {
   const snapshot = await getSnapshot(db);
+  const nodeTypes = snapshot.meta.node_types[0];
   const fieldIndices = buildNodeFieldIndices(snapshot);
 
   // Sanity check to ensure the node_data rows were generated correctly.
@@ -19,23 +20,24 @@ export async function processNodes(db: Kysely<Database>): Promise<void> {
     );
   }
 
-  for await (const rawBatch of batchSelect(
-    db.selectFrom("nodeData").selectAll(),
+  for await (const nodeData of batchSelectAll(
+    db,
+    "nodeData",
+    "id",
     NODE_BATCH_SIZE,
   )) {
-    const currBatch = rawBatch.map(raw => ({
+    const batch = nodeData.map(raw => ({
       ...raw,
       fieldValues: JSON.parse(raw.fieldValues),
     }));
-
     const nameLookup = await getStringsByIndex(
       db,
-      currBatch.map(n => n.fieldValues[fieldIndices["name"]]),
+      batch.map(n => n.fieldValues[fieldIndices["name"]]),
     );
 
-    const nodes = currBatch.map(({ index, fieldValues }) => ({
+    const nodes = batch.map(({ index, fieldValues }) => ({
       index,
-      type: snapshot.meta.node_types[0][fieldValues[fieldIndices["type"]]],
+      type: nodeTypes[fieldValues[fieldIndices["type"]]],
       name: nameLookup[fieldValues[fieldIndices["name"]]].value,
       nodeId: fieldValues[fieldIndices["id"]],
       selfSize: fieldValues[fieldIndices["self_size"]],
