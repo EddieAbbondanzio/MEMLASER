@@ -1,4 +1,4 @@
-import { Kysely } from "kysely";
+import { Kysely, SelectQueryBuilder } from "kysely";
 import { Database } from "./db";
 import { AllSelection } from "kysely/dist/cjs/parser/select-parser";
 import { From } from "kysely/dist/cjs/parser/table-parser";
@@ -20,19 +20,24 @@ export async function getTableSize(
   return count as number;
 }
 
-export async function* batchSelectTable<T extends keyof Database>(
-  db: Kysely<Database>,
-  table: T,
+// Only works with selectAll()
+export async function* batchSelect<T extends keyof Database>(
+  query: SelectQueryBuilder<Database, T, Model<T>>,
   batchSize: number,
-): AsyncGenerator<Model<T>, void, void> {
-  const count = await getTableSize(db, table);
-  const selectQuery = db.selectFrom(table).selectAll();
-  for (let i = 0; i < count; i += batchSize) {
-    const rows = await selectQuery
-      .limit(Math.min(batchSize, count - i))
-      .offset(i)
-      .execute();
+): AsyncGenerator<Model<T>[], void, void> {
+  // Repeat batches until we get a batch smaller than batchSize. That means
+  // we are done!
 
-    yield rows as unknown as Model<T>[];
+  let offset = 0;
+  while (true) {
+    const rows = await query.limit(batchSize).offset(offset).execute();
+    offset += batchSize;
+
+    yield rows as Model<T>[];
+    // If the last batch we got was smaller than the batchSize, it means that
+    // that it was the last batch and we can stop.
+    if (rows.length < batchSize) {
+      return;
+    }
   }
 }

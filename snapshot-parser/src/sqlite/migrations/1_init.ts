@@ -47,14 +47,18 @@ export async function up(db: Kysely<unknown>): Promise<void> {
   await db.schema
     .createTable("edges")
     .addColumn("id", "integer", col => col.primaryKey().autoIncrement())
+    .addColumn("index", "integer", col => col.notNull())
     .addColumn("type", "text", col => col.notNull())
     .addColumn("name", "text", col => col.notNull())
-    .addColumn("from_node", "integer", col => col.notNull())
-    .addColumn("to_node", "integer", col => col.notNull())
-    .addForeignKeyConstraint("from_node_foreign_key", ["from_node"], "nodes", [
-      "id",
-    ])
-    .addForeignKeyConstraint("to_node_foreign_key", ["to_node"], "nodes", [
+    .addColumn("from_node_id", "integer", col => col.notNull())
+    .addColumn("to_node_id", "integer", col => col.notNull())
+    .addForeignKeyConstraint(
+      "from_node_foreign_key",
+      ["from_node_id"],
+      "nodes",
+      ["id"],
+    )
+    .addForeignKeyConstraint("to_node_foreign_key", ["to_node_id"], "nodes", [
       "id",
     ])
     .execute();

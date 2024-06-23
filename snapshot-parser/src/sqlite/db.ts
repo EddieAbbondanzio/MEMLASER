@@ -65,8 +65,8 @@ interface EdgesTable {
   index: number;
   type: string;
   name: string;
-  toNode: number;
-  fromNode: number;
+  toNodeId: number;
+  fromNodeId: number;
 }
 
 interface StringsTable {
