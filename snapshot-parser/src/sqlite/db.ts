@@ -75,21 +75,6 @@ interface StringsTable {
   value: string;
 }
 
-export async function loadSQLiteDB(path: string): Promise<Kysely<Database>> {
-  const dialect = new SqliteDialect({
-    database: new SQLiteDatabase(path),
-  });
-
-  const db = new Kysely<Database>({
-    dialect,
-    // Kysely has a ParseJSONResultsPlugin but it was parsing random strings
-    // that contain JSON into JS objects so it was causing more trouble than
-    // worth to keep it.
-    plugins: [new CamelCasePlugin()],
-  });
-  return db;
-}
-
 export async function initializeSQLiteDB(
   outputPath: string,
 ): Promise<Kysely<Database>> {

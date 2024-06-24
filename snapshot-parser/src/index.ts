@@ -4,12 +4,14 @@ import { processNodes } from "./processing/nodes";
 import { Kysely } from "kysely";
 import { Database, initializeSQLiteDB } from "./sqlite/db";
 import { processEdges } from "./processing/edges";
+import * as fs from "fs";
 
 async function main(): Promise<void> {
   console.log("main()");
   await parseSnapshotToSQLite({
     snapshotPath: "samples/foo-bar.heapsnapshot",
     outputPath: "out/foo-bar.sqlite",
+    overwriteExisting: true,
   });
   console.log("-- done!");
 }
@@ -18,12 +20,25 @@ void main();
 interface ParseSnapshotToSQLiteOptions {
   snapshotPath: string;
   outputPath: string;
+  overwriteExisting?: boolean;
 }
 
 export async function parseSnapshotToSQLite(
   options: ParseSnapshotToSQLiteOptions,
 ): Promise<Kysely<Database>> {
-  const { snapshotPath, outputPath } = options;
+  const { snapshotPath, outputPath, overwriteExisting } = options;
+
+  if (fs.existsSync(outputPath)) {
+    if (!overwriteExisting) {
+      console.error(
+        `Output file: ${outputPath} already exist. Please pass overWritingExisting: true if you want it to be updated.`,
+      );
+    } else {
+      console.warn(`Overwriting existing file: ${outputPath}`);
+      await fs.promises.rm(outputPath);
+    }
+  }
+
   const db = await initializeSQLiteDB(outputPath);
 
   // Snapshot will always be read before anything else so it's safe to use these
