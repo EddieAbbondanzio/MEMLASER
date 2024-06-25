@@ -109,27 +109,19 @@ export async function processEdges(db: Kysely<Database>): Promise<void> {
   }
 }
 
-async function createEdgeDataLoader(db: Kysely<Database>): Promise<{
+export async function createEdgeDataLoader(
+  db: Kysely<Database>,
+  batchSize = EDGE_DATA_BATCH_SIZE,
+): Promise<{
   getNext(count: number): Promise<Model<"edgeData">[]>;
 }> {
-  const iterator = batchSelectAll(
-    db,
-    "edgeData",
-    "index",
-    EDGE_DATA_BATCH_SIZE,
-  );
+  const iterator = batchSelectAll(db, "edgeData", "index", batchSize);
   const cache: Model<"edgeData">[] = [];
   let isDraining = false;
 
   return {
     async getNext(count: number): Promise<Model<"edgeData">[]> {
-      // Empty.
-      if (cache.length === 0 && isDraining) {
-        return [];
-      }
-
-      // Cache needs to be refilled.
-      if (cache.length < count && !isDraining) {
+      while (!isDraining && cache.length < count) {
         const result = await iterator.next();
         if (result.done) {
           isDraining = true;
@@ -138,7 +130,13 @@ async function createEdgeDataLoader(db: Kysely<Database>): Promise<{
         }
       }
 
-      return cache.splice(0, count);
+      const edges = cache.splice(0, count);
+      if (edges.length < count) {
+        throw new Error(
+          `Cannot get next ${count} edges. Only ${edges.length} left.`,
+        );
+      }
+      return edges;
     },
   };
 }
