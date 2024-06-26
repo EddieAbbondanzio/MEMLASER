@@ -1,8 +1,8 @@
 import { getStringsByIndex } from "../../src/processing/strings";
-import { createInMemorySQLiteDB } from "../_factories/db";
+import { createTestSQLiteDB } from "../_factories/db";
 
 test("getStringsByIndex", async () => {
-  const db = await createInMemorySQLiteDB();
+  const db = await createTestSQLiteDB();
 
   await db
     .insertInto("strings")

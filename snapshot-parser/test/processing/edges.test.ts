@@ -1,9 +1,9 @@
-import { createEdgeDataLoader } from "../../src/processing/edges";
-import { createInMemorySQLiteDB } from "../_factories/db";
+import { createEdgeDataLoader, processEdges } from "../../src/processing/edges";
+import { createTestSQLiteDB } from "../_factories/db";
 import { createSnapshot } from "../_factories/snapshot";
 
 test("createEdgeDataLoader throws if cannot get next n edges", async () => {
-  const db = await createInMemorySQLiteDB();
+  const db = await createTestSQLiteDB();
   const snapshot = createSnapshot();
   await db
     .insertInto("snapshots")
@@ -18,7 +18,7 @@ test("createEdgeDataLoader throws if cannot get next n edges", async () => {
 });
 
 test("createEdgeDataLoader", async () => {
-  const db = await createInMemorySQLiteDB();
+  const db = await createTestSQLiteDB();
   const snapshot = createSnapshot({
     nodeCount: 5,
     edgeCount: 6,
@@ -105,10 +105,10 @@ test("createEdgeDataLoader", async () => {
   await db
     .insertInto("edgeData")
     .values([
-      { index: 0, fieldValues: JSON.stringify(["property", 0, 7]) },
-      { index: 3, fieldValues: JSON.stringify(["property", 1, 14]) },
-      { index: 6, fieldValues: JSON.stringify(["property", 2, 21]) },
-      { index: 9, fieldValues: JSON.stringify(["property", 3, 28]) },
+      { index: 0, fieldValues: JSON.stringify([2, 0, 7]) },
+      { index: 3, fieldValues: JSON.stringify([2, 1, 14]) },
+      { index: 6, fieldValues: JSON.stringify([2, 2, 21]) },
+      { index: 9, fieldValues: JSON.stringify([2, 3, 28]) },
     ])
     .execute();
 
@@ -117,21 +117,158 @@ test("createEdgeDataLoader", async () => {
   expect(edges[0]).toEqual({
     id: 1,
     index: 0,
-    fieldValues: '["property",0,7]',
+    fieldValues: "[2,0,7]",
   });
   expect(edges[1]).toEqual({
     id: 2,
     index: 3,
-    fieldValues: '["property",1,14]',
+    fieldValues: "[2,1,14]",
   });
   expect(edges[2]).toEqual({
     id: 3,
     index: 6,
-    fieldValues: '["property",2,21]',
+    fieldValues: "[2,2,21]",
   });
   expect(edges[3]).toEqual({
     id: 4,
     index: 9,
-    fieldValues: '["property",3,28]',
+    fieldValues: "[2,3,28]",
+  });
+});
+
+test("processEdges", async () => {
+  const db = await createTestSQLiteDB();
+  const snapshot = createSnapshot({
+    nodeCount: 5,
+    edgeCount: 6,
+  });
+  await db
+    .insertInto("snapshots")
+    .values({
+      ...snapshot,
+      meta: JSON.stringify(snapshot.meta),
+    })
+    .execute();
+
+  // Object should look like:
+  // Foo: {
+  //   a: ""
+  //   b: ""
+  //   c: ""
+  //   d: ""
+  // }
+  await db
+    .insertInto("nodes")
+    .values([
+      {
+        type: "object",
+        name: "Foo",
+        edgeCount: 4,
+        index: 0,
+        nodeId: 1,
+        selfSize: 0,
+        traceNodeId: 0,
+        detached: 0,
+      },
+      {
+        type: "string",
+        name: "a",
+        edgeCount: 0,
+        index: 7,
+        nodeId: 2,
+        selfSize: 0,
+        traceNodeId: 0,
+        detached: 0,
+      },
+      {
+        type: "string",
+        name: "b",
+        edgeCount: 0,
+        index: 14,
+        nodeId: 3,
+        selfSize: 0,
+        traceNodeId: 0,
+        detached: 0,
+      },
+      {
+        type: "string",
+        name: "c",
+        edgeCount: 0,
+        index: 21,
+        nodeId: 4,
+        selfSize: 0,
+        traceNodeId: 0,
+        detached: 0,
+      },
+      {
+        type: "string",
+        name: "d",
+        edgeCount: 0,
+        index: 28,
+        nodeId: 5,
+        selfSize: 0,
+        traceNodeId: 0,
+        detached: 0,
+      },
+    ])
+    .execute();
+  await db
+    .insertInto("strings")
+    .values([
+      { index: 0, value: "a" },
+      { index: 1, value: "b" },
+      { index: 2, value: "c" },
+      { index: 3, value: "d" },
+    ])
+    .execute();
+  await db
+    .insertInto("edgeData")
+    .values([
+      { index: 0, fieldValues: JSON.stringify([2, 0, 7]) },
+      { index: 3, fieldValues: JSON.stringify([2, 1, 14]) },
+      { index: 6, fieldValues: JSON.stringify([2, 2, 21]) },
+      { index: 9, fieldValues: JSON.stringify([2, 3, 28]) },
+    ])
+    .execute();
+
+  await processEdges(db);
+
+  const edges = await db
+    .selectFrom("edges")
+    .selectAll()
+    .orderBy("index")
+    .execute();
+
+  expect(edges[0]).toEqual({
+    id: 1,
+    index: 0,
+    type: "property",
+    name: "a",
+    fromNodeId: 1,
+    toNodeId: 2,
+  });
+  expect(edges[1]).toEqual({
+    id: 2,
+    index: 3,
+    type: "property",
+    name: "b",
+    fromNodeId: 1,
+    toNodeId: 3,
+  });
+  expect(edges[2]).toEqual({
+    id: 3,
+    index: 6,
+    type: "property",
+    name: "c",
+    fromNodeId: 1,
+    toNodeId: 4,
+  });
+  expect(edges[3]).toEqual({
+    id: 4,
+    index: 9,
+    type: "property",
+    name: "d",
+    fromNodeId: 1,
+    toNodeId: 5,
   });
 });

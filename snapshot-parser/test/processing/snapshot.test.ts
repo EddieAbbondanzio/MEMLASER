@@ -3,11 +3,11 @@ import {
   buildNodeFieldIndices,
   getSnapshot,
 } from "../../src/processing/snapshot";
-import { createInMemorySQLiteDB } from "../_factories/db";
+import { createTestSQLiteDB } from "../_factories/db";
 import { createMeta, createSnapshot } from "../_factories/snapshot";
 
 test("getSnapshot", async () => {
-  const db = await createInMemorySQLiteDB();
+  const db = await createTestSQLiteDB();
   await db
     .insertInto("snapshots")
     .values({

@@ -1,9 +1,9 @@
 import { processNodes } from "../../src/processing/nodes";
-import { createInMemorySQLiteDB } from "../_factories/db";
+import { createTestSQLiteDB } from "../_factories/db";
 import { createSnapshot } from "../_factories/snapshot";
 
 test("processNodes throws if node count doesn't match node data count", async () => {
-  const db = await createInMemorySQLiteDB();
+  const db = await createTestSQLiteDB();
   const snapshot = createSnapshot({
     nodeCount: 14,
   });
@@ -21,7 +21,7 @@ test("processNodes throws if node count doesn't match node data count", async ()
 });
 
 test("processNodes", async () => {
-  const db = await createInMemorySQLiteDB();
+  const db = await createTestSQLiteDB();
   const snapshot = createSnapshot({
     nodeCount: 4,
   });
