@@ -63,10 +63,3 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     ])
     .execute();
 }
-
-export async function down(db: Kysely<unknown>): Promise<void> {
-  await db.schema.dropTable("snapshots").execute();
-  await db.schema.dropTable("nodes").execute();
-  await db.schema.dropTable("edges").execute();
-  await db.schema.dropTable("node_edges").execute();
-}
