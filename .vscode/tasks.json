@@ -2,6 +2,19 @@
   "version": "2.0.0",
   "tasks": [
     {
+      "label": "app:run",
+      "command": "flutter run lib/main.dart",
+      "type": "shell",
+      "args": [],
+      "problemMatcher": ["$tsc"],
+      "presentation": {
+        "reveal": "always"
+      },
+      "options": {
+        "cwd": "app"
+      }
+    },
+    {
       "label": "snapshot-parser:build",
       "command": "yarn -s run build",
       "type": "shell",
