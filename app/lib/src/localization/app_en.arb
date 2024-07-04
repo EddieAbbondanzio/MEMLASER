@@ -1,6 +1,6 @@
 {
-  "appTitle": "app",
+  "appTitle": "MEMLASER",
   "@appTitle": {
-    "description": "The title of the application"
+    "description": "A Node.js heapdump analyzer"
   }
 }
