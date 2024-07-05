@@ -1,6 +1,6 @@
 import { Module } from "@nestjs/common";
-import { SnapshotController } from "./snapshot.controller";
-import { SnapshotService } from "./snapshot.service";
+import { SnapshotController } from "./snapshot.controller.js";
+import { SnapshotService } from "./snapshot.service.js";
 
 @Module({
   imports: [],

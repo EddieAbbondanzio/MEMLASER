@@ -6,8 +6,8 @@ import {
   Post,
   UseInterceptors,
 } from "@nestjs/common";
-import { SnapshotService } from "./snapshot.service";
-import { Snapshot } from "./snapshot";
+import { SnapshotService } from "./snapshot.service.js";
+import { Snapshot } from "./snapshot.js";
 import { IsNotEmpty } from "class-validator";
 
 class ImportSnapshotDTO {
