@@ -2,6 +2,7 @@
   "name": "memlaser",
   "private": true,
   "workspaces": [
+    "api",
     "snapshot-paser",
     "snapshot-generator"
   ],
