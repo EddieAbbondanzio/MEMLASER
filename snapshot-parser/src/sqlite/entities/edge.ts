@@ -1,5 +1,6 @@
 import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 import { Node } from "./node";
+import { EdgeType } from "../../json/schema";
 
 @Entity({ name: "edges" })
 export class Edge {
@@ -8,7 +9,7 @@ export class Edge {
   @Column({ type: "integer" })
   index!: number;
   @Column({ type: "integer" })
-  type!: string;
+  type!: EdgeType;
   @Column({ type: "text" })
   name!: string;
   @Column({ type: "integer" })

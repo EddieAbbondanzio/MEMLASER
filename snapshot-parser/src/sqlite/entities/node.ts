@@ -1,4 +1,5 @@
 import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { NodeType } from "../../json/schema";
 
 @Entity({ name: "nodes" })
 export class Node {
@@ -7,7 +8,7 @@ export class Node {
   @Column({ type: "integer" })
   index!: number;
   @Column({ type: "text" })
-  type!: string;
+  type!: NodeType;
   @Column({ type: "text" })
   name!: string;
   @Column({ type: "integer" })
