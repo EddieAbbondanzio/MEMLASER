@@ -1,10 +1,10 @@
-import { processNodes } from "../../src/processing/nodes";
-import { HeapString } from "../../src/sqlite/entities/heapString";
-import { Node } from "../../src/sqlite/entities/node";
-import { NodeData } from "../../src/sqlite/entities/nodeData";
-import { Snapshot } from "../../src/sqlite/entities/snapshot";
-import { createTestSQLiteDB } from "../_factories/db";
-import { createSnapshot } from "../_factories/snapshot";
+import { processNodes } from "../../src/processing/nodes.js";
+import { HeapString } from "../../src/sqlite/entities/heapString.js";
+import { Node } from "../../src/sqlite/entities/node.js";
+import { NodeData } from "../../src/sqlite/entities/nodeData.js";
+import { Snapshot } from "../../src/sqlite/entities/snapshot.js";
+import { createTestSQLiteDB } from "../_factories/db.js";
+import { createSnapshot } from "../_factories/snapshot.js";
 
 test("processNodes throws if node count doesn't match node data count", async () => {
   const db = await createTestSQLiteDB();

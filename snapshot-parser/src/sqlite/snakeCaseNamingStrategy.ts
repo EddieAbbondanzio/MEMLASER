@@ -1,5 +1,5 @@
 import { DefaultNamingStrategy, NamingStrategyInterface } from "typeorm";
-import { snakeCase } from "typeorm/util/StringUtils";
+import { snakeCase } from "typeorm/util/StringUtils.js";
 
 export class SnakeCaseNamingStrategy
   extends DefaultNamingStrategy

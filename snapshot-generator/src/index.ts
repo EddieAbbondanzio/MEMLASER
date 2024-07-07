@@ -1,22 +1,21 @@
-import * as v8 from "v8"
-
+import * as v8 from "v8";
 
 class Foo {
-    constructor() {}
+  constructor() {}
 }
 
 class Bar {
-    constructor() {}
+  constructor() {}
 }
 
 async function main(): Promise<void> {
-    console.log("Generating sample heapdump");
+  console.log("Generating sample heapdump");
 
-    const _foos = [new Foo(), new Foo(), new Foo()];
-    const _bars = [new Bar()]
+  const _foos = [new Foo(), new Foo(), new Foo()];
+  const _bars = [new Bar()];
 
-    v8.writeHeapSnapshot("out/foo-bar.heapsnapshot")
+  v8.writeHeapSnapshot("out/foo-bar.heapsnapshot");
 
-    console.log("Done!")
+  console.log("Done!");
 }
 void main();

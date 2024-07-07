@@ -1,6 +1,5 @@
-import { chain } from "stream-chain";
 import * as fs from "fs";
-import { parser } from "stream-json";
+import * as sj from "stream-json";
 import {
   EdgeJSON,
   MetaJSON,
@@ -16,8 +15,8 @@ import {
   stringsJSONSchema,
   traceFunctionInfosJSONSchema,
   traceTreesJSONSchema,
-} from "./schema";
-import { Token } from "./tokens";
+} from "./schema.js";
+import { Token } from "./tokens.js";
 import {
   buildKey,
   buildNumber,
@@ -26,9 +25,10 @@ import {
   batchBuildArray,
   assertNextToken,
   buildObject,
-} from "./utils";
-import { TokenQueue } from "./tokenQueue";
-import { chunk } from "lodash";
+} from "./utils.js";
+import { TokenQueue } from "./tokenQueue.js";
+import _ from "lodash";
+import sc from "stream-chain";
 
 // N.B. The parser doesn't account for nullValue, trueValue, or falseValue
 // tokens and could crash if the heapsnapshot file format is ever changed to use
@@ -62,9 +62,13 @@ export async function parseSnapshotFile(
 ): Promise<void> {
   const tokenQueue = new TokenQueue();
 
-  const pipeline = chain([
+  const pipeline = sc.chain([
     fs.createReadStream(path),
-    parser({ packKeys: false, packStrings: false, packNumbers: false }),
+    sj.default.parser({
+      packKeys: false,
+      packStrings: false,
+      packNumbers: false,
+    }),
     token => tokenQueue.onToken(token),
   ]);
 
@@ -299,7 +303,7 @@ export async function* buildNodeFieldValues(
     batchSize,
   )) {
     const validatedNodes = await nodeJSONSchema.parseAsync(nodes);
-    const chunkedNodeFieldValues = chunk(validatedNodes, nodeFieldCount);
+    const chunkedNodeFieldValues = _.chunk(validatedNodes, nodeFieldCount);
 
     yield [chunkedNodeFieldValues, offset];
   }
@@ -322,7 +326,7 @@ export async function* buildEdgeFieldValues(
     batchSize,
   )) {
     const validatedEdges = await edgeJSONSchema.parseAsync(edges);
-    const chunkedEdgeFieldValues = chunk(validatedEdges, edgeFieldCount);
+    const chunkedEdgeFieldValues = _.chunk(validatedEdges, edgeFieldCount);
 
     yield [chunkedEdgeFieldValues, offset];
   }

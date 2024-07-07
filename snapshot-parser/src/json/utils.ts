@@ -1,6 +1,6 @@
-import { TokenParsingError } from "./errors";
-import { TokenQueue } from "./tokenQueue";
-import { Token } from "./tokens";
+import { TokenParsingError } from "./errors.js";
+import { TokenQueue } from "./tokenQueue.js";
+import { Token } from "./tokens.js";
 
 export async function buildObject<O extends Record<string, unknown>>(
   queue: TokenQueue,

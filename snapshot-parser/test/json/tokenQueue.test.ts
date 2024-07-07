@@ -1,4 +1,4 @@
-import { createTokenQueue } from "../_factories/tokenQueue";
+import { createTokenQueue } from "../_factories/tokenQueue.js";
 
 test("tokenQueue peek leaves token in queue", async () => {
   const tokenQueue = await createTokenQueue(

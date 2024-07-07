@@ -1,12 +1,12 @@
-import { batchSelectAll } from "../sqlite/utils";
-import { buildEdgeFieldIndices, getSnapshot } from "./snapshot";
-import { getStringsByIndex } from "./strings";
-import { chunk, keyBy } from "lodash";
-import { Node } from "../sqlite/entities/node";
-import { EdgeData } from "../sqlite/entities/edgeData";
+import { batchSelectAll } from "../sqlite/utils.js";
+import { buildEdgeFieldIndices, getSnapshot } from "./snapshot.js";
+import { getStringsByIndex } from "./strings.js";
+import _ from "lodash";
+import { Node } from "../sqlite/entities/node.js";
+import { EdgeData } from "../sqlite/entities/edgeData.js";
 import { DataSource, In } from "typeorm";
-import { Edge } from "../sqlite/entities/edge";
-import { EdgeType } from "../json/schema";
+import { Edge } from "../sqlite/entities/edge.js";
+import { EdgeType } from "../json/schema.js";
 
 const NODE_BATCH_SIZE = 1000;
 const EDGE_DATA_BATCH_SIZE = 1000;
@@ -77,7 +77,7 @@ export async function processEdges(db: DataSource): Promise<void> {
     const nodeIds = await db.getRepository(Node).find({
       where: { index: In(nodeIndices) },
     });
-    const nodesByIndex = keyBy(nodeIds, obj => obj.index);
+    const nodesByIndex = _.keyBy(nodeIds, obj => obj.index);
 
     for (const edge of edgeProcessingData) {
       const toNodeIndex = edge.fieldValues[fieldIndices["to_node"]];
@@ -105,7 +105,7 @@ export async function processEdges(db: DataSource): Promise<void> {
       });
     }
 
-    const chunks = chunk(edges, EDGE_INSERT_BATCH_SIZE);
+    const chunks = _.chunk(edges, EDGE_INSERT_BATCH_SIZE);
     for (const chunk of chunks) {
       await db.createQueryBuilder().insert().into(Edge).values(chunk).execute();
     }

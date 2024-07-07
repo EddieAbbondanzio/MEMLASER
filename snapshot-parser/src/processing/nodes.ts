@@ -1,9 +1,9 @@
-import { buildNodeFieldIndices, getSnapshot } from "./snapshot";
-import { batchSelectAll } from "../sqlite/utils";
-import { getStringsByIndex } from "./strings";
+import { buildNodeFieldIndices, getSnapshot } from "./snapshot.js";
+import { batchSelectAll } from "../sqlite/utils.js";
+import { getStringsByIndex } from "./strings.js";
 import { DataSource } from "typeorm";
-import { Node } from "../sqlite/entities/node";
-import { NodeData } from "../sqlite/entities/nodeData";
+import { Node } from "../sqlite/entities/node.js";
+import { NodeData } from "../sqlite/entities/nodeData.js";
 
 const NODE_BATCH_SIZE = 1000;
 

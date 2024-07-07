@@ -1,5 +1,5 @@
-import { TokenQueue } from "../../src/json/tokenQueue";
-import { Token } from "../../src/json/tokens";
+import { TokenQueue } from "../../src/json/tokenQueue.js";
+import { Token } from "../../src/json/tokens.js";
 import { chain } from "stream-chain";
 import * as fs from "fs";
 import { parser } from "stream-json";

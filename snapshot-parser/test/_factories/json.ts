@@ -1,4 +1,4 @@
-import { MetaJSON, SnapshotJSON } from "../../src/json/schema";
+import { MetaJSON, SnapshotJSON } from "../../src/json/schema.js";
 
 export function createSnapshotJSON(p?: Partial<SnapshotJSON>): SnapshotJSON {
   return {

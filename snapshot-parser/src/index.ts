@@ -1,16 +1,16 @@
 // Needed by TypeORM.
 import "reflect-metadata";
-import { parseSnapshotFile } from "./json/parser";
-import { EdgeJSON, NodeJSON, SnapshotJSON } from "./json/schema";
-import { processNodes } from "./processing/nodes";
-import { initializeSQLite } from "./sqlite/utils";
-import { processEdges } from "./processing/edges";
+import { parseSnapshotFile } from "./json/parser.js";
+import { EdgeJSON, NodeJSON, SnapshotJSON } from "./json/schema.js";
+import { processNodes } from "./processing/nodes.js";
+import { initializeSQLite } from "./sqlite/utils.js";
+import { processEdges } from "./processing/edges.js";
 import * as fs from "fs";
 import { DataSource } from "typeorm";
-import { HeapString } from "./sqlite/entities/heapString";
-import { Snapshot } from "./sqlite/entities/snapshot";
-import { NodeData } from "./sqlite/entities/nodeData";
-import { EdgeData } from "./sqlite/entities/edgeData";
+import { HeapString } from "./sqlite/entities/heapString.js";
+import { Snapshot } from "./sqlite/entities/snapshot.js";
+import { NodeData } from "./sqlite/entities/nodeData.js";
+import { EdgeData } from "./sqlite/entities/edgeData.js";
 
 async function main(): Promise<void> {
   console.log("main()");
