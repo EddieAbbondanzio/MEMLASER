@@ -30,10 +30,6 @@ interface ParseSnapshotToSQLiteOptions {
   overwriteExisting?: boolean;
 }
 
-export function helloWorld(): void {
-  console.log("HELLO WORLD!");
-}
-
 export async function parseSnapshotToSQLite(
   options: ParseSnapshotToSQLiteOptions,
 ): Promise<DataSource> {
