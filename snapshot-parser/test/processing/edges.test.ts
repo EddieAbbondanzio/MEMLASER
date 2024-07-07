@@ -1,4 +1,9 @@
 import { createEdgeDataLoader, processEdges } from "../../src/processing/edges";
+import { Edge } from "../../src/sqlite/entities/edge";
+import { EdgeData } from "../../src/sqlite/entities/edgeData";
+import { HeapString } from "../../src/sqlite/entities/heapString";
+import { Node } from "../../src/sqlite/entities/node";
+import { Snapshot } from "../../src/sqlite/entities/snapshot";
 import { createTestSQLiteDB } from "../_factories/db";
 import { createSnapshot } from "../_factories/snapshot";
 
@@ -6,11 +11,10 @@ test("createEdgeDataLoader throws if cannot get next n edges", async () => {
   const db = await createTestSQLiteDB();
   const snapshot = createSnapshot();
   await db
-    .insertInto("snapshots")
-    .values({
-      ...snapshot,
-      meta: JSON.stringify(snapshot.meta),
-    })
+    .createQueryBuilder()
+    .insert()
+    .into(Snapshot)
+    .values(snapshot)
     .execute();
 
   const loader = await createEdgeDataLoader(db);
@@ -24,11 +28,10 @@ test("createEdgeDataLoader", async () => {
     edgeCount: 6,
   });
   await db
-    .insertInto("snapshots")
-    .values({
-      ...snapshot,
-      meta: JSON.stringify(snapshot.meta),
-    })
+    .createQueryBuilder()
+    .insert()
+    .into(Snapshot)
+    .values(snapshot)
     .execute();
 
   // Object should look like:
@@ -39,7 +42,9 @@ test("createEdgeDataLoader", async () => {
   //   d: ""
   // }
   await db
-    .insertInto("nodes")
+    .createQueryBuilder()
+    .insert()
+    .into(Node)
     .values([
       {
         type: "object",
@@ -49,7 +54,7 @@ test("createEdgeDataLoader", async () => {
         nodeId: 1,
         selfSize: 0,
         traceNodeId: 0,
-        detached: 0,
+        detached: false,
       },
       {
         type: "string",
@@ -59,7 +64,7 @@ test("createEdgeDataLoader", async () => {
         nodeId: 2,
         selfSize: 0,
         traceNodeId: 0,
-        detached: 0,
+        detached: false,
       },
       {
         type: "string",
@@ -69,7 +74,7 @@ test("createEdgeDataLoader", async () => {
         nodeId: 3,
         selfSize: 0,
         traceNodeId: 0,
-        detached: 0,
+        detached: false,
       },
       {
         type: "string",
@@ -79,7 +84,7 @@ test("createEdgeDataLoader", async () => {
         nodeId: 4,
         selfSize: 0,
         traceNodeId: 0,
-        detached: 0,
+        detached: false,
       },
       {
         type: "string",
@@ -89,12 +94,14 @@ test("createEdgeDataLoader", async () => {
         nodeId: 5,
         selfSize: 0,
         traceNodeId: 0,
-        detached: 0,
+        detached: false,
       },
     ])
     .execute();
   await db
-    .insertInto("strings")
+    .createQueryBuilder()
+    .insert()
+    .into(HeapString)
     .values([
       { index: 0, value: "a" },
       { index: 1, value: "b" },
@@ -103,12 +110,14 @@ test("createEdgeDataLoader", async () => {
     ])
     .execute();
   await db
-    .insertInto("edgeData")
+    .createQueryBuilder()
+    .insert()
+    .into(EdgeData)
     .values([
-      { index: 0, fieldValues: JSON.stringify([2, 0, 7]) },
-      { index: 3, fieldValues: JSON.stringify([2, 1, 14]) },
-      { index: 6, fieldValues: JSON.stringify([2, 2, 21]) },
-      { index: 9, fieldValues: JSON.stringify([2, 3, 28]) },
+      { index: 0, fieldValues: [2, 0, 7] },
+      { index: 3, fieldValues: [2, 1, 14] },
+      { index: 6, fieldValues: [2, 2, 21] },
+      { index: 9, fieldValues: [2, 3, 28] },
     ])
     .execute();
 
@@ -117,22 +126,22 @@ test("createEdgeDataLoader", async () => {
   expect(edges[0]).toEqual({
     id: 1,
     index: 0,
-    fieldValues: "[2,0,7]",
+    fieldValues: [2, 0, 7],
   });
   expect(edges[1]).toEqual({
     id: 2,
     index: 3,
-    fieldValues: "[2,1,14]",
+    fieldValues: [2, 1, 14],
   });
   expect(edges[2]).toEqual({
     id: 3,
     index: 6,
-    fieldValues: "[2,2,21]",
+    fieldValues: [2, 2, 21],
   });
   expect(edges[3]).toEqual({
     id: 4,
     index: 9,
-    fieldValues: "[2,3,28]",
+    fieldValues: [2, 3, 28],
   });
 });
 
@@ -143,11 +152,10 @@ test("processEdges", async () => {
     edgeCount: 6,
   });
   await db
-    .insertInto("snapshots")
-    .values({
-      ...snapshot,
-      meta: JSON.stringify(snapshot.meta),
-    })
+    .createQueryBuilder()
+    .insert()
+    .into(Snapshot)
+    .values(snapshot)
     .execute();
 
   // Object should look like:
@@ -158,7 +166,9 @@ test("processEdges", async () => {
   //   d: ""
   // }
   await db
-    .insertInto("nodes")
+    .createQueryBuilder()
+    .insert()
+    .into(Node)
     .values([
       {
         type: "object",
@@ -168,7 +178,7 @@ test("processEdges", async () => {
         nodeId: 1,
         selfSize: 0,
         traceNodeId: 0,
-        detached: 0,
+        detached: false,
       },
       {
         type: "string",
@@ -178,7 +188,7 @@ test("processEdges", async () => {
         nodeId: 2,
         selfSize: 0,
         traceNodeId: 0,
-        detached: 0,
+        detached: false,
       },
       {
         type: "string",
@@ -188,7 +198,7 @@ test("processEdges", async () => {
         nodeId: 3,
         selfSize: 0,
         traceNodeId: 0,
-        detached: 0,
+        detached: false,
       },
       {
         type: "string",
@@ -198,7 +208,7 @@ test("processEdges", async () => {
         nodeId: 4,
         selfSize: 0,
         traceNodeId: 0,
-        detached: 0,
+        detached: false,
       },
       {
         type: "string",
@@ -208,12 +218,14 @@ test("processEdges", async () => {
         nodeId: 5,
         selfSize: 0,
         traceNodeId: 0,
-        detached: 0,
+        detached: false,
       },
     ])
     .execute();
   await db
-    .insertInto("strings")
+    .createQueryBuilder()
+    .insert()
+    .into(HeapString)
     .values([
       { index: 0, value: "a" },
       { index: 1, value: "b" },
@@ -222,22 +234,24 @@ test("processEdges", async () => {
     ])
     .execute();
   await db
-    .insertInto("edgeData")
+    .createQueryBuilder()
+    .insert()
+    .into(EdgeData)
     .values([
-      { index: 0, fieldValues: JSON.stringify([2, 0, 7]) },
-      { index: 3, fieldValues: JSON.stringify([2, 1, 14]) },
-      { index: 6, fieldValues: JSON.stringify([2, 2, 21]) },
-      { index: 9, fieldValues: JSON.stringify([2, 3, 28]) },
+      { index: 0, fieldValues: [2, 0, 7] },
+      { index: 3, fieldValues: [2, 1, 14] },
+      { index: 6, fieldValues: [2, 2, 21] },
+      { index: 9, fieldValues: [2, 3, 28] },
     ])
     .execute();
 
   await processEdges(db);
 
-  const edges = await db
-    .selectFrom("edges")
-    .selectAll()
-    .orderBy("index")
-    .execute();
+  const edges = await db.getRepository(Edge).find({
+    order: {
+      index: "ASC",
+    },
+  });
 
   expect(edges[0]).toEqual({
     id: 1,

@@ -1,4 +1,8 @@
 import { processNodes } from "../../src/processing/nodes";
+import { HeapString } from "../../src/sqlite/entities/heapString";
+import { Node } from "../../src/sqlite/entities/node";
+import { NodeData } from "../../src/sqlite/entities/nodeData";
+import { Snapshot } from "../../src/sqlite/entities/snapshot";
 import { createTestSQLiteDB } from "../_factories/db";
 import { createSnapshot } from "../_factories/snapshot";
 
@@ -8,11 +12,10 @@ test("processNodes throws if node count doesn't match node data count", async ()
     nodeCount: 14,
   });
   await db
-    .insertInto("snapshots")
-    .values({
-      ...snapshot,
-      meta: JSON.stringify(snapshot.meta),
-    })
+    .createQueryBuilder()
+    .insert()
+    .into(Snapshot)
+    .values(snapshot)
     .execute();
 
   await expect(processNodes(db)).rejects.toThrow(
@@ -26,36 +29,39 @@ test("processNodes", async () => {
     nodeCount: 4,
   });
   await db
-    .insertInto("snapshots")
-    .values({
-      ...snapshot,
-      meta: JSON.stringify(snapshot.meta),
-    })
+    .createQueryBuilder()
+    .insert()
+    .into(Snapshot)
+    .values(snapshot)
     .execute();
 
   await db
-    .insertInto("nodeData")
+    .createQueryBuilder()
+    .insert()
+    .into(NodeData)
     .values([
       {
         index: 0,
-        fieldValues: JSON.stringify([1, 1, 1, 0, 65, 0, 0]),
+        fieldValues: [1, 1, 1, 0, 65, 0, 0],
       },
       {
         index: 7,
-        fieldValues: JSON.stringify([3, 2, 3, 0, 27, 0, 0]),
+        fieldValues: [3, 2, 3, 0, 27, 0, 0],
       },
       {
         index: 14,
-        fieldValues: JSON.stringify([5, 3, 5, 0, 9432, 0, 0]),
+        fieldValues: [5, 3, 5, 0, 9432, 0, 0],
       },
       {
         index: 21,
-        fieldValues: JSON.stringify([2, 4, 7, 24, 86, 0, 0]),
+        fieldValues: [2, 4, 7, 24, 86, 0, 0],
       },
     ])
     .execute();
   await db
-    .insertInto("strings")
+    .createQueryBuilder()
+    .insert()
+    .into(HeapString)
     .values([
       { index: 1, value: "foo" },
       { index: 2, value: "bar" },
@@ -66,11 +72,7 @@ test("processNodes", async () => {
 
   await processNodes(db);
 
-  const nodes = await db
-    .selectFrom("nodes")
-    .selectAll()
-    .orderBy("index asc")
-    .execute();
+  const nodes = await db.getRepository(Node).find({ order: { index: "ASC" } });
 
   expect(nodes[0]).toEqual({
     id: 1,
