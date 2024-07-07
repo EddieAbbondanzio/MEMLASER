@@ -32,16 +32,12 @@ export async function processNodes(db: DataSource): Promise<void> {
     "id",
     NODE_BATCH_SIZE,
   )) {
-    const batch = nodeData.map(raw => ({
-      ...raw,
-      fieldValues: JSON.parse(raw.fieldValues),
-    }));
     const nameLookup = await getStringsByIndex(
       db,
-      batch.map(n => n.fieldValues[fieldIndices["name"]]),
+      nodeData.map(n => n.fieldValues[fieldIndices["name"]]),
     );
 
-    const nodes = batch.map(({ index, fieldValues }) => ({
+    const nodes = nodeData.map(({ index, fieldValues }) => ({
       index,
       type: nodeTypes[fieldValues[fieldIndices["type"]]],
       name: nameLookup[fieldValues[fieldIndices["name"]]].value,

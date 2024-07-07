@@ -6,6 +6,6 @@ export class NodeData {
   id!: number;
   @Column({ type: "integer" })
   index!: number;
-  @Column({ type: "text" })
-  fieldValues!: string;
+  @Column({ type: "json" })
+  fieldValues!: number[];
 }

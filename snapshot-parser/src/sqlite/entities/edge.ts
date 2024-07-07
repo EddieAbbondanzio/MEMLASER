@@ -1,4 +1,5 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Node } from "./node";
 
 @Entity({ name: "edges" })
 export class Edge {
@@ -11,7 +12,9 @@ export class Edge {
   @Column({ type: "text" })
   name!: string;
   @Column({ type: "integer" })
+  @OneToOne(() => Node, n => n.id)
   fromNodeId!: number;
   @Column({ type: "integer" })
+  @OneToOne(() => Node, n => n.id)
   toNodeId!: number;
 }

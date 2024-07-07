@@ -15,7 +15,7 @@ export async function initializeSQLite(
     type: "better-sqlite3",
     database: outputPath,
     // TODO: Load entities and migrations auto-magically!
-    entities: [Edge, EdgeData, Node, NodeData, Snapshot, HeapString],
+    entities: [Snapshot, Edge, EdgeData, Node, NodeData, Snapshot, HeapString],
     migrations: [Init1720318566156],
     namingStrategy: new SnakeCaseNamingStrategy(),
   });

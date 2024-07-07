@@ -1,3 +1,5 @@
+// Needed by TypeORM.
+import "reflect-metadata";
 import { parseSnapshotFile } from "./json/parser";
 import { EdgeJSON, NodeJSON, SnapshotJSON } from "./json/schema";
 import { processNodes } from "./processing/nodes";
@@ -5,13 +7,11 @@ import { initializeSQLite } from "./sqlite/utils";
 import { processEdges } from "./processing/edges";
 import * as fs from "fs";
 import { DataSource } from "typeorm";
-
-// Needed by TypeORM.
-import "reflect-metadata";
 import { HeapString } from "./sqlite/entities/heapString";
 import { Snapshot } from "./sqlite/entities/snapshot";
 import { NodeData } from "./sqlite/entities/nodeData";
 import { EdgeData } from "./sqlite/entities/edgeData";
+import { Node } from "./sqlite/entities/node";
 
 async function main(): Promise<void> {
   console.log("main()");
@@ -53,19 +53,19 @@ export async function parseSnapshotToSQLite(
   let nodeFieldCount = 0;
   let edgeFieldCount = 0;
 
-  const onSnapshot = async (snapshot: SnapshotJSON): Promise<void> => {
-    nodeFieldCount = snapshot.meta.node_fields.length;
-    edgeFieldCount = snapshot.meta.edge_fields.length;
+  const onSnapshot = async (json: SnapshotJSON): Promise<void> => {
+    nodeFieldCount = json.meta.node_fields.length;
+    edgeFieldCount = json.meta.edge_fields.length;
 
     await db
       .createQueryBuilder()
       .insert()
       .into(Snapshot)
       .values({
-        meta: JSON.stringify(snapshot.meta),
-        nodeCount: snapshot.node_count,
-        edgeCount: snapshot.edge_count,
-        traceFunctionCount: snapshot.trace_function_count,
+        meta: json.meta,
+        edgeCount: json.edge_count,
+        nodeCount: json.node_count,
+        traceFunctionCount: json.trace_function_count,
       })
       .execute();
   };
@@ -84,7 +84,7 @@ export async function parseSnapshotToSQLite(
           // i by the number of fields to ensure it points to the first field of
           // the node.
           index: offset + i * nodeFieldCount,
-          fieldValues: JSON.stringify(n),
+          fieldValues: n,
         })),
       )
       .execute();
@@ -104,7 +104,7 @@ export async function parseSnapshotToSQLite(
           // i by the number of fields to ensure it points to the first field of
           // the edge.
           index: offset + i * edgeFieldCount,
-          fieldValues: JSON.stringify(e),
+          fieldValues: e,
         })),
       )
       .execute();

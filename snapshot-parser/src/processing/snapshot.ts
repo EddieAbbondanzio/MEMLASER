@@ -1,27 +1,12 @@
 import { DataSource } from "typeorm";
-import { EdgeFieldJSON, MetaJSON, NodeFieldJSON } from "../json/schema";
+import { EdgeFieldJSON, NodeFieldJSON } from "../json/schema";
 import { Snapshot } from "../sqlite/entities/snapshot";
 
-export interface Snapshot {
-  id: number;
-  nodeCount: number;
-  edgeCount: number;
-  traceFunctionCount: number;
-  meta: MetaJSON;
-}
-
+// TODO: Do we still need this?
 export async function getSnapshot(db: DataSource): Promise<Snapshot> {
-  const rawSnapshot = await db
-    .createQueryBuilder()
-    .select()
-    .from(Snapshot, "snapshot")
-    .select("*")
-    .execute();
+  const snapshot = await db.getRepository(Snapshot).find();
 
-  return {
-    ...rawSnapshot,
-    meta: JSON.parse(rawSnapshot.meta),
-  };
+  return snapshot[0];
 }
 
 export type NodeFieldIndices = Record<NodeFieldJSON, number>;
