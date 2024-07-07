@@ -1,6 +1,6 @@
 import { Kysely } from "kysely";
-import { Database, initializeSQLiteDB } from "../../src/sqlite/db";
+import { Database, initializeSQLite } from "../../src/sqlite/db";
 
 export async function createTestSQLiteDB(): Promise<Kysely<Database>> {
-  return await initializeSQLiteDB(":memory:");
+  return await initializeSQLite(":memory:");
 }

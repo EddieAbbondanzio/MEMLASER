@@ -10,6 +10,7 @@ import {
 import SQLiteDatabase from "better-sqlite3";
 import * as path from "path";
 import * as fs from "fs";
+import { DataSource } from "typeorm";
 
 export type WithDefault<S> = ColumnType<S, S | undefined, S>;
 
@@ -75,44 +76,14 @@ interface StringsTable {
   value: string;
 }
 
-export async function initializeSQLiteDB(
+export async function initializeSQLite(
   outputPath: string,
-): Promise<Kysely<Database>> {
-  const dialect = new SqliteDialect({
-    database: new SQLiteDatabase(outputPath),
+): Promise<DataSource> {
+  const dataSource = new DataSource({
+    type: "better-sqlite3",
+    database: outputPath,
+    // TODO: Add entities!
   });
-
-  const db = new Kysely<Database>({
-    dialect,
-    // Kysely has a ParseJSONResultsPlugin but it was parsing random strings
-    // that contain JSON into JS objects so it was causing more trouble than
-    // worth to keep it.
-    plugins: [new CamelCasePlugin()],
-  });
-  await migrate(db);
-  return db;
-}
-
-async function migrate(db: Kysely<Database>): Promise<void> {
-  // N.B. Must be an absolute path.
-  const migrationFolder = path.join(__dirname, "migrations");
-
-  const migrator = new Migrator({
-    db,
-    provider: new FileMigrationProvider({
-      fs: fs.promises,
-      path,
-      migrationFolder,
-    }),
-  });
-
-  const { error, results } = await migrator.migrateToLatest();
-  if (error) {
-    throw error;
-  }
-
-  const failures = results?.filter(m => m.status === "Error") ?? [];
-  if (failures?.length > 0) {
-    throw new Error(`Failed to run migrations: ${failures.join(", ")}`);
-  }
+  dataSource.runMigrations();
+  return dataSource;
 }

@@ -1,65 +1,228 @@
-import { Kysely } from "kysely";
+import {
+  MigrationInterface,
+  QueryRunner,
+  Table,
+  TableForeignKey,
+} from "typeorm";
 
-export async function up(db: Kysely<unknown>): Promise<void> {
-  await db.schema
-    .createTable("snapshots")
-    .addColumn("id", "integer", col => col.primaryKey().autoIncrement())
-    .addColumn("meta", "text", col => col.notNull())
-    .addColumn("node_count", "integer", col => col.notNull())
-    .addColumn("edge_count", "integer", col => col.notNull())
-    .addColumn("trace_function_count", "integer", col => col.notNull())
-    .execute();
+export class Init1720318566156 implements MigrationInterface {
+  async up(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.createTable(
+      new Table({
+        name: "snapshots",
+        columns: [
+          {
+            name: "id",
+            type: "integer",
+            isPrimary: true,
+            isGenerated: true,
+            generationStrategy: "increment",
+          },
+          {
+            name: "meta",
+            type: "text",
+            isNullable: false,
+          },
+          { name: "node_count", type: "integer", isNullable: false },
+          { name: "edge_count", type: "integer", isNullable: false },
+          { name: "trace_function_count", type: "integer", isNullable: false },
+        ],
+      }),
+    );
 
-  await db.schema
-    .createTable("node_data")
-    .addColumn("id", "integer", col => col.primaryKey().autoIncrement())
-    .addColumn("index", "integer", col => col.notNull())
-    .addColumn("field_values", "text", col => col.notNull())
-    .execute();
+    await queryRunner.createTable(
+      new Table({
+        name: "node_data",
+        columns: [
+          {
+            name: "id",
+            type: "integer",
+            isPrimary: true,
+            isGenerated: true,
+            generationStrategy: "increment",
+          },
+          {
+            name: "index",
+            type: "integer",
+            isNullable: false,
+          },
+          {
+            name: "field_values",
+            type: "text",
+            isNullable: false,
+          },
+        ],
+      }),
+    );
 
-  await db.schema
-    .createTable("edge_data")
-    .addColumn("id", "integer", col => col.primaryKey().autoIncrement())
-    .addColumn("index", "integer", col => col.notNull())
-    .addColumn("field_values", "text", col => col.notNull())
-    .execute();
+    await queryRunner.createTable(
+      new Table({
+        name: "edge_data",
+        columns: [
+          {
+            name: "id",
+            type: "integer",
+            isPrimary: true,
+            isGenerated: true,
+            generationStrategy: "increment",
+          },
+          {
+            name: "index",
+            type: "integer",
+            isNullable: false,
+          },
+          {
+            name: "field_values",
+            type: "text",
+            isNullable: false,
+          },
+        ],
+      }),
+    );
 
-  await db.schema
-    .createTable("strings")
-    .addColumn("id", "integer", col => col.primaryKey().autoIncrement())
-    .addColumn("index", "integer", col => col.notNull())
-    .addColumn("value", "text", col => col.notNull())
-    .execute();
+    await queryRunner.createTable(
+      new Table({
+        name: "strings",
+        columns: [
+          {
+            name: "id",
+            type: "integer",
+            isPrimary: true,
+            isGenerated: true,
+            generationStrategy: "increment",
+          },
+          {
+            name: "index",
+            type: "integer",
+            isNullable: false,
+          },
+          {
+            name: "value",
+            type: "text",
+            isNullable: false,
+          },
+        ],
+      }),
+    );
 
-  await db.schema
-    .createTable("nodes")
-    .addColumn("id", "integer", col => col.primaryKey().autoIncrement())
-    .addColumn("index", "integer", col => col.notNull())
-    .addColumn("type", "text", col => col.notNull())
-    .addColumn("name", "text", col => col.notNull())
-    .addColumn("node_id", "integer", col => col.notNull().unique())
-    .addColumn("self_size", "integer", col => col.notNull())
-    .addColumn("edge_count", "integer", col => col.notNull())
-    .addColumn("trace_node_id", "integer", col => col.notNull())
-    .addColumn("detached", "boolean", col => col.notNull())
-    .execute();
+    await queryRunner.createTable(
+      new Table({
+        name: "nodes",
+        columns: [
+          {
+            name: "id",
+            type: "integer",
+            isPrimary: true,
+            isGenerated: true,
+            generationStrategy: "increment",
+          },
+          {
+            name: "index",
+            type: "integer",
+            isNullable: false,
+          },
+          {
+            name: "type",
+            type: "text",
+            isNullable: false,
+          },
+          {
+            name: "name",
+            type: "text",
+            isNullable: false,
+          },
+          {
+            name: "node_id",
+            type: "integer",
+            isNullable: false,
+            isUnique: true,
+          },
+          {
+            name: "self_size",
+            type: "integer",
+            isNullable: false,
+          },
+          {
+            name: "edge_count",
+            type: "integer",
+            isNullable: false,
+          },
+          {
+            name: "trace_node_id",
+            type: "integer",
+            isNullable: false,
+          },
+          {
+            name: "detached",
+            type: "boolean",
+            isNullable: false,
+          },
+        ],
+      }),
+    );
 
-  await db.schema
-    .createTable("edges")
-    .addColumn("id", "integer", col => col.primaryKey().autoIncrement())
-    .addColumn("index", "integer", col => col.notNull())
-    .addColumn("type", "text", col => col.notNull())
-    .addColumn("name", "text", col => col.notNull())
-    .addColumn("from_node_id", "integer", col => col.notNull())
-    .addColumn("to_node_id", "integer", col => col.notNull())
-    .addForeignKeyConstraint(
-      "from_node_foreign_key",
-      ["from_node_id"],
-      "nodes",
-      ["id"],
-    )
-    .addForeignKeyConstraint("to_node_foreign_key", ["to_node_id"], "nodes", [
-      "id",
-    ])
-    .execute();
+    await queryRunner.createTable(
+      new Table({
+        name: "edges",
+        columns: [
+          {
+            name: "id",
+            type: "integer",
+            isPrimary: true,
+            isGenerated: true,
+            generationStrategy: "increment",
+          },
+          {
+            name: "index",
+            type: "integer",
+            isNullable: false,
+          },
+          {
+            name: "type",
+            type: "text",
+            isNullable: false,
+          },
+          {
+            name: "name",
+            type: "text",
+            isNullable: false,
+          },
+          {
+            name: "from_node_id",
+            type: "integer",
+            isNullable: false,
+          },
+          {
+            name: "to_node_id",
+            type: "integer",
+            isNullable: false,
+          },
+        ],
+      }),
+    );
+
+    await queryRunner.createForeignKey(
+      "edges",
+      new TableForeignKey({
+        columnNames: ["from_node_id"],
+        referencedColumnNames: ["id"],
+        referencedTableName: "nodes",
+        onDelete: "CASCADE",
+      }),
+    );
+
+    await queryRunner.createForeignKey(
+      "edges",
+      new TableForeignKey({
+        columnNames: ["to_node_id"],
+        referencedColumnNames: ["id"],
+        referencedTableName: "nodes",
+        onDelete: "CASCADE",
+      }),
+    );
+  }
+
+  async down(): Promise<void> {
+    // Nothing to do here...
+  }
 }

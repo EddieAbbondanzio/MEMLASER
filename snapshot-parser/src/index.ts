@@ -2,9 +2,12 @@ import { parseSnapshotFile } from "./json/parser";
 import { EdgeJSON, NodeJSON, SnapshotJSON } from "./json/schema";
 import { processNodes } from "./processing/nodes";
 import { Kysely } from "kysely";
-import { Database, initializeSQLiteDB } from "./sqlite/db";
+import { Database, initializeSQLite } from "./sqlite/db";
 import { processEdges } from "./processing/edges";
 import * as fs from "fs";
+
+// Needed by TypeORM.
+import "reflect-metadata";
 
 async function main(): Promise<void> {
   console.log("main()");
@@ -39,7 +42,7 @@ export async function parseSnapshotToSQLite(
     }
   }
 
-  const db = await initializeSQLiteDB(outputPath);
+  const db = await initializeSQLite(outputPath);
 
   // Snapshot will always be read before anything else so it's safe to use these
   // variables in other callbacks such as onNodeBatch, onEdgeBatch.
