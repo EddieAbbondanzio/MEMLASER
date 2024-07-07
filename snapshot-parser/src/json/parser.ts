@@ -150,9 +150,8 @@ async function buildHeapSnapshot(
           STRING_BATCH_SIZE,
         )) {
           if (onStringBatch) {
-            const validatedStrings = await stringsJSONSchema.parseAsync(
-              strings,
-            );
+            const validatedStrings =
+              await stringsJSONSchema.parseAsync(strings);
             await onStringBatch(validatedStrings, offset);
           }
         }
@@ -181,9 +180,8 @@ async function buildHeapSnapshot(
           TRACE_TREE_BATCH_SIZE,
         )) {
           if (onTraceTrees) {
-            const validatedTraceTrees = await traceTreesJSONSchema.parseAsync(
-              traceTrees,
-            );
+            const validatedTraceTrees =
+              await traceTreesJSONSchema.parseAsync(traceTrees);
             await onTraceTrees(validatedTraceTrees, offset);
           }
         }
@@ -197,9 +195,8 @@ async function buildHeapSnapshot(
           LOCATIONS_BATCH_SIZE,
         )) {
           if (onLocations) {
-            const validatedLocations = await locationsJSONSchema.parseAsync(
-              locations,
-            );
+            const validatedLocations =
+              await locationsJSONSchema.parseAsync(locations);
             await onLocations(validatedLocations, offset);
           }
         }

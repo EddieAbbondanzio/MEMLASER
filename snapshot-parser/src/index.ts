@@ -1,10 +1,16 @@
+// Needed by TypeORM.
+import "reflect-metadata";
 import { parseSnapshotFile } from "./json/parser";
 import { EdgeJSON, NodeJSON, SnapshotJSON } from "./json/schema";
 import { processNodes } from "./processing/nodes";
-import { Kysely } from "kysely";
-import { Database, initializeSQLiteDB } from "./sqlite/db";
+import { initializeSQLite } from "./sqlite/utils";
 import { processEdges } from "./processing/edges";
 import * as fs from "fs";
+import { DataSource } from "typeorm";
+import { HeapString } from "./sqlite/entities/heapString";
+import { Snapshot } from "./sqlite/entities/snapshot";
+import { NodeData } from "./sqlite/entities/nodeData";
+import { EdgeData } from "./sqlite/entities/edgeData";
 
 async function main(): Promise<void> {
   console.log("main()");
@@ -25,7 +31,7 @@ interface ParseSnapshotToSQLiteOptions {
 
 export async function parseSnapshotToSQLite(
   options: ParseSnapshotToSQLiteOptions,
-): Promise<Kysely<Database>> {
+): Promise<DataSource> {
   const { snapshotPath, outputPath, overwriteExisting } = options;
 
   if (fs.existsSync(outputPath)) {
@@ -39,26 +45,28 @@ export async function parseSnapshotToSQLite(
     }
   }
 
-  const db = await initializeSQLiteDB(outputPath);
+  const db = await initializeSQLite(outputPath);
 
   // Snapshot will always be read before anything else so it's safe to use these
   // variables in other callbacks such as onNodeBatch, onEdgeBatch.
   let nodeFieldCount = 0;
   let edgeFieldCount = 0;
 
-  const onSnapshot = async (snapshot: SnapshotJSON): Promise<void> => {
-    nodeFieldCount = snapshot.meta.node_fields.length;
-    edgeFieldCount = snapshot.meta.edge_fields.length;
+  const onSnapshot = async (json: SnapshotJSON): Promise<void> => {
+    nodeFieldCount = json.meta.node_fields.length;
+    edgeFieldCount = json.meta.edge_fields.length;
 
     await db
-      .insertInto("snapshots")
+      .createQueryBuilder()
+      .insert()
+      .into(Snapshot)
       .values({
-        meta: JSON.stringify(snapshot.meta),
-        nodeCount: snapshot.node_count,
-        edgeCount: snapshot.edge_count,
-        traceFunctionCount: snapshot.trace_function_count,
+        meta: json.meta,
+        edgeCount: json.edge_count,
+        nodeCount: json.node_count,
+        traceFunctionCount: json.trace_function_count,
       })
-      .executeTakeFirst();
+      .execute();
   };
 
   const onNodeBatch = async (
@@ -66,14 +74,16 @@ export async function parseSnapshotToSQLite(
     offset: number,
   ): Promise<void> => {
     await db
-      .insertInto("nodeData")
+      .createQueryBuilder()
+      .insert()
+      .into(NodeData)
       .values(
         nodes.map((n, i) => ({
           // Since nodes store field values in a flat array we have to multiply
           // i by the number of fields to ensure it points to the first field of
           // the node.
           index: offset + i * nodeFieldCount,
-          fieldValues: JSON.stringify(n),
+          fieldValues: n,
         })),
       )
       .execute();
@@ -84,14 +94,16 @@ export async function parseSnapshotToSQLite(
     offset: number,
   ): Promise<void> => {
     await db
-      .insertInto("edgeData")
+      .createQueryBuilder()
+      .insert()
+      .into(EdgeData)
       .values(
         edges.map((e, i) => ({
           // Since edges store field values in a flat array we have to multiply
           // i by the number of fields to ensure it points to the first field of
           // the edge.
           index: offset + i * edgeFieldCount,
-          fieldValues: JSON.stringify(e),
+          fieldValues: e,
         })),
       )
       .execute();
@@ -102,7 +114,9 @@ export async function parseSnapshotToSQLite(
     offset: number,
   ): Promise<void> => {
     await db
-      .insertInto("strings")
+      .createQueryBuilder()
+      .insert()
+      .into(HeapString)
       .values(
         strings.map((s, i) => ({
           index: offset + i,

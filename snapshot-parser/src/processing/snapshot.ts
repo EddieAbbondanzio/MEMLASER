@@ -1,25 +1,11 @@
-import { Kysely } from "kysely";
-import { Database } from "../sqlite/db";
-import { EdgeFieldJSON, MetaJSON, NodeFieldJSON } from "../json/schema";
+import { DataSource } from "typeorm";
+import { EdgeFieldJSON, NodeFieldJSON } from "../json/schema";
+import { Snapshot } from "../sqlite/entities/snapshot";
 
-export interface Snapshot {
-  id: number;
-  nodeCount: number;
-  edgeCount: number;
-  traceFunctionCount: number;
-  meta: MetaJSON;
-}
+export async function getSnapshot(db: DataSource): Promise<Snapshot> {
+  const snapshot = await db.getRepository(Snapshot).find();
 
-export async function getSnapshot(db: Kysely<Database>): Promise<Snapshot> {
-  const rawSnapshot = await db
-    .selectFrom("snapshots")
-    .selectAll()
-    .executeTakeFirstOrThrow();
-
-  return {
-    ...rawSnapshot,
-    meta: JSON.parse(rawSnapshot.meta),
-  };
+  return snapshot[0];
 }
 
 export type NodeFieldIndices = Record<NodeFieldJSON, number>;

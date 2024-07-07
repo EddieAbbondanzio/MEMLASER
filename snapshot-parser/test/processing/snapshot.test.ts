@@ -3,17 +3,20 @@ import {
   buildNodeFieldIndices,
   getSnapshot,
 } from "../../src/processing/snapshot";
+import { Snapshot } from "../../src/sqlite/entities/snapshot";
 import { createTestSQLiteDB } from "../_factories/db";
 import { createMeta, createSnapshot } from "../_factories/snapshot";
 
 test("getSnapshot", async () => {
   const db = await createTestSQLiteDB();
   await db
-    .insertInto("snapshots")
+    .createQueryBuilder()
+    .insert()
+    .into(Snapshot)
     .values({
       nodeCount: 7,
       edgeCount: 0,
-      meta: JSON.stringify(createMeta({ edge_fields: ["fake"] })),
+      meta: createMeta({ edge_fields: ["fake"] }),
       traceFunctionCount: 0,
     })
     .execute();

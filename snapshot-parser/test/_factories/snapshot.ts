@@ -1,5 +1,5 @@
 import { MetaJSON } from "../../src/json/schema";
-import { Snapshot } from "../../src/processing/snapshot";
+import { Snapshot } from "../../src/sqlite/entities/snapshot";
 
 export function createSnapshot(props?: Partial<Snapshot>): Snapshot {
   return {
