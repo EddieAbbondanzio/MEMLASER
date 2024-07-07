@@ -1,7 +1,7 @@
 {
-  "name": "snapshot-parser",
+  "name": "@memlaser/snapshot-parser",
   "version": "1.0.0",
-  "main": "index.js",
+  "exports": "./dist/index.js",
   "license": "GPL-3.0-only",
   "type": "module",
   "engines": {

@@ -12,21 +12,26 @@ import { Snapshot } from "./sqlite/entities/snapshot.js";
 import { NodeData } from "./sqlite/entities/nodeData.js";
 import { EdgeData } from "./sqlite/entities/edgeData.js";
 
-async function main(): Promise<void> {
-  console.log("main()");
-  await parseSnapshotToSQLite({
-    snapshotPath: "samples/foo-bar.heapsnapshot",
-    outputPath: "out/foo-bar.sqlite",
-    overwriteExisting: true,
-  });
-  console.log("-- done!");
-}
-void main();
+// TODO: Move this to a debug function for testing
+// async function main(): Promise<void> {
+//   console.log("main()");
+//   await parseSnapshotToSQLite({
+//     snapshotPath: "samples/foo-bar.heapsnapshot",
+//     outputPath: "out/foo-bar.sqlite",
+//     overwriteExisting: true,
+//   });
+//   console.log("-- done!");
+// }
+// void main();
 
 interface ParseSnapshotToSQLiteOptions {
   snapshotPath: string;
   outputPath: string;
   overwriteExisting?: boolean;
+}
+
+export function helloWorld(): void {
+  console.log("HELLO WORLD!");
 }
 
 export async function parseSnapshotToSQLite(
