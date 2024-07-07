@@ -1,16 +1,6 @@
-import {
-  CamelCasePlugin,
-  FileMigrationProvider,
-  Kysely,
-  Migrator,
-  SqliteDialect,
-  Generated,
-  ColumnType,
-} from "kysely";
-import SQLiteDatabase from "better-sqlite3";
-import * as path from "path";
-import * as fs from "fs";
+import { Generated, ColumnType } from "kysely";
 import { DataSource } from "typeorm";
+import { Init1720318566156 } from "./migrations/1_init";
 
 export type WithDefault<S> = ColumnType<S, S | undefined, S>;
 
@@ -82,8 +72,13 @@ export async function initializeSQLite(
   const dataSource = new DataSource({
     type: "better-sqlite3",
     database: outputPath,
-    // TODO: Add entities!
+    entities: [],
+    // TODO: If we add more migrations, make this scale better.
+    // (ex: pass a path to the migration directory)
+    migrations: [Init1720318566156],
   });
-  dataSource.runMigrations();
+  await dataSource.initialize();
+  await dataSource.runMigrations({ transaction: "all" });
+  await dataSource.showMigrations();
   return dataSource;
 }
