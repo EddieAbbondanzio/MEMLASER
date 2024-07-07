@@ -6,6 +6,7 @@ import { Node } from "../sqlite/entities/node";
 import { EdgeData } from "../sqlite/entities/edgeData";
 import { DataSource, In } from "typeorm";
 import { Edge } from "../sqlite/entities/edge";
+import { EdgeType } from "../json/schema";
 
 const NODE_BATCH_SIZE = 1000;
 const EDGE_DATA_BATCH_SIZE = 1000;
@@ -95,7 +96,9 @@ export async function processEdges(db: DataSource): Promise<void> {
 
       edges.push({
         index: e.edgeIndex,
-        type: edgeTypes[e.fieldValues[fieldIndices["type"]] as number],
+        type: edgeTypes[
+          e.fieldValues[fieldIndices["type"]] as number
+        ] as EdgeType,
         name: e.name,
         toNodeId: e.toNodeId,
         fromNodeId: e.fromNodeId,
