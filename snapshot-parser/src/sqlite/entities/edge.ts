@@ -1,6 +1,6 @@
 import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from "typeorm";
-import { Node } from "./node";
-import { EdgeType } from "../../json/schema";
+import { Node } from "./node.js";
+import { EdgeType } from "../../json/schema.js";
 
 @Entity({ name: "edges" })
 export class Edge {

@@ -1,6 +1,6 @@
 import { Dictionary, keyBy } from "lodash";
 import { DataSource, In } from "typeorm";
-import { HeapString } from "../sqlite/entities/heapString";
+import { HeapString } from "../sqlite/entities/heapString.js";
 
 export async function getStringsByIndex(
   db: DataSource,

@@ -1,6 +1,6 @@
-import { getStringsByIndex } from "../../src/processing/strings";
-import { HeapString } from "../../src/sqlite/entities/heapString";
-import { createTestSQLiteDB } from "../_factories/db";
+import { getStringsByIndex } from "../../src/processing/strings.js";
+import { HeapString } from "../../src/sqlite/entities/heapString.js";
+import { createTestSQLiteDB } from "../_factories/db.js";
 
 test("getStringsByIndex", async () => {
   const db = await createTestSQLiteDB();

@@ -16,8 +16,8 @@ import {
   stringsJSONSchema,
   traceFunctionInfosJSONSchema,
   traceTreesJSONSchema,
-} from "./schema";
-import { Token } from "./tokens";
+} from "./schema.js";
+import { Token } from "./tokens.js";
 import {
   buildKey,
   buildNumber,
@@ -26,8 +26,8 @@ import {
   batchBuildArray,
   assertNextToken,
   buildObject,
-} from "./utils";
-import { TokenQueue } from "./tokenQueue";
+} from "./utils.js";
+import { TokenQueue } from "./tokenQueue.js";
 import { chunk } from "lodash";
 
 // N.B. The parser doesn't account for nullValue, trueValue, or falseValue

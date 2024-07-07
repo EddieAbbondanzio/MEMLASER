@@ -1,12 +1,12 @@
-import { batchSelectAll } from "../sqlite/utils";
-import { buildEdgeFieldIndices, getSnapshot } from "./snapshot";
-import { getStringsByIndex } from "./strings";
+import { batchSelectAll } from "../sqlite/utils.js";
+import { buildEdgeFieldIndices, getSnapshot } from "./snapshot.js";
+import { getStringsByIndex } from "./strings.js";
 import { chunk, keyBy } from "lodash";
-import { Node } from "../sqlite/entities/node";
-import { EdgeData } from "../sqlite/entities/edgeData";
+import { Node } from "../sqlite/entities/node.js";
+import { EdgeData } from "../sqlite/entities/edgeData.js";
 import { DataSource, In } from "typeorm";
-import { Edge } from "../sqlite/entities/edge";
-import { EdgeType } from "../json/schema";
+import { Edge } from "../sqlite/entities/edge.js";
+import { EdgeType } from "../json/schema.js";
 
 const NODE_BATCH_SIZE = 1000;
 const EDGE_DATA_BATCH_SIZE = 1000;

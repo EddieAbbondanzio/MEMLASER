@@ -5,8 +5,8 @@ import {
   buildNumber,
   buildObject,
   buildString,
-} from "../../src/json/utils";
-import { createTokenQueue } from "../_factories/tokenQueue";
+} from "../../src/json/utils.js";
+import { createTokenQueue } from "../_factories/tokenQueue.js";
 
 beforeEach(() => {
   jest.spyOn(console, "warn");

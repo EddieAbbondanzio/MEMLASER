@@ -1,4 +1,4 @@
-import { Token } from "./tokens";
+import { Token } from "./tokens.js";
 
 export class TokenParsingError extends Error {
   constructor(message: string, tokens?: Array<Token | null>) {

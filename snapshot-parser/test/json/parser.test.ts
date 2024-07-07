@@ -3,9 +3,9 @@ import {
   buildEdgeFieldValues,
   buildNodeFieldValues,
   buildSnapshot,
-} from "../../src/json/parser";
-import { createSnapshotJSON } from "../_factories/json";
-import { createTokenQueue } from "../_factories/tokenQueue";
+} from "../../src/json/parser.js";
+import { createSnapshotJSON } from "../_factories/json.js";
+import { createTokenQueue } from "../_factories/tokenQueue.js";
 
 // This also tests buildMeta
 test("buildSnapshot", async () => {

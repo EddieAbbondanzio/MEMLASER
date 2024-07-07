@@ -1,11 +1,14 @@
-import { createEdgeDataLoader, processEdges } from "../../src/processing/edges";
-import { Edge } from "../../src/sqlite/entities/edge";
-import { EdgeData } from "../../src/sqlite/entities/edgeData";
-import { HeapString } from "../../src/sqlite/entities/heapString";
-import { Node } from "../../src/sqlite/entities/node";
-import { Snapshot } from "../../src/sqlite/entities/snapshot";
-import { createTestSQLiteDB } from "../_factories/db";
-import { createSnapshot } from "../_factories/snapshot";
+import {
+  createEdgeDataLoader,
+  processEdges,
+} from "../../src/processing/edges.js";
+import { Edge } from "../../src/sqlite/entities/edge.js";
+import { EdgeData } from "../../src/sqlite/entities/edgeData.js";
+import { HeapString } from "../../src/sqlite/entities/heapString.js";
+import { Node } from "../../src/sqlite/entities/node.js";
+import { Snapshot } from "../../src/sqlite/entities/snapshot.js";
+import { createTestSQLiteDB } from "../_factories/db.js";
+import { createSnapshot } from "../_factories/snapshot.js";
 
 test("createEdgeDataLoader throws if cannot get next n edges", async () => {
   const db = await createTestSQLiteDB();

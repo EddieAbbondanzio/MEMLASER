@@ -1,12 +1,12 @@
 import { DataSource, FindOptionsOrder, ObjectLiteral } from "typeorm";
-import { Edge } from "./entities/edge";
-import { Node } from "./entities/node";
-import { Snapshot } from "./entities/snapshot";
-import { EdgeData } from "./entities/edgeData";
-import { NodeData } from "./entities/nodeData";
-import { HeapString } from "./entities/heapString";
-import { Init1720318566156 } from "./migrations/1_init";
-import { SnakeCaseNamingStrategy } from "./snakeCaseNamingStrategy";
+import { Edge } from "./entities/edge.js";
+import { Node } from "./entities/node.js";
+import { Snapshot } from "./entities/snapshot.js";
+import { EdgeData } from "./entities/edgeData.js";
+import { NodeData } from "./entities/nodeData.js";
+import { HeapString } from "./entities/heapString.js";
+import { Init1720318566156 } from "./migrations/1_init.js";
+import { SnakeCaseNamingStrategy } from "./snakeCaseNamingStrategy.js";
 
 export async function initializeSQLite(
   outputPath: string,

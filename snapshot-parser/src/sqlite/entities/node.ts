@@ -1,5 +1,5 @@
 import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
-import { NodeType } from "../../json/schema";
+import { NodeType } from "../../json/schema.js";
 
 @Entity({ name: "nodes" })
 export class Node {

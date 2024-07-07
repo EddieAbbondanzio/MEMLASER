@@ -1,5 +1,5 @@
 import EventEmitter from "events";
-import { Token } from "./tokens";
+import { Token } from "./tokens.js";
 
 export class TokenQueue {
   #isDraining: boolean;

@@ -1,6 +1,6 @@
 import { DataSource } from "typeorm";
-import { EdgeFieldJSON, NodeFieldJSON } from "../json/schema";
-import { Snapshot } from "../sqlite/entities/snapshot";
+import { EdgeFieldJSON, NodeFieldJSON } from "../json/schema.js";
+import { Snapshot } from "../sqlite/entities/snapshot.js";
 
 export async function getSnapshot(db: DataSource): Promise<Snapshot> {
   const snapshot = await db.getRepository(Snapshot).find();
