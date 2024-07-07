@@ -3,7 +3,7 @@
   "private": true,
   "workspaces": [
     "api",
-    "snapshot-paser",
+    "snapshot-parser",
     "snapshot-generator"
   ],
   "devDependencies": {

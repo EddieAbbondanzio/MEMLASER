@@ -12,7 +12,7 @@ import { IsNotEmpty } from "class-validator";
 
 class ImportSnapshotDTO {
   @IsNotEmpty()
-  path: string;
+  path!: string;
 }
 
 @Controller("snapshots")

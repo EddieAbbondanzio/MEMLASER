@@ -1,5 +1,5 @@
 {
-  "name": "api",
+  "name": "@memlaser/api",
   "version": "0.0.1",
   "license": "GPL-3.0-only",
   "type": "module",
@@ -20,6 +20,7 @@
     "test:e2e": "jest --config ./test/e2e/jest-e2e.json"
   },
   "dependencies": {
+    "@memlaser/snapshot-parser": "^1.0.0",
     "@nestjs/common": "^10.0.0",
     "@nestjs/core": "^10.0.0",
     "@nestjs/platform-express": "^10.0.0",

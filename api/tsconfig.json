@@ -16,5 +16,6 @@
     "strictNullChecks": true,
     "noImplicitAny": true,
     "strictBindCallApply": false
-  }
+  },
+  "references": [{ "path": "../snapshot-parser" }]
 }
