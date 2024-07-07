@@ -46,6 +46,7 @@ export async function processNodes(db: DataSource): Promise<void> {
       detached: Boolean(fieldValues[fieldIndices["detachedness"]]),
       traceNodeId: fieldValues[fieldIndices["trace_node_id"]],
     }));
+
     await db.createQueryBuilder().insert().into(Node).values(nodes).execute();
   }
 }

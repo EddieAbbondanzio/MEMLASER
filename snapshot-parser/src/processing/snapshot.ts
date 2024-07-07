@@ -2,7 +2,6 @@ import { DataSource } from "typeorm";
 import { EdgeFieldJSON, NodeFieldJSON } from "../json/schema";
 import { Snapshot } from "../sqlite/entities/snapshot";
 
-// TODO: Do we still need this?
 export async function getSnapshot(db: DataSource): Promise<Snapshot> {
   const snapshot = await db.getRepository(Snapshot).find();
 

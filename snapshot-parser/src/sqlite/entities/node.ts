@@ -7,6 +7,8 @@ export class Node {
   @Column({ type: "integer" })
   index!: number;
   @Column({ type: "text" })
+  type!: string;
+  @Column({ type: "text" })
   name!: string;
   @Column({ type: "integer" })
   nodeId!: number;

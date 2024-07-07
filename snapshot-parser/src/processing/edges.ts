@@ -4,7 +4,7 @@ import { getStringsByIndex } from "./strings";
 import { chunk, keyBy } from "lodash";
 import { Node } from "../sqlite/entities/node";
 import { EdgeData } from "../sqlite/entities/edgeData";
-import { DataSource } from "typeorm";
+import { DataSource, In } from "typeorm";
 import { Edge } from "../sqlite/entities/edge";
 
 const NODE_BATCH_SIZE = 1000;
@@ -47,7 +47,7 @@ export async function processEdges(db: DataSource): Promise<void> {
       for (const edge of edgeData) {
         edgeProcessingData.push({
           edgeIndex: edge.index,
-          fieldValues: JSON.parse(edge.fieldValues),
+          fieldValues: edge.fieldValues,
           fromNodeId: node.id,
         });
       }
@@ -73,13 +73,9 @@ export async function processEdges(db: DataSource): Promise<void> {
     const nodeIndices = edgeProcessingData.map(
       e => e.fieldValues[fieldIndices["to_node"]],
     ) as number[];
-    const nodeIds = await db
-      .createQueryBuilder()
-      .select()
-      .from(Node, "node")
-      .select(["id", "index"])
-      .where("index IN (:...nodeIndices)", nodeIndices)
-      .execute();
+    const nodeIds = await db.getRepository(Node).find({
+      where: { index: In(nodeIndices) },
+    });
     const nodesByIndex = keyBy(nodeIds, obj => obj.index);
 
     for (const edge of edgeProcessingData) {
