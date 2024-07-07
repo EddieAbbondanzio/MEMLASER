@@ -1,11 +1,9 @@
 {
-  "extends": "./tsconfig.base.json",
+  "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist"
+    "sourceMap": false
   },
-
   // We don't include test directory to keep build size small.
   // Src: https://stackoverflow.com/a/60223923
-  "include": ["src"],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "test", "jest.config.js"]
 }

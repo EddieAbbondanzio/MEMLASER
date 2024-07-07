@@ -1,5 +1,18 @@
 {
-  "extends": "./tsconfig.base.json",
-  "include": ["src", "test"],
-  "exclude": ["node_modules"]
+  "compilerOptions": {
+    "target": "es2021",
+    "allowJs": true,
+    "esModuleInterop": true,
+    "moduleResolution": "node",
+    "noImplicitAny": true,
+    "sourceMap": true,
+    "baseUrl": ".",
+    "resolveJsonModule": true,
+    "strict": true,
+    "strictNullChecks": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "lib": ["ES2021"],
+    "outDir": "dist"
+  }
 }
