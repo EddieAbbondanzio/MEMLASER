@@ -23,7 +23,6 @@
   "dependencies": {
     "@types/lodash": "^4.17.5",
     "better-sqlite3": "^11.0.0",
-    "kysely": "^0.27.3",
     "lodash": "^4.17.21",
     "reflect-metadata": "^0.2.2",
     "stream-chain": "^2.2.5",

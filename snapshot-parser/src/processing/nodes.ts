@@ -1,27 +1,33 @@
-import { Kysely } from "kysely";
-import { Database } from "../sqlite/db";
 import { buildNodeFieldIndices, getSnapshot } from "./snapshot";
-import { batchSelectAll, getTableSize } from "../sqlite/utils";
+import { batchSelectAll } from "../sqlite/utils";
 import { getStringsByIndex } from "./strings";
+import { DataSource } from "typeorm";
+import { Node } from "../sqlite/entities/node";
+import { NodeData } from "../sqlite/entities/nodeData";
 
 const NODE_BATCH_SIZE = 1000;
 
-export async function processNodes(db: Kysely<Database>): Promise<void> {
+export async function processNodes(db: DataSource): Promise<void> {
   const snapshot = await getSnapshot(db);
   const nodeTypes = snapshot.meta.node_types[0];
   const fieldIndices = buildNodeFieldIndices(snapshot);
 
   // Sanity check to ensure the node_data rows were generated correctly.
   const { nodeCount } = snapshot;
-  const nodeDataCount = await getTableSize(db, "nodeData");
+  const nodeDataCount = await db
+    .createQueryBuilder()
+    .select("*")
+    .from(Node, "node")
+    .getCount();
   if (nodeCount !== nodeDataCount) {
     throw new Error(
       `Size of node_data table (${nodeDataCount}) doesn't match nodeCount: ${nodeCount}`,
     );
   }
 
-  for await (const nodeData of batchSelectAll(
+  for await (const nodeData of batchSelectAll<NodeData>(
     db,
+    NodeData,
     "nodeData",
     "id",
     NODE_BATCH_SIZE,
@@ -45,6 +51,6 @@ export async function processNodes(db: Kysely<Database>): Promise<void> {
       detached: fieldValues[fieldIndices["detachedness"]],
       traceNodeId: fieldValues[fieldIndices["trace_node_id"]],
     }));
-    await db.insertInto("nodes").values(nodes).execute();
+    await db.createQueryBuilder().insert().into(Node).values(nodes).execute();
   }
 }

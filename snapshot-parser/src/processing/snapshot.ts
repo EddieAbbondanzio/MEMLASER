@@ -1,6 +1,6 @@
-import { Kysely } from "kysely";
-import { Database } from "../sqlite/db";
+import { DataSource } from "typeorm";
 import { EdgeFieldJSON, MetaJSON, NodeFieldJSON } from "../json/schema";
+import { Snapshot } from "../sqlite/entities/snapshot";
 
 export interface Snapshot {
   id: number;
@@ -10,11 +10,13 @@ export interface Snapshot {
   meta: MetaJSON;
 }
 
-export async function getSnapshot(db: Kysely<Database>): Promise<Snapshot> {
+export async function getSnapshot(db: DataSource): Promise<Snapshot> {
   const rawSnapshot = await db
-    .selectFrom("snapshots")
-    .selectAll()
-    .executeTakeFirstOrThrow();
+    .createQueryBuilder()
+    .select()
+    .from(Snapshot, "snapshot")
+    .select("*")
+    .execute();
 
   return {
     ...rawSnapshot,

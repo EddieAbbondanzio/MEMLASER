@@ -1,13 +1,17 @@
 import { parseSnapshotFile } from "./json/parser";
 import { EdgeJSON, NodeJSON, SnapshotJSON } from "./json/schema";
 import { processNodes } from "./processing/nodes";
-import { Kysely } from "kysely";
-import { Database, initializeSQLite } from "./sqlite/db";
+import { initializeSQLite } from "./sqlite/utils";
 import { processEdges } from "./processing/edges";
 import * as fs from "fs";
+import { DataSource } from "typeorm";
 
 // Needed by TypeORM.
 import "reflect-metadata";
+import { HeapString } from "./sqlite/entities/heapString";
+import { Snapshot } from "./sqlite/entities/snapshot";
+import { NodeData } from "./sqlite/entities/nodeData";
+import { EdgeData } from "./sqlite/entities/edgeData";
 
 async function main(): Promise<void> {
   console.log("main()");
@@ -28,7 +32,7 @@ interface ParseSnapshotToSQLiteOptions {
 
 export async function parseSnapshotToSQLite(
   options: ParseSnapshotToSQLiteOptions,
-): Promise<Kysely<Database>> {
+): Promise<DataSource> {
   const { snapshotPath, outputPath, overwriteExisting } = options;
 
   if (fs.existsSync(outputPath)) {
@@ -54,14 +58,16 @@ export async function parseSnapshotToSQLite(
     edgeFieldCount = snapshot.meta.edge_fields.length;
 
     await db
-      .insertInto("snapshots")
+      .createQueryBuilder()
+      .insert()
+      .into(Snapshot)
       .values({
         meta: JSON.stringify(snapshot.meta),
         nodeCount: snapshot.node_count,
         edgeCount: snapshot.edge_count,
         traceFunctionCount: snapshot.trace_function_count,
       })
-      .executeTakeFirst();
+      .execute();
   };
 
   const onNodeBatch = async (
@@ -69,7 +75,9 @@ export async function parseSnapshotToSQLite(
     offset: number,
   ): Promise<void> => {
     await db
-      .insertInto("nodeData")
+      .createQueryBuilder()
+      .insert()
+      .into(NodeData)
       .values(
         nodes.map((n, i) => ({
           // Since nodes store field values in a flat array we have to multiply
@@ -87,7 +95,9 @@ export async function parseSnapshotToSQLite(
     offset: number,
   ): Promise<void> => {
     await db
-      .insertInto("edgeData")
+      .createQueryBuilder()
+      .insert()
+      .into(EdgeData)
       .values(
         edges.map((e, i) => ({
           // Since edges store field values in a flat array we have to multiply
@@ -105,7 +115,9 @@ export async function parseSnapshotToSQLite(
     offset: number,
   ): Promise<void> => {
     await db
-      .insertInto("strings")
+      .createQueryBuilder()
+      .insert()
+      .into(HeapString)
       .values(
         strings.map((s, i) => ({
           index: offset + i,

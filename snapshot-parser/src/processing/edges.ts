@@ -1,9 +1,11 @@
-import { Kysely } from "kysely";
-import { Database } from "src/sqlite/db";
-import { Model, batchSelectAll } from "../sqlite/utils";
+import { batchSelectAll } from "../sqlite/utils";
 import { buildEdgeFieldIndices, getSnapshot } from "./snapshot";
 import { getStringsByIndex } from "./strings";
 import { chunk, keyBy } from "lodash";
+import { Node } from "../sqlite/entities/node";
+import { EdgeData } from "../sqlite/entities/edgeData";
+import { DataSource } from "typeorm";
+import { Edge } from "../sqlite/entities/edge";
 
 const NODE_BATCH_SIZE = 1000;
 const EDGE_DATA_BATCH_SIZE = 1000;
@@ -24,14 +26,15 @@ interface EdgeProcessingData {
   toNodeId?: number;
 }
 
-export async function processEdges(db: Kysely<Database>): Promise<void> {
+export async function processEdges(db: DataSource): Promise<void> {
   const snapshot = await getSnapshot(db);
   const edgeTypes = snapshot.meta.edge_types[0];
   const fieldIndices = buildEdgeFieldIndices(snapshot);
   const edgeDataLoader = await createEdgeDataLoader(db);
 
-  for await (const nodeBatch of batchSelectAll(
+  for await (const nodeBatch of batchSelectAll<Node>(
     db,
+    Node,
     "nodes",
     "index",
     NODE_BATCH_SIZE,
@@ -72,9 +75,11 @@ export async function processEdges(db: Kysely<Database>): Promise<void> {
       e => e.fieldValues[fieldIndices["to_node"]],
     ) as number[];
     const nodeIds = await db
-      .selectFrom("nodes")
+      .createQueryBuilder()
+      .select()
+      .from(Node, "node")
       .select(["id", "index"])
-      .where("index", "in", nodeIndices)
+      .where("index IN (:...nodeIndices)", nodeIndices)
       .execute();
     const nodesByIndex = keyBy(nodeIds, obj => obj.index);
 
@@ -104,23 +109,29 @@ export async function processEdges(db: Kysely<Database>): Promise<void> {
 
     const chunks = chunk(edges, EDGE_INSERT_BATCH_SIZE);
     for (const chunk of chunks) {
-      await db.insertInto("edges").values(chunk).execute();
+      await db.createQueryBuilder().insert().into(Edge).values(chunk).execute();
     }
   }
 }
 
 export async function createEdgeDataLoader(
-  db: Kysely<Database>,
+  db: DataSource,
   batchSize = EDGE_DATA_BATCH_SIZE,
 ): Promise<{
-  getNext(count: number): Promise<Model<"edgeData">[]>;
+  getNext(count: number): Promise<EdgeData[]>;
 }> {
-  const iterator = batchSelectAll(db, "edgeData", "index", batchSize);
-  const cache: Model<"edgeData">[] = [];
+  const iterator = batchSelectAll<EdgeData>(
+    db,
+    EdgeData,
+    "edgeData",
+    "index",
+    batchSize,
+  );
+  const cache: EdgeData[] = [];
   let isDraining = false;
 
   return {
-    async getNext(count: number): Promise<Model<"edgeData">[]> {
+    async getNext(count: number): Promise<EdgeData[]> {
       while (!isDraining && cache.length < count) {
         const result = await iterator.next();
         if (result.done) {
