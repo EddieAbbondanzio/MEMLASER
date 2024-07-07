@@ -11,7 +11,6 @@ import { HeapString } from "./sqlite/entities/heapString";
 import { Snapshot } from "./sqlite/entities/snapshot";
 import { NodeData } from "./sqlite/entities/nodeData";
 import { EdgeData } from "./sqlite/entities/edgeData";
-import { Node } from "./sqlite/entities/node";
 
 async function main(): Promise<void> {
   console.log("main()");

@@ -1,4 +1,4 @@
-import { DataSource } from "typeorm";
+import { DataSource, FindOptionsOrder, ObjectLiteral } from "typeorm";
 import { Edge } from "./entities/edge";
 import { Node } from "./entities/node";
 import { Snapshot } from "./entities/snapshot";
@@ -24,28 +24,22 @@ export async function initializeSQLite(
   return dataSource;
 }
 
-export async function* batchSelectAll<T>(
+export async function* batchSelectAll<T extends ObjectLiteral>(
   db: DataSource,
   table: new () => T,
-  tableAlias: string,
   orderBy: keyof T,
   batchSize: number,
 ): AsyncGenerator<T[], void, void> {
   // Repeat batches until we get a batch smaller than batchSize. That means
   // we are done!
 
+  const order = { [orderBy]: "ASC" } as FindOptionsOrder<T>;
+
   let offset = 0;
   while (true) {
     const rows = await db
-      .createQueryBuilder()
-      .select()
-      .from(table, tableAlias)
-      .select("*")
-      .limit(batchSize)
-      .offset(offset)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .orderBy(orderBy as any)
-      .execute();
+      .getRepository<T>(table)
+      .find({ take: batchSize, skip: offset, order });
     offset += batchSize;
 
     yield rows;

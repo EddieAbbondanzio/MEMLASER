@@ -1,16 +1,14 @@
-import { Kysely } from "kysely";
-import { Database } from "../sqlite/db";
 import { Dictionary, keyBy } from "lodash";
+import { DataSource, In } from "typeorm";
+import { HeapString } from "../sqlite/entities/heapString";
 
 export async function getStringsByIndex(
-  db: Kysely<Database>,
+  db: DataSource,
   indices: number[],
 ): Promise<Dictionary<{ index: number; value: string }>> {
-  const strings = await db
-    .selectFrom("strings")
-    .select(["index", "value"])
-    .where("index", "in", indices)
-    .execute();
+  const strings = await db.getRepository(HeapString).findBy({
+    index: In(indices),
+  });
 
   return keyBy(strings, s => s.index);
 }

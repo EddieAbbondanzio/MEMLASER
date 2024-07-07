@@ -35,7 +35,6 @@ export async function processEdges(db: DataSource): Promise<void> {
   for await (const nodeBatch of batchSelectAll<Node>(
     db,
     Node,
-    "nodes",
     "index",
     NODE_BATCH_SIZE,
   )) {
@@ -120,13 +119,7 @@ export async function createEdgeDataLoader(
 ): Promise<{
   getNext(count: number): Promise<EdgeData[]>;
 }> {
-  const iterator = batchSelectAll<EdgeData>(
-    db,
-    EdgeData,
-    "edgeData",
-    "index",
-    batchSize,
-  );
+  const iterator = batchSelectAll<EdgeData>(db, EdgeData, "index", batchSize);
   const cache: EdgeData[] = [];
   let isDraining = false;
 

@@ -1,6 +1,6 @@
-import { Kysely } from "kysely";
-import { Database, initializeSQLite } from "../../src/sqlite/db";
+import { DataSource } from "typeorm";
+import { initializeSQLite } from "../../src/sqlite/utils";
 
-export async function createTestSQLiteDB(): Promise<Kysely<Database>> {
+export async function createTestSQLiteDB(): Promise<DataSource> {
   return await initializeSQLite(":memory:");
 }

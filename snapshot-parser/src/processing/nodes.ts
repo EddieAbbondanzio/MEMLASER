@@ -17,7 +17,7 @@ export async function processNodes(db: DataSource): Promise<void> {
   const nodeDataCount = await db
     .createQueryBuilder()
     .select("*")
-    .from(Node, "node")
+    .from(NodeData, "node_data")
     .getCount();
   if (nodeCount !== nodeDataCount) {
     throw new Error(
@@ -28,7 +28,6 @@ export async function processNodes(db: DataSource): Promise<void> {
   for await (const nodeData of batchSelectAll<NodeData>(
     db,
     NodeData,
-    "nodeData",
     "id",
     NODE_BATCH_SIZE,
   )) {
@@ -44,7 +43,7 @@ export async function processNodes(db: DataSource): Promise<void> {
       nodeId: fieldValues[fieldIndices["id"]],
       selfSize: fieldValues[fieldIndices["self_size"]],
       edgeCount: fieldValues[fieldIndices["edge_count"]],
-      detached: fieldValues[fieldIndices["detachedness"]],
+      detached: Boolean(fieldValues[fieldIndices["detachedness"]]),
       traceNodeId: fieldValues[fieldIndices["trace_node_id"]],
     }));
     await db.createQueryBuilder().insert().into(Node).values(nodes).execute();
