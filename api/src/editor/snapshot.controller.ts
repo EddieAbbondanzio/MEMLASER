@@ -22,14 +22,14 @@ export class SnapshotController {
   @UseInterceptors(ClassSerializerInterceptor)
   @Get()
   async getAll(): Promise<Snapshot[]> {
-    await this.snapshotService.loadSnapshots();
-    return [new Snapshot("foo/bar.heapsnapshot")];
+    const snapshots = await this.snapshotService.getAvailableSnapshots();
+    return snapshots;
   }
 
   @Post("import")
-  import(@Body() importDTO: ImportSnapshotDTO): Snapshot {
+  import(@Body() importDTO: ImportSnapshotDTO): void {
     console.log("GOT: ", importDTO);
     // TODO: Create the snapshot
-    return new Snapshot("foo/bar.heapsnapshot");
+    // return new Snapshot("foo/bar.heapsnapshot");
   }
 }

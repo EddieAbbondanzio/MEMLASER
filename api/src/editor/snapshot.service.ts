@@ -2,6 +2,7 @@ import { Injectable, OnModuleInit } from "@nestjs/common";
 import { DATA_DIR } from "../config.js";
 import fs from "node:fs";
 import path from "node:path";
+import { Snapshot } from "./snapshot.js";
 
 // Snapshots (.sqlite) files live inside a snapshot dir within the data dir.
 
@@ -23,5 +24,15 @@ export class SnapshotService implements OnModuleInit {
     }
   }
 
-  async loadSnapshots(): Promise<void> {}
+  async getAvailableSnapshots(): Promise<Snapshot[]> {
+    const snapshots = (await fs.promises.readdir(this.snapshotDirectoryPath))
+      .filter((f) => /.*\.sqlite/.test(f))
+      .map((f) => {
+        const snapshotPath = path.join(this.snapshotDirectoryPath, f);
+        const nameNoExtension = path.parse(snapshotPath).name;
+        return new Snapshot(nameNoExtension, snapshotPath);
+      });
+
+    return snapshots;
+  }
 }
