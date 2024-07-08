@@ -2,7 +2,8 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class Sidebar extends StatelessWidget {
   const Sidebar({super.key});
@@ -38,6 +39,16 @@ class Sidebar extends StatelessWidget {
                       if (result != null) {
                         File file = File(result.files.single.path!);
                         print('File: ${file.path}');
+
+                        var r = await http.post(
+                            Uri.parse("http://localhost:3000/snapshots/import"),
+                            body: jsonEncode(
+                                <String, String>{'path': file.path}));
+
+                        print("GOT RESPONSE");
+                        print(r.statusCode);
+                        print(r.body);
+                        print(r.headers);
 
                         // Now we'd make an HTTP request to API and give it the path.
                         // POST snapshot/import {

@@ -3,6 +3,7 @@ import { DATA_DIR } from "../config.js";
 import fs from "node:fs";
 import path from "node:path";
 import { Snapshot } from "./snapshot.js";
+import { parseSnapshotToSQLite } from "@memlaser/snapshot-parser";
 
 // Snapshots (.sqlite) files live inside a snapshot dir within the data dir.
 
@@ -34,5 +35,21 @@ export class SnapshotService implements OnModuleInit {
       });
 
     return snapshots;
+  }
+
+  async importSnapshot(p: string): Promise<Snapshot> {
+    const importPath = path.parse(p);
+    const outputPath = path.join(
+      this.snapshotDirectoryPath,
+      `${importPath.name}.sqlite`,
+    );
+
+    const ds = await parseSnapshotToSQLite({
+      snapshotPath: p,
+      outputPath,
+    });
+    await ds.destroy();
+
+    return new Snapshot(importPath.name, outputPath);
   }
 }
