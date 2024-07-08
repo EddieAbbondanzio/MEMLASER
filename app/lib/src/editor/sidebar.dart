@@ -42,6 +42,7 @@ class Sidebar extends StatelessWidget {
 
                         var r = await http.post(
                             Uri.parse("http://localhost:3000/snapshots/import"),
+                            headers: {"Content-Type": "application/json"},
                             body: jsonEncode(
                                 <String, String>{'path': file.path}));
 

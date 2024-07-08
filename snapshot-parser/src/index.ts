@@ -38,7 +38,7 @@ export async function parseSnapshotToSQLite(
   if (fs.existsSync(outputPath)) {
     if (!overwriteExisting) {
       throw new Error(
-        `Output file: ${outputPath} already exist. Please pass overWritingExisting: true if you want it to be updated.`,
+        `Output file: ${outputPath} already exists. Please pass overWritingExisting: true if you want it to be updated.`,
       );
     } else {
       console.warn(`Overwriting existing file: ${outputPath}`);
