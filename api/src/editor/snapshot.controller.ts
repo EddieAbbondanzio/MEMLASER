@@ -21,8 +21,8 @@ export class SnapshotController {
 
   @UseInterceptors(ClassSerializerInterceptor)
   @Get()
-  getAll(): Snapshot[] {
-    // TODO: Load snapshots from data dir.
+  async getAll(): Promise<Snapshot[]> {
+    await this.snapshotService.loadSnapshots();
     return [new Snapshot("foo/bar.heapsnapshot")];
   }
 

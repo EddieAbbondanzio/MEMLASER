@@ -1,12 +1,26 @@
-import { Injectable } from "@nestjs/common";
-import { OS_PATHS } from "../config.js";
+import { Injectable, OnModuleInit } from "@nestjs/common";
+import { DATA_DIR } from "../config.js";
+import fs from "node:fs";
+import path from "node:path";
+
+// Snapshots (.sqlite) files live inside a snapshot dir within the data dir.
 
 @Injectable()
-export class SnapshotService {
-  dataDirectory: string;
+export class SnapshotService implements OnModuleInit {
+  // Safe to assert as non-null because onModuleInit runs before the API starts
+  // handling incoming requests.
+  snapshotDirectoryPath!: string;
 
-  constructor() {
-    this.dataDirectory = OS_PATHS.data;
+  async onModuleInit(): Promise<void> {
+    // Create data directory if it doesn't exist.
+    if (!fs.existsSync(DATA_DIR)) {
+      await fs.promises.mkdir(DATA_DIR);
+    }
+
+    this.snapshotDirectoryPath = path.join(DATA_DIR, "snapshots");
+    if (!fs.existsSync(this.snapshotDirectoryPath)) {
+      await fs.promises.mkdir(this.snapshotDirectoryPath);
+    }
   }
 
   async loadSnapshots(): Promise<void> {}
