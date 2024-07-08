@@ -3,6 +3,7 @@ import type { JestConfigWithTsJest } from "ts-jest";
 // See: https://kulshekhar.github.io/ts-jest/docs/guides/esm-support/
 const jestConfig: JestConfigWithTsJest = {
   preset: "ts-jest/presets/default-esm",
+  rootDir: "test",
   moduleNameMapper: {
     "^(\\.{1,2}/.*)\\.js$": "$1",
   },
