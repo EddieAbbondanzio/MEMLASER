@@ -1,5 +1,5 @@
 import { Injectable, OnModuleInit } from "@nestjs/common";
-import { DATA_DIR } from "../config.js";
+import { DATA_DIR } from "../core/config.js";
 import fs from "node:fs";
 import path from "node:path";
 import { Snapshot } from "./snapshot.js";
