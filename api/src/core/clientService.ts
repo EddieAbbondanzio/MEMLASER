@@ -1,25 +1,23 @@
 import { Injectable } from "@nestjs/common";
 import { Socket } from "socket.io";
-import { ClientEvent } from "./clientEvents.js";
+import { Client } from "./client.js";
 
 @Injectable()
 export class ClientService {
-  private clients: Map<string, Socket> = new Map();
+  private clients: Map<string, Client> = new Map();
 
-  registerClient(client: Socket) {
-    this.clients.set(client.id, client);
+  getClient(clientId: string): Client | undefined {
+    return this.clients.get(clientId);
+  }
+
+  registerClient(socket: Socket): Client {
+    const { id } = socket;
+    const client = new Client(id, socket);
+    this.clients.set(id, client);
+    return client;
   }
 
   deregisterClient(client: Socket): void {
     this.clients.delete(client.id);
-  }
-
-  async dispatchEvent(clientId: string, event: ClientEvent): Promise<void> {
-    const client = this.clients.get(clientId);
-    if (client === undefined) {
-      throw new Error(`No client found for Id: ${clientId}`);
-    }
-
-    client.send(JSON.stringify(event));
   }
 }

@@ -4,7 +4,7 @@ import {
   OnGatewayConnection,
   OnGatewayDisconnect,
 } from "@nestjs/websockets";
-import { Socket, Server } from "socket.io";
+import { Socket } from "socket.io";
 import { WEBSOCKET_PORT } from "./config.js";
 import { ClientService } from "./clientService.js";
 
@@ -14,22 +14,17 @@ export class WebsocketGateway
 {
   constructor(private clientService: ClientService) {}
 
-  handleConnection(client: Socket) {
-    console.log(`Client connected: ${client.id}`);
-    this.clientService.registerClient(client);
-    this.clientService.dispatchEvent(client.id, {
+  handleConnection(socket: Socket) {
+    console.log(`Client connected: ${socket.id}`);
+    const client = this.clientService.registerClient(socket);
+    client.dispatchEvent({
       type: "CLIENT_ID",
-      data: client.id,
+      data: socket.id,
     });
   }
 
-  handleDisconnect(client: Socket) {
-    console.log(`Client disconnected: ${client.id}`);
-    this.clientService.deregisterClient(client);
-  }
-
-  @SubscribeMessage("test")
-  handleMessage(client: Socket, payload: any): void {
-    console.log(`Message from client ${client.id}: ${payload}`);
+  handleDisconnect(socket: Socket) {
+    console.log(`Client disconnected: ${socket.id}`);
+    this.clientService.deregisterClient(socket);
   }
 }
