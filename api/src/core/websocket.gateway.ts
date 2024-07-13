@@ -1,30 +1,36 @@
 import {
-  SubscribeMessage,
   WebSocketGateway,
   OnGatewayConnection,
   OnGatewayDisconnect,
+  WebSocketServer,
 } from "@nestjs/websockets";
-import { Socket } from "socket.io";
 import { WEBSOCKET_PORT } from "./config.js";
 import { ClientService } from "./clientService.js";
+import { WsAdapter } from "@nestjs/platform-ws";
+import { WebSocket } from "ws";
 
-@WebSocketGateway(WEBSOCKET_PORT)
+@WebSocketGateway({
+  transports: ["websocket"],
+  cors: { origin: "*" },
+  path: "/events",
+})
 export class WebsocketGateway
   implements OnGatewayConnection, OnGatewayDisconnect
 {
+  @WebSocketServer()
+  private server: WsAdapter;
+
   constructor(private clientService: ClientService) {}
 
-  handleConnection(socket: Socket) {
-    console.log(`Client connected: ${socket.id}`);
+  handleConnection(socket: WebSocket) {
     const client = this.clientService.registerClient(socket);
     client.dispatchEvent({
       type: "CLIENT_ID",
-      data: socket.id,
+      data: client.id,
     });
   }
 
-  handleDisconnect(socket: Socket) {
-    console.log(`Client disconnected: ${socket.id}`);
+  handleDisconnect(socket: WebSocket) {
     this.clientService.deregisterClient(socket);
   }
 }

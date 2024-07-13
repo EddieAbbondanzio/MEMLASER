@@ -18,19 +18,20 @@ export class ClientMiddleware implements NestMiddleware {
   constructor(private readonly clientService: ClientService) {}
 
   use(req: Request, res: Response, next: NextFunction): void {
-    const clientId = req.headers[CLIENT_ID_HEADER] as string | undefined;
-    if (clientId === undefined) {
-      res.status(400);
-      return;
-    }
+    console.log("GOT CLIENT REQUEST!", req);
+    // const clientId = req.headers[CLIENT_ID_HEADER] as string | undefined;
+    // if (clientId === undefined) {
+    //   res.sendStatus(400);
+    //   return;
+    // }
 
-    const client = this.clientService.getClient(clientId);
-    if (client === undefined) {
-      res.status(400);
-      return;
-    }
+    // const client = this.clientService.getClient(clientId);
+    // if (client === undefined) {
+    //   res.sendStatus(400);
+    //   return;
+    // }
 
-    req.client = client;
+    // req.client = client;
     next();
   }
 }

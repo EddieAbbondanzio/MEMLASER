@@ -1,11 +1,9 @@
-import { Socket } from "socket.io";
-
 export type ClientEvent = { type: "CLIENT_ID"; data: string };
 
 export class Client {
   constructor(
     public id: string,
-    public socket: Socket,
+    public socket: any,
   ) {}
 
   dispatchEvent(event: ClientEvent): void {

@@ -1,6 +1,11 @@
 import { Injectable } from "@nestjs/common";
-import { Socket } from "socket.io";
 import { Client } from "./client.js";
+import { nanoid } from "nanoid";
+import * as ws from "ws";
+
+interface ExtendedWebSocket extends ws.WebSocket {
+  id: string;
+}
 
 @Injectable()
 export class ClientService {
@@ -10,14 +15,16 @@ export class ClientService {
     return this.clients.get(clientId);
   }
 
-  registerClient(socket: Socket): Client {
-    const { id } = socket;
+  registerClient(socket: ws.WebSocket): Client {
+    const id = nanoid(16);
     const client = new Client(id, socket);
     this.clients.set(id, client);
+    (socket as ExtendedWebSocket).id = client.id;
+
     return client;
   }
 
-  deregisterClient(client: Socket): void {
-    this.clients.delete(client.id);
+  deregisterClient(client: ws.WebSocket): void {
+    this.clients.delete((client as ExtendedWebSocket).id);
   }
 }

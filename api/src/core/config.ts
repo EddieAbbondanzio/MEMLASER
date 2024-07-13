@@ -8,5 +8,5 @@ if (process.env.NODE_ENV === "production") {
   DATA_DIR = osPaths.data;
 }
 
-export const WEBSOCKET_PORT = 3001;
-export const HTTP_PORT = 3000;
+export const HTTP_PORT = 3475;
+export const WEBSOCKET_PORT = 3476;
