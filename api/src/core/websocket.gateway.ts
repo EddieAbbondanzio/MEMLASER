@@ -3,7 +3,6 @@ import {
   WebSocketGateway,
   OnGatewayConnection,
   OnGatewayDisconnect,
-  WebSocketServer,
 } from "@nestjs/websockets";
 import { Socket, Server } from "socket.io";
 import { WEBSOCKET_PORT } from "./config.js";
@@ -18,6 +17,10 @@ export class WebsocketGateway
   handleConnection(client: Socket) {
     console.log(`Client connected: ${client.id}`);
     this.clientService.registerClient(client);
+    this.clientService.dispatchEvent(client.id, {
+      type: "CLIENT_ID",
+      data: client.id,
+    });
   }
 
   handleDisconnect(client: Socket) {
