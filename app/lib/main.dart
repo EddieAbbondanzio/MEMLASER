@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:web_socket_channel/web_socket_channel.dart';
 
 import 'src/app.dart';
 import 'src/settings/settings_controller.dart';
@@ -13,8 +15,15 @@ void main() async {
   // This prevents a sudden theme change when the app is first displayed.
   await settingsController.loadSettings();
 
+  var websocketConnection =
+      WebSocketChannel.connect(Uri.parse("ws://localhost:3475/events"));
+
+  await websocketConnection.ready;
+
   // Run the app and pass in the SettingsController. The app listens to the
   // SettingsController for changes, then passes it further down to the
   // SettingsView.
-  runApp(MyApp(settingsController: settingsController));
+  runApp(ChangeNotifierProvider(
+      create: (context) => Backend(websocketConnection),
+      child: MyApp(settingsController: settingsController)));
 }
