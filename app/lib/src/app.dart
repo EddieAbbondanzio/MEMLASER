@@ -2,9 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:memlaser/src/editor/editor_view.dart';
-import 'package:web_socket_channel/web_socket_channel.dart';
-import 'package:provider/provider.dart' as provider;
-import 'dart:convert';
 import 'settings/settings_controller.dart';
 
 /// The Widget that configures your application.
@@ -78,24 +75,5 @@ class MyApp extends StatelessWidget {
         );
       },
     );
-  }
-}
-
-class Backend extends ChangeNotifier {
-  String clientId = "";
-  final WebSocketChannel _channel;
-
-  Backend(this._channel) {
-    _channel.stream.listen((m) {
-      var parsed = json.decode(m);
-      print(parsed);
-
-      switch (parsed["type"]) {
-        case "CLIENT_ID":
-          clientId = parsed["data"];
-          print("Got client id: $clientId");
-          notifyListeners();
-      }
-    });
   }
 }

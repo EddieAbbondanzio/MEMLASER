@@ -11,22 +11,25 @@ declare global {
   }
 }
 
-const CLIENT_ID_HEADER = "X-Client-ID";
+const CLIENT_ID_HEADER = "x-client-id";
 
 @Injectable()
 export class ClientMiddleware implements NestMiddleware {
   constructor(private readonly clientService: ClientService) {}
 
   use(req: Request, res: Response, next: NextFunction): void {
+    console.log(req.headers);
     const clientId = req.headers[CLIENT_ID_HEADER] as string | undefined;
     if (clientId === undefined) {
-      res.sendStatus(400);
+      res.status(400);
+      res.json({ message: "Invalid client id." });
       return;
     }
 
     const client = this.clientService.getClient(clientId);
     if (client === undefined) {
-      res.sendStatus(400);
+      res.status(400);
+      res.json({ message: "Unknown client." });
       return;
     }
 

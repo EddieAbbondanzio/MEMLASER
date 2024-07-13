@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:memlaser/src/app.dart';
+import 'package:memlaser/src/backend.dart';
 import 'package:memlaser/src/editor/sidebar.dart';
 import 'package:provider/provider.dart';
 
@@ -10,9 +10,9 @@ class Body extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<Backend>(
       builder: (context, backend, child) {
-        return Row(
+        return const Row(
           children: [
-            const Sidebar(),
+            Sidebar(),
             Text("hiii"),
             // TODO: Add main content here.
           ],
