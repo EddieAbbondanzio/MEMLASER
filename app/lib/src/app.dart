@@ -82,7 +82,7 @@ class MyApp extends StatelessWidget {
 }
 
 class Backend extends ChangeNotifier {
-  late String clientId;
+  String clientId = "";
   final WebSocketChannel _channel;
 
   Backend(this._channel) {
@@ -94,11 +94,8 @@ class Backend extends ChangeNotifier {
         case "CLIENT_ID":
           clientId = parsed["data"];
           print("Got client id: $clientId");
+          notifyListeners();
       }
     });
-  }
-
-  String getClientId() {
-    return clientId;
   }
 }
