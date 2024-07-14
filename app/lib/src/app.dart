@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:memlaser/src/editor/editor_view.dart';
-
 import 'settings/settings_controller.dart';
 
 /// The Widget that configures your application.
@@ -51,12 +50,8 @@ class MyApp extends StatelessWidget {
           onGenerateTitle: (BuildContext context) =>
               AppLocalizations.of(context)!.appTitle,
 
-          // Define a light and dark color theme. Then, read the user's
-          // preferred ThemeMode (light, dark, or system default) from the
-          // SettingsController to display the correct theme.
-          theme: ThemeData(),
-          darkTheme: ThemeData.dark(),
-          themeMode: settingsController.themeMode,
+          theme: ThemeData.from(
+              colorScheme: ColorScheme.fromSeed(seedColor: (Colors.blue))),
 
           // Define a function to handle named routes in order to support
           // Flutter web url navigation and deep linking.

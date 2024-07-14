@@ -1,9 +1,11 @@
 import {
   Body,
   ClassSerializerInterceptor,
+  ConflictException,
   Controller,
   Get,
   Post,
+  ServiceUnavailableException,
   UseInterceptors,
 } from "@nestjs/common";
 import { SnapshotService } from "./snapshot.service.js";
@@ -21,15 +23,22 @@ export class SnapshotController {
 
   @UseInterceptors(ClassSerializerInterceptor)
   @Get()
-  getAll(): Snapshot[] {
-    // TODO: Load snapshots from data dir.
-    return [new Snapshot("foo/bar.heapsnapshot")];
+  async getAvailable(): Promise<Snapshot[]> {
+    const snapshots = await this.snapshotService.getAvailableSnapshots();
+    return snapshots;
   }
 
   @Post("import")
-  import(@Body() importDTO: ImportSnapshotDTO): Snapshot {
-    console.log("GOT: ", importDTO);
-    // TODO: Create the snapshot
-    return new Snapshot("foo/bar.heapsnapshot");
+  async import(@Body() { path }: ImportSnapshotDTO): Promise<Snapshot> {
+    try {
+      const snapshot = await this.snapshotService.importSnapshot(path);
+      return snapshot;
+    } catch (err) {
+      if (/already exists/.test((err as Error).message)) {
+        throw new ConflictException("Snapshot has already been imported.");
+      } else {
+        throw new ServiceUnavailableException();
+      }
+    }
   }
 }

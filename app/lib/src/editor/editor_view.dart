@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:memlaser/src/editor/body.dart';
+import 'package:memlaser/src/editor/main/editor_main.dart';
+import 'package:memlaser/src/editor/sidebar/sidebar.dart';
 
 class EditorView extends StatelessWidget {
   const EditorView({
@@ -10,8 +11,10 @@ class EditorView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        appBar: AppBar(title: const Text('Editor!'), actions: []),
-        body: const Body());
+    return const Scaffold(
+        body: Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [EditorSidebar(), EditorMain()],
+    ));
   }
 }

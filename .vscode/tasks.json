@@ -15,6 +15,19 @@
       }
     },
     {
+      "label": "api:test",
+      "command": "yarn -s run test",
+      "type": "shell",
+      "args": [],
+      "problemMatcher": ["$tsc"],
+      "presentation": {
+        "reveal": "always"
+      },
+      "options": {
+        "cwd": "api"
+      }
+    },
+    {
       "label": "app:run",
       "command": "flutter run lib/main.dart",
       "type": "shell",
