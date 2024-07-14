@@ -9,24 +9,25 @@ class EditorSidebarHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    return Container(
         padding: const EdgeInsets.all(8.0),
+        decoration: const BoxDecoration(
+            border:
+                Border(bottom: BorderSide(width: 1, color: Colors.black12))),
         child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                "Snapshots",
-                style: TextStyle(
-                    color: Colors.black,
-                    fontWeight: FontWeight.bold,
-                    fontSize: Theme.of(context).textTheme.bodyLarge?.fontSize),
-              ),
+              Text("Snapshots",
+                  style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize:
+                          Theme.of(context).textTheme.labelLarge?.fontSize)),
               FilledButton(
                   style: FilledButton.styleFrom(
                     textStyle: const TextStyle(
                         fontSize: 12.0, fontWeight: FontWeight.bold),
-                    backgroundColor: Colors.black12,
+                    backgroundColor: Colors.blue,
                     padding: const EdgeInsets.all(8.0),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(4.0)),
@@ -55,7 +56,6 @@ class EditorSidebarHeader extends StatelessWidget {
                   },
                   child: const Text(
                     "Import",
-                    style: TextStyle(color: Colors.black),
                   ))
             ]));
   }

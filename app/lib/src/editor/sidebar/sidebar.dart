@@ -5,6 +5,9 @@ import 'package:memlaser/src/editor/sidebar/sidebar_snapshot.dart';
 
 import 'package:provider/provider.dart';
 
+const sidebarWidthPX = 320.0;
+const sidebarBorder = Colors.black12;
+
 class EditorSidebar extends StatelessWidget {
   const EditorSidebar({super.key});
 
@@ -14,8 +17,10 @@ class EditorSidebar extends StatelessWidget {
       final snapshots = api.snapshots;
 
       return Container(
-        color: Colors.white12,
-        width: 320.0,
+        decoration: const BoxDecoration(
+            color: Colors.white12,
+            border: Border(right: BorderSide(width: 1, color: sidebarBorder))),
+        width: sidebarWidthPX,
         child: Column(
           children: [
             const EditorSidebarHeader(),
