@@ -9,8 +9,8 @@ class EditorMain extends StatelessWidget {
       child: ColoredBox(
         color: Colors.white,
         child: Text(
-          'hi',
-          style: TextStyle(color: Colors.green),
+          'Epic main content here!',
+          style: TextStyle(color: Colors.black),
         ),
       ),
     );

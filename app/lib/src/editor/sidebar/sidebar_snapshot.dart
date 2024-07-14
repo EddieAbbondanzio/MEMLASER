@@ -9,7 +9,9 @@ class EditorSidebarSnapshot extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
+        visualDensity: VisualDensity.comfortable,
         contentPadding: const EdgeInsets.fromLTRB(8.0, 0, 8.0, 0),
+        dense: true,
         title: Text(
           snapshot.name,
         ),

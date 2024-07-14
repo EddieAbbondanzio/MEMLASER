@@ -22,8 +22,15 @@ class EditorSidebarHeader extends StatelessWidget {
                     fontWeight: FontWeight.bold,
                     fontSize: Theme.of(context).textTheme.bodyLarge?.fontSize),
               ),
-              TextButton(
-                  style: TextButton.styleFrom(backgroundColor: Colors.black12),
+              FilledButton(
+                  style: FilledButton.styleFrom(
+                    textStyle: const TextStyle(
+                        fontSize: 12.0, fontWeight: FontWeight.bold),
+                    backgroundColor: Colors.black12,
+                    padding: const EdgeInsets.all(8.0),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(4.0)),
+                  ),
                   onPressed: () async {
                     print("CLICK!");
                     FilePickerResult? result =

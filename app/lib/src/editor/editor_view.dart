@@ -13,6 +13,7 @@ class EditorView extends StatelessWidget {
   Widget build(BuildContext context) {
     return const Scaffold(
         body: Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [EditorSidebar(), EditorMain()],
     ));
   }

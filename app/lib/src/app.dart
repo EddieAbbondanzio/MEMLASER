@@ -51,7 +51,7 @@ class MyApp extends StatelessWidget {
               AppLocalizations.of(context)!.appTitle,
 
           theme: ThemeData.from(
-              colorScheme: ColorScheme.fromSeed(seedColor: (Colors.white))),
+              colorScheme: ColorScheme.fromSeed(seedColor: (Colors.blue))),
 
           // Define a function to handle named routes in order to support
           // Flutter web url navigation and deep linking.

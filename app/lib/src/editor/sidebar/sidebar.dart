@@ -11,21 +11,18 @@ class EditorSidebar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Consumer<API>(builder: (context, api, child) {
-      var snapshots = api.snapshots;
-      print("Snapshot length: $snapshots.length");
+      final snapshots = api.snapshots;
 
       return Container(
-        padding: const EdgeInsets.all(8.0),
+        color: Colors.white12,
         width: 320.0,
         child: Column(
           children: [
             const EditorSidebarHeader(),
             ListView.builder(
               itemCount: snapshots.length,
-              itemBuilder: (context, index) => Material(
-                type: MaterialType.transparency,
-                child: EditorSidebarSnapshot(snapshot: snapshots[index]),
-              ),
+              itemBuilder: (context, index) =>
+                  EditorSidebarSnapshot(snapshot: snapshots[index]),
               shrinkWrap: true,
               scrollDirection: Axis.vertical,
             )
