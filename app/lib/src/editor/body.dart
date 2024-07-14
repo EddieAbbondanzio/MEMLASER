@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:memlaser/src/backend.dart';
-import 'package:memlaser/src/editor/sidebar.dart';
+import 'package:memlaser/src/api/client.dart';
+import 'package:memlaser/src/editor/sidebar/sidebar.dart';
 import 'package:provider/provider.dart';
 
 class Body extends StatelessWidget {
@@ -8,7 +8,7 @@ class Body extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<Backend>(
+    return Consumer<API>(
       builder: (context, backend, child) {
         return const Row(
           children: [

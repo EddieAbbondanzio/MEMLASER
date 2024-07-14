@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:memlaser/src/backend.dart';
+import 'package:memlaser/src/api/client.dart';
+import 'package:memlaser/src/api/config.dart';
 import 'package:provider/provider.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
@@ -16,15 +17,10 @@ void main() async {
   // This prevents a sudden theme change when the app is first displayed.
   await settingsController.loadSettings();
 
-  var websocketConnection =
-      WebSocketChannel.connect(Uri.parse("ws://localhost:3475/events"));
-
+  final websocketConnection = WebSocketChannel.connect(Uri.parse(wsURL));
   await websocketConnection.ready;
 
-  // Run the app and pass in the SettingsController. The app listens to the
-  // SettingsController for changes, then passes it further down to the
-  // SettingsView.
   runApp(ChangeNotifierProvider(
-      create: (context) => Backend(websocketConnection),
+      create: (context) => API(websocketConnection),
       child: MyApp(settingsController: settingsController)));
 }

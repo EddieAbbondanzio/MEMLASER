@@ -21,14 +21,14 @@ export class ClientMiddleware implements NestMiddleware {
     console.log(req.headers);
     const clientId = req.headers[CLIENT_ID_HEADER] as string | undefined;
     if (clientId === undefined) {
-      res.status(400);
-      res.json({ message: "Invalid client id." });
+      res.status(404);
+      res.json({ message: "Unknown client id." });
       return;
     }
 
     const client = this.clientService.getClient(clientId);
     if (client === undefined) {
-      res.status(400);
+      res.status(404);
       res.json({ message: "Unknown client." });
       return;
     }
