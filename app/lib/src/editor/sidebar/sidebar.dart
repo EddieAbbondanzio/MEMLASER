@@ -5,8 +5,8 @@ import 'package:memlaser/src/editor/sidebar/sidebar_snapshot.dart';
 
 import 'package:provider/provider.dart';
 
-class Sidebar extends StatelessWidget {
-  const Sidebar({super.key});
+class EditorSidebar extends StatelessWidget {
+  const EditorSidebar({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -15,16 +15,17 @@ class Sidebar extends StatelessWidget {
       print("Snapshot length: $snapshots.length");
 
       return Container(
-        padding: const EdgeInsets.all(12.0),
+        padding: const EdgeInsets.all(8.0),
         width: 320.0,
-        color: Colors.white,
         child: Column(
           children: [
-            const SidebarHeader(),
+            const EditorSidebarHeader(),
             ListView.builder(
               itemCount: snapshots.length,
-              itemBuilder: (context, index) =>
-                  SidebarSnapshot(snapshot: snapshots[index]),
+              itemBuilder: (context, index) => Material(
+                type: MaterialType.transparency,
+                child: EditorSidebarSnapshot(snapshot: snapshots[index]),
+              ),
               shrinkWrap: true,
               scrollDirection: Axis.vertical,
             )

@@ -37,7 +37,7 @@ class API extends ChangeNotifier {
   Future<void> loadInitialState() async {
     final snapshotsJSON = await get<List<dynamic>>("snapshots");
     snapshots = snapshotsJSON
-        .map((json) => Snapshot(json["name"], json["path"]))
+        .map((json) => Snapshot(json["name"], json["path"], "100 mb"))
         .toList();
     notifyListeners();
   }
