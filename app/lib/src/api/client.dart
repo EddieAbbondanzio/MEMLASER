@@ -5,13 +5,6 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
-const apiPort = 3475;
-
-// TODO: Prob will need to split this out into multiple ChangeNotifiers.
-// For example, sometimes we want to listen to the number of snapshots changing,
-// but other times we just want to listen for ServerEvents and not re-render
-// on each state change.
-
 class APIClient {
   String clientId = "";
 
