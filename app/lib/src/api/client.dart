@@ -21,6 +21,7 @@ class APIClient {
     ready = _readyCompleter.future;
 
     _channel.stream.listen((m) {
+      // TODO: Introduce a type for messages.
       final parsed = json.decode(m);
 
       switch (parsed["type"]) {
