@@ -31,7 +31,20 @@ export class SnapshotService implements OnModuleInit {
       .map((f) => {
         const snapshotPath = path.join(this.snapshotDirectoryPath, f);
         const nameNoExtension = path.parse(snapshotPath).name;
-        return new Snapshot(nameNoExtension, snapshotPath);
+
+        // TODO: Devise how to store imported date, and OG heap file size.
+        // We need to either store this in a separate json file ex: (appState.json)
+        // or put it in the SQLite files and query each one we render in the sidebar.
+
+        const fstat = fs.statSync(snapshotPath);
+        const importedAt = new Date(fstat.birthtimeMs);
+
+        return new Snapshot(
+          nameNoExtension,
+          snapshotPath,
+          "100 mb",
+          importedAt,
+        );
       });
 
     return snapshots;
@@ -50,6 +63,6 @@ export class SnapshotService implements OnModuleInit {
     });
     await ds.destroy();
 
-    return new Snapshot(importPath.name, outputPath);
+    return new Snapshot(importPath.name, outputPath, "101mb", new Date());
   }
 }

@@ -1,8 +1,7 @@
 import 'dart:io';
-import 'dart:convert';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:memlaser/src/api/client.dart';
+import 'package:memlaser/src/api/services/snapshot_service.dart';
 import 'package:provider/provider.dart';
 
 class ImportSnapshotButton extends StatelessWidget {
@@ -10,21 +9,14 @@ class ImportSnapshotButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<API>(builder: (context, api, child) {
+    return Consumer<SnapshotService>(
+        builder: (context, snapshotService, child) {
       onPressed() async {
-        print("CLICK!");
         FilePickerResult? result = await FilePicker.platform.pickFiles();
 
         if (result != null) {
           File file = File(result.files.single.path!);
-          print('File: ${file.path}');
-
-          final r = await api.post(
-              "snapshots/import", jsonEncode({'path': file.path}));
-
-          // TODO, define a SnapshotsService api client? It would have helpers
-          // like .snapshots, or importSnapshot. importSnapshot would add the
-          // snapshot to .snapshots and notifyListeners() so we could re-render.
+          await snapshotService.importSnapshot(file.path);
         }
       }
 

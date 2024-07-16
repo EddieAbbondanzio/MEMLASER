@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:memlaser/src/api/domain/snapshot.dart';
+import 'package:memlaser/src/api/dtos/snapshot.dart';
 
 class EditorSidebarSnapshot extends StatelessWidget {
   final Snapshot snapshot;

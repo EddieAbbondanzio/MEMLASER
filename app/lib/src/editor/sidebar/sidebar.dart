@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:memlaser/src/api/client.dart';
+import 'package:memlaser/src/api/services/snapshot_service.dart';
 import 'package:memlaser/src/editor/sidebar/sidebar_header.dart';
 import 'package:memlaser/src/editor/sidebar/sidebar_snapshot.dart';
 
@@ -13,8 +13,9 @@ class EditorSidebar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<API>(builder: (context, api, child) {
-      final snapshots = api.snapshots;
+    return Consumer<SnapshotService>(
+        builder: (context, snapshotService, child) {
+      final snapshots = snapshotService.snapshots;
 
       return Container(
         decoration: const BoxDecoration(
