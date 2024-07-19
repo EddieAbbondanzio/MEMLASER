@@ -201,6 +201,36 @@ export class Init1720318566156 implements MigrationInterface {
       }),
     );
 
+    await queryRunner.createTable(
+      new Table({
+        name: "snapshot_stats",
+        columns: [
+          {
+            name: "id",
+            type: "integer",
+            isPrimary: true,
+            isGenerated: true,
+            generationStrategy: "increment",
+          },
+          {
+            name: "size",
+            type: "integer",
+            isNullable: false,
+          },
+          {
+            name: "created_at",
+            type: "integer",
+            isNullable: false,
+          },
+          {
+            name: "imported_at",
+            type: "integer",
+            isNullable: false,
+          },
+        ],
+      }),
+    );
+
     await queryRunner.createForeignKey(
       "edges",
       new TableForeignKey({

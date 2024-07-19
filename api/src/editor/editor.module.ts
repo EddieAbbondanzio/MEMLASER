@@ -7,6 +7,4 @@ import { SnapshotService } from "./snapshot.service.js";
   controllers: [SnapshotController],
   providers: [SnapshotService],
 })
-export class EditorModule {
-  
-}
+export class EditorModule {}

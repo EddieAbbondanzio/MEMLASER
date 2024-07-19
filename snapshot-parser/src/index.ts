@@ -11,6 +11,7 @@ import { HeapString } from "./sqlite/entities/heapString.js";
 import { Snapshot } from "./sqlite/entities/snapshot.js";
 import { NodeData } from "./sqlite/entities/nodeData.js";
 import { EdgeData } from "./sqlite/entities/edgeData.js";
+import { SnapshotStats } from "./sqlite/entities/snapshotStats.js";
 
 // TODO: Move this to a debug function for testing
 // async function main(): Promise<void> {
@@ -47,6 +48,17 @@ export async function parseSnapshotToSQLite(
   }
 
   const db = await initializeSQLite(outputPath);
+  const snapshotStats = fs.statSync(snapshotPath);
+  await db
+    .createQueryBuilder()
+    .insert()
+    .into(SnapshotStats)
+    .values({
+      size: snapshotStats.size,
+      createdAt: snapshotStats.birthtime,
+      importedAt: new Date(),
+    })
+    .execute();
 
   // Snapshot will always be read before anything else so it's safe to use these
   // variables in other callbacks such as onNodeBatch, onEdgeBatch.

@@ -7,6 +7,7 @@ import { NodeData } from "./entities/nodeData.js";
 import { HeapString } from "./entities/heapString.js";
 import { Init1720318566156 } from "./migrations/1_init.js";
 import { SnakeCaseNamingStrategy } from "./snakeCaseNamingStrategy.js";
+import { SnapshotStats } from "./entities/snapshotStats.js";
 
 export async function initializeSQLite(
   outputPath: string,
@@ -15,7 +16,15 @@ export async function initializeSQLite(
     type: "better-sqlite3",
     database: outputPath,
     // TODO: Load entities and migrations auto-magically!
-    entities: [Snapshot, Edge, EdgeData, Node, NodeData, Snapshot, HeapString],
+    entities: [
+      Snapshot,
+      Edge,
+      EdgeData,
+      Node,
+      NodeData,
+      SnapshotStats,
+      HeapString,
+    ],
     migrations: [Init1720318566156],
     namingStrategy: new SnakeCaseNamingStrategy(),
   });
