@@ -28,7 +28,7 @@ import {
 import { TokenQueue } from "./tokenQueue.js";
 import _ from "lodash";
 import sc from "stream-chain";
-import { MetaJSON } from "@memlaser/database";
+import { Meta } from "@memlaser/database";
 
 // N.B. The parser doesn't account for nullValue, trueValue, or falseValue
 // tokens and could crash if the heapsnapshot file format is ever changed to use
@@ -248,7 +248,7 @@ export async function buildSnapshot(queue: TokenQueue): Promise<SnapshotJSON> {
   return validated;
 }
 
-export async function buildMeta(queue: TokenQueue): Promise<MetaJSON> {
+export async function buildMeta(queue: TokenQueue): Promise<Meta> {
   const raw = await buildObject(queue, async (q, key) => {
     switch (key) {
       case "node_types":
@@ -267,7 +267,16 @@ export async function buildMeta(queue: TokenQueue): Promise<MetaJSON> {
   });
 
   const validated = await metaJSONSchema.parseAsync(raw);
-  return validated as MetaJSON;
+  return {
+    nodeFields: validated.node_fields,
+    nodeTypes: validated.node_types,
+    edgeFields: validated.edge_fields,
+    edgeTypes: validated.edge_types,
+    locationFields: validated.location_fields,
+    sampleFields: validated.sample_fields,
+    traceFunctionInfoFields: validated.trace_function_info_fields,
+    traceNodeFields: validated.trace_node_fields,
+  };
 }
 
 async function buildStringArrayWithNestedArray(

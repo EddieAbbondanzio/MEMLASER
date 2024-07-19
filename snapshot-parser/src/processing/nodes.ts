@@ -7,7 +7,7 @@ const NODE_BATCH_SIZE = 1000;
 
 export async function processNodes(db: DataSource): Promise<void> {
   const snapshot = await getSnapshot(db);
-  const nodeTypes = snapshot.meta.node_types[0];
+  const nodeTypes = snapshot.meta.nodeTypes[0];
   const fieldIndices = buildNodeFieldIndices(snapshot);
 
   // Sanity check to ensure the node_data rows were generated correctly.

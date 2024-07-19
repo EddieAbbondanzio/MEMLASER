@@ -9,7 +9,7 @@ export async function getSnapshot(db: DataSource): Promise<Snapshot> {
 
 export type NodeFieldIndices = Record<NodeField, number>;
 export function buildNodeFieldIndices(snapshot: Snapshot): NodeFieldIndices {
-  const { node_fields: nodeFields } = snapshot.meta;
+  const { nodeFields } = snapshot.meta;
 
   const lookup = nodeFields.reduce((lookup, key, index) => {
     lookup[key as NodeField] = index;
@@ -21,7 +21,7 @@ export function buildNodeFieldIndices(snapshot: Snapshot): NodeFieldIndices {
 
 export type EdgeFieldIndices = Record<EdgeField, number>;
 export function buildEdgeFieldIndices(snapshot: Snapshot): EdgeFieldIndices {
-  const { edge_fields: edgeFields } = snapshot.meta;
+  const { edgeFields } = snapshot.meta;
 
   const lookup = edgeFields.reduce((lookup, key, index) => {
     lookup[key as EdgeField] = index;

@@ -1,4 +1,4 @@
-import { Snapshot } from "@memlaser/database";
+import { EdgeField, NodeField, Snapshot } from "@memlaser/database";
 import {
   buildEdgeFieldIndices,
   buildNodeFieldIndices,
@@ -16,7 +16,7 @@ test("getSnapshot", async () => {
     .values({
       nodeCount: 7,
       edgeCount: 0,
-      meta: createMeta({ edge_fields: ["fake"] }),
+      meta: createMeta({ edgeFields: [EdgeField.NameOrIndex] }),
       traceFunctionCount: 0,
     })
     .execute();
@@ -25,20 +25,20 @@ test("getSnapshot", async () => {
   expect(snapshot.nodeCount).toBe(7);
   expect(snapshot.edgeCount).toBe(0);
   expect(snapshot.traceFunctionCount).toBe(0);
-  expect(snapshot.meta.edge_fields).toEqual(["fake"]);
+  expect(snapshot.meta.edgeFields).toEqual([EdgeField.NameOrIndex]);
 });
 
 test("buildNodeFieldIndices", () => {
   const snapshot = createSnapshot({
     meta: createMeta({
-      node_fields: [
-        "type",
-        "name",
-        "id",
-        "self_size",
-        "edge_count",
-        "trace_node_id",
-        "detachedness",
+      nodeFields: [
+        NodeField.Type,
+        NodeField.Name,
+        NodeField.Id,
+        NodeField.SelfSize,
+        NodeField.EdgeCount,
+        NodeField.TraceNodeId,
+        NodeField.Detachedness,
       ],
     }),
   });
@@ -56,7 +56,7 @@ test("buildNodeFieldIndices", () => {
 test("buildEdgeFieldIndices", () => {
   const snapshot = createSnapshot({
     meta: createMeta({
-      edge_fields: ["type", "name_or_index", "to_node"],
+      edgeFields: [EdgeField.Type, EdgeField.NameOrIndex, EdgeField.ToNode],
     }),
   });
 

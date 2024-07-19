@@ -10,7 +10,7 @@ import {
   NodeData,
   EdgeData,
   SnapshotStats,
-  MetaJSON,
+  Meta,
 } from "@memlaser/database";
 import { processEdges } from "./processing/edges.js";
 import * as fs from "fs";
@@ -77,7 +77,16 @@ export async function parseSnapshotToSQLite(
       .insert()
       .into(Snapshot)
       .values({
-        meta: json.meta as MetaJSON,
+        meta: {
+          nodeFields: json.meta.node_fields,
+          nodeTypes: json.meta.node_types,
+          edgeFields: json.meta.edge_fields,
+          edgeTypes: json.meta.edge_types,
+          traceFunctionInfoFields: json.meta.trace_function_info_fields,
+          traceNodeFields: json.meta.trace_node_fields,
+          sampleFields: json.meta.sample_fields,
+          locationFields: json.meta.location_fields,
+        },
         edgeCount: json.edge_count,
         nodeCount: json.node_count,
         traceFunctionCount: json.trace_function_count,

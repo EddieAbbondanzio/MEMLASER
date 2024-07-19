@@ -1,4 +1,13 @@
-import { EdgeField, EdgeType, NodeField, NodeType } from "@memlaser/database";
+import {
+  EdgeField,
+  EdgeType,
+  LocationField,
+  NodeField,
+  NodeType,
+  SampleField,
+  TraceFunctionInfoField,
+  TraceNodeField,
+} from "@memlaser/database";
 import { z } from "zod";
 
 export const nodeJSONSchema = z.array(z.number());
@@ -40,19 +49,26 @@ export const nodeFieldSchema = z.nativeEnum(NodeField);
 export const nodeTypeSchema = z.nativeEnum(NodeType);
 export const edgeFieldSchema = z.nativeEnum(EdgeField);
 export const edgeTypeSchema = z.nativeEnum(EdgeType);
+export const traceFunctionInfoFieldsSchema = z.nativeEnum(
+  TraceFunctionInfoField,
+);
+export const traceNodeFieldsSchema = z.nativeEnum(TraceNodeField);
+export const sampleFieldsSchema = z.nativeEnum(SampleField);
+export const locationFieldsSchema = z.nativeEnum(LocationField);
 
 // Keep in sync with MetaJson type in database package.
 export const metaJSONSchema = z.object({
   node_fields: z.array(nodeFieldSchema),
   node_types: z.tuple([z.array(nodeTypeSchema)]).rest(z.string()),
-  edge_fields: z.array(z.string()),
+  edge_fields: z.array(edgeFieldSchema),
   edge_types: z.tuple([z.array(edgeTypeSchema)]).rest(z.string()),
   // TODO: What are the following?
-  trace_function_info_fields: z.array(z.string()),
-  trace_node_fields: z.array(z.string()),
-  sample_fields: z.array(z.string()),
-  location_fields: z.array(z.string()),
+  trace_function_info_fields: z.array(traceFunctionInfoFieldsSchema),
+  trace_node_fields: z.array(traceNodeFieldsSchema),
+  sample_fields: z.array(sampleFieldsSchema),
+  location_fields: z.array(locationFieldsSchema),
 });
+export type MetaJSON = z.infer<typeof metaJSONSchema>;
 
 export const snapshotJSONSchema = z.object({
   meta: metaJSONSchema,

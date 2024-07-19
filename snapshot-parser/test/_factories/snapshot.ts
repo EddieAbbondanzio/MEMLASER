@@ -1,5 +1,15 @@
-import { MetaJSON } from "../../src/json/schema.js";
-import { Snapshot } from "../../src/sqlite/entities/snapshot.js";
+import {
+  EdgeField,
+  EdgeType,
+  LocationField,
+  Meta,
+  NodeField,
+  NodeType,
+  SampleField,
+  Snapshot,
+  TraceFunctionInfoField,
+  TraceNodeField,
+} from "@memlaser/database";
 
 export function createSnapshot(props?: Partial<Snapshot>): Snapshot {
   return {
@@ -11,34 +21,34 @@ export function createSnapshot(props?: Partial<Snapshot>): Snapshot {
   };
 }
 
-export function createMeta(props?: Partial<MetaJSON>): MetaJSON {
+export function createMeta(props?: Partial<Meta>): Meta {
   return {
-    node_fields: props?.node_fields ?? [
-      "type",
-      "name",
-      "id",
-      "self_size",
-      "edge_count",
-      "trace_node_id",
-      "detachedness",
+    nodeFields: props?.nodeFields ?? [
+      NodeField.Type,
+      NodeField.Name,
+      NodeField.Id,
+      NodeField.SelfSize,
+      NodeField.EdgeCount,
+      NodeField.TraceNodeId,
+      NodeField.Detachedness,
     ],
-    node_types: props?.node_types ?? [
+    nodeTypes: props?.nodeTypes ?? [
       [
-        "hidden",
-        "array",
-        "string",
-        "object",
-        "code",
-        "closure",
-        "regexp",
-        "number",
-        "native",
-        "synthetic",
-        "concatenated string",
-        "sliced string",
-        "symbol",
-        "bigint",
-        "object shape",
+        NodeType.Hidden,
+        NodeType.Array,
+        NodeType.String,
+        NodeType.Object,
+        NodeType.Code,
+        NodeType.Closure,
+        NodeType.Regexp,
+        NodeType.Number,
+        NodeType.Native,
+        NodeType.Synthetic,
+        NodeType.ConcatenatedString,
+        NodeType.SlicedString,
+        NodeType.Symbol,
+        NodeType.BigInt,
+        NodeType.ObjectShape,
       ],
       "string",
       "number",
@@ -47,41 +57,48 @@ export function createMeta(props?: Partial<MetaJSON>): MetaJSON {
       "number",
       "number",
     ],
-    edge_fields: props?.edge_fields ?? ["type", "name_or_index", "to_node"],
-    edge_types: props?.edge_types ?? [
+    edgeFields: props?.edgeFields ?? [
+      EdgeField.Type,
+      EdgeField.NameOrIndex,
+      EdgeField.ToNode,
+    ],
+    edgeTypes: props?.edgeTypes ?? [
       [
-        "context",
-        "element",
-        "property",
-        "internal",
-        "hidden",
-        "shortcut",
-        "weak",
+        EdgeType.Context,
+        EdgeType.Element,
+        EdgeType.Property,
+        EdgeType.Internal,
+        EdgeType.Hidden,
+        EdgeType.Shortcut,
+        EdgeType.Weak,
       ],
       "string_or_number",
       "node",
     ],
-    trace_function_info_fields: props?.trace_function_info_fields ?? [
-      "function_id",
-      "name",
-      "script_name",
-      "script_id",
-      "line",
-      "column",
+    traceFunctionInfoFields: props?.traceFunctionInfoFields ?? [
+      TraceFunctionInfoField.FunctionId,
+      TraceFunctionInfoField.Name,
+      TraceFunctionInfoField.ScriptName,
+      TraceFunctionInfoField.ScriptId,
+      TraceFunctionInfoField.Line,
+      TraceFunctionInfoField.Column,
     ],
-    trace_node_fields: props?.trace_node_fields ?? [
-      "id",
-      "function_info_index",
-      "count",
-      "size",
-      "children",
+    traceNodeFields: props?.traceNodeFields ?? [
+      TraceNodeField.Id,
+      TraceNodeField.FunctionInfoIndex,
+      TraceNodeField.Count,
+      TraceNodeField.Size,
+      TraceNodeField.Children,
     ],
-    sample_fields: props?.sample_fields ?? ["timestamp_us", "last_assigned_id"],
-    location_fields: props?.location_fields ?? [
-      "object_index",
-      "script_id",
-      "line",
-      "column",
+    sampleFields: props?.sampleFields ?? [
+      SampleField.TimestampUS,
+      SampleField.LastAssignedId,
+    ],
+    locationFields: props?.locationFields ?? [
+      LocationField.ObjectIndex,
+      LocationField.ScriptId,
+      LocationField.Line,
+      LocationField.Column,
     ],
   };
 }

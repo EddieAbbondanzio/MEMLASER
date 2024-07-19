@@ -31,7 +31,7 @@ interface EdgeProcessingData {
 
 export async function processEdges(db: DataSource): Promise<void> {
   const snapshot = await getSnapshot(db);
-  const edgeTypes = snapshot.meta.edge_types[0];
+  const edgeTypes = snapshot.meta.edgeTypes[0];
   const fieldIndices = buildEdgeFieldIndices(snapshot);
   const edgeDataLoader = await createEdgeDataLoader(db);
 

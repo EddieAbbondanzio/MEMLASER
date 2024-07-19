@@ -1,5 +1,5 @@
-import { MetaJSON } from "@memlaser/database";
-import { SnapshotJSON } from "../../src/json/schema.js";
+import { EdgeField, EdgeType, NodeField, NodeType } from "@memlaser/database";
+import { MetaJSON, SnapshotJSON } from "../../src/json/schema.js";
 
 export function createSnapshotJSON(p?: Partial<SnapshotJSON>): SnapshotJSON {
   return {
@@ -13,32 +13,36 @@ export function createSnapshotJSON(p?: Partial<SnapshotJSON>): SnapshotJSON {
 export function createMetaJSON(p?: Partial<MetaJSON>): MetaJSON {
   return {
     node_fields: p?.node_fields ?? [
-      "type",
-      "name",
-      "id",
-      "self_size",
-      "edge_count",
-      "trace_node_id",
-      "detachedness",
+      NodeField.Type,
+      NodeField.Name,
+      NodeField.Id,
+      NodeField.SelfSize,
+      NodeField.EdgeCount,
+      NodeField.TraceNodeId,
+      NodeField.Detachedness,
     ],
-    edge_fields: p?.edge_fields ?? ["type", "name_or_index", "to_node"],
+    edge_fields: p?.edge_fields ?? [
+      EdgeField.Type,
+      EdgeField.NameOrIndex,
+      EdgeField.ToNode,
+    ],
     node_types: p?.node_types ?? [
       [
-        "hidden",
-        "array",
-        "string",
-        "object",
-        "code",
-        "closure",
-        "regexp",
-        "number",
-        "native",
-        "synthetic",
-        "concatenated string",
-        "sliced string",
-        "symbol",
-        "bigint",
-        "object shape",
+        NodeType.Hidden,
+        NodeType.Array,
+        NodeType.String,
+        NodeType.Object,
+        NodeType.Code,
+        NodeType.Closure,
+        NodeType.Regexp,
+        NodeType.Number,
+        NodeType.Native,
+        NodeType.Synthetic,
+        NodeType.ConcatenatedString,
+        NodeType.SlicedString,
+        NodeType.Symbol,
+        NodeType.BigInt,
+        NodeType.ObjectShape,
       ],
       "string",
       "number",
@@ -49,13 +53,13 @@ export function createMetaJSON(p?: Partial<MetaJSON>): MetaJSON {
     ],
     edge_types: p?.edge_types ?? [
       [
-        "context",
-        "element",
-        "property",
-        "internal",
-        "hidden",
-        "shortcut",
-        "weak",
+        EdgeType.Context,
+        EdgeType.Element,
+        EdgeType.Property,
+        EdgeType.Internal,
+        EdgeType.Hidden,
+        EdgeType.Shortcut,
+        EdgeType.Weak,
       ],
       "string_or_number",
       "node",
