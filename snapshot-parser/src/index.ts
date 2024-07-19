@@ -3,27 +3,30 @@ import "reflect-metadata";
 import { parseSnapshotFile } from "./json/parser.js";
 import { EdgeJSON, NodeJSON, SnapshotJSON } from "./json/schema.js";
 import { processNodes } from "./processing/nodes.js";
-import { initializeSQLite } from "./sqlite/utils.js";
+import {
+  initializeSQLiteDB,
+  HeapString,
+  Snapshot,
+  NodeData,
+  EdgeData,
+  SnapshotStats,
+  MetaJSON,
+} from "@memlaser/database";
 import { processEdges } from "./processing/edges.js";
 import * as fs from "fs";
 import { DataSource } from "typeorm";
-import { HeapString } from "./sqlite/entities/heapString.js";
-import { Snapshot } from "./sqlite/entities/snapshot.js";
-import { NodeData } from "./sqlite/entities/nodeData.js";
-import { EdgeData } from "./sqlite/entities/edgeData.js";
-import { SnapshotStats } from "./sqlite/entities/snapshotStats.js";
 
 // TODO: Move this to a debug function for testing
-// async function main(): Promise<void> {
-//   console.log("main()");
-//   await parseSnapshotToSQLite({
-//     snapshotPath: "samples/foo-bar.heapsnapshot",
-//     outputPath: "out/foo-bar.sqlite",
-//     overwriteExisting: true,
-//   });
-//   console.log("-- done!");
-// }
-// void main();
+async function main(): Promise<void> {
+  console.log("main()");
+  await parseSnapshotToSQLite({
+    snapshotPath: "samples/foo-bar.heapsnapshot",
+    outputPath: "out/foo-bar.sqlite",
+    overwriteExisting: true,
+  });
+  console.log("-- done!");
+}
+void main();
 
 interface ParseSnapshotToSQLiteOptions {
   snapshotPath: string;
@@ -47,7 +50,7 @@ export async function parseSnapshotToSQLite(
     }
   }
 
-  const db = await initializeSQLite(outputPath);
+  const db = await initializeSQLiteDB(outputPath);
   const snapshotStats = fs.statSync(snapshotPath);
   await db
     .createQueryBuilder()
@@ -74,7 +77,7 @@ export async function parseSnapshotToSQLite(
       .insert()
       .into(Snapshot)
       .values({
-        meta: json.meta,
+        meta: json.meta as MetaJSON,
         edgeCount: json.edge_count,
         nodeCount: json.node_count,
         traceFunctionCount: json.trace_function_count,

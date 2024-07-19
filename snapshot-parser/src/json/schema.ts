@@ -1,3 +1,4 @@
+import { EdgeField, EdgeType, NodeField, NodeType } from "@memlaser/database";
 import { z } from "zod";
 
 export const nodeJSONSchema = z.array(z.number());
@@ -35,62 +36,23 @@ export const heapSnapshotJSONKeySchema = z.enum([
 ]);
 export type HeapSnapshotJSONKey = z.infer<typeof heapSnapshotJSONKeySchema>;
 
-export const nodeFieldJSONSchema = z.enum([
-  "type",
-  "name",
-  "id",
-  "self_size",
-  "edge_count",
-  "detachedness",
-  "trace_node_id",
-]);
-export type NodeFieldJSON = z.infer<typeof nodeFieldJSONSchema>;
+export const nodeFieldSchema = z.nativeEnum(NodeField);
+export const nodeTypeSchema = z.nativeEnum(NodeType);
+export const edgeFieldSchema = z.nativeEnum(EdgeField);
+export const edgeTypeSchema = z.nativeEnum(EdgeType);
 
-export const nodeTypeJSONSchema = z.enum([
-  "hidden",
-  "array",
-  "string",
-  "object",
-  "code",
-  "closure",
-  "regexp",
-  "number",
-  "native",
-  "synthetic",
-  "concatenated string",
-  "sliced string",
-  "symbol",
-  "bigint",
-  "object shape",
-]);
-export type NodeType = z.infer<typeof nodeTypeJSONSchema>;
-
-export const edgeFieldJSONSchema = z.enum(["type", "name_or_index", "to_node"]);
-export type EdgeFieldJSON = z.infer<typeof edgeFieldJSONSchema>;
-
-export const edgeTypeJSONSchema = z.enum([
-  "context",
-  "element",
-  "property",
-  "internal",
-  "hidden",
-  "shortcut",
-  "weak",
-]);
-export type EdgeType = z.infer<typeof edgeTypeJSONSchema>;
-
+// Keep in sync with MetaJson type in database package.
 export const metaJSONSchema = z.object({
-  node_fields: z.array(nodeFieldJSONSchema),
-  node_types: z.tuple([z.array(nodeTypeJSONSchema)]).rest(z.string()),
+  node_fields: z.array(nodeFieldSchema),
+  node_types: z.tuple([z.array(nodeTypeSchema)]).rest(z.string()),
   edge_fields: z.array(z.string()),
-  edge_types: z.tuple([z.array(z.string())]).rest(z.string()),
+  edge_types: z.tuple([z.array(edgeTypeSchema)]).rest(z.string()),
   // TODO: What are the following?
   trace_function_info_fields: z.array(z.string()),
   trace_node_fields: z.array(z.string()),
   sample_fields: z.array(z.string()),
   location_fields: z.array(z.string()),
 });
-export type MetaJSON = z.infer<typeof metaJSONSchema>;
 
 export const snapshotJSONSchema = z.object({
   meta: metaJSONSchema,

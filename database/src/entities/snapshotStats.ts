@@ -1,5 +1,4 @@
 import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
-import { MetaJSON } from "../../json/schema.js";
 
 @Entity({ name: "snapshot_stats" })
 export class SnapshotStats {

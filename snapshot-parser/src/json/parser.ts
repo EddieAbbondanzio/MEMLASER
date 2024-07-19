@@ -2,7 +2,6 @@ import * as fs from "fs";
 import * as sj from "stream-json";
 import {
   EdgeJSON,
-  MetaJSON,
   NodeJSON,
   SnapshotJSON,
   edgeJSONSchema,
@@ -29,6 +28,7 @@ import {
 import { TokenQueue } from "./tokenQueue.js";
 import _ from "lodash";
 import sc from "stream-chain";
+import { MetaJSON } from "@memlaser/database";
 
 // N.B. The parser doesn't account for nullValue, trueValue, or falseValue
 // tokens and could crash if the heapsnapshot file format is ever changed to use
@@ -267,7 +267,7 @@ export async function buildMeta(queue: TokenQueue): Promise<MetaJSON> {
   });
 
   const validated = await metaJSONSchema.parseAsync(raw);
-  return validated;
+  return validated as MetaJSON;
 }
 
 async function buildStringArrayWithNestedArray(

@@ -1,9 +1,9 @@
+import { Snapshot } from "@memlaser/database";
 import {
   buildEdgeFieldIndices,
   buildNodeFieldIndices,
   getSnapshot,
 } from "../../src/processing/snapshot.js";
-import { Snapshot } from "../../src/sqlite/entities/snapshot.js";
 import { createTestSQLiteDB } from "../_factories/db.js";
 import { createMeta, createSnapshot } from "../_factories/snapshot.js";
 

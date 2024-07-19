@@ -1,12 +1,15 @@
 import {
+  Snapshot,
+  Node,
+  HeapString,
+  EdgeData,
+  Edge,
+  NodeType,
+} from "@memlaser/database";
+import {
   createEdgeDataLoader,
   processEdges,
 } from "../../src/processing/edges.js";
-import { Edge } from "../../src/sqlite/entities/edge.js";
-import { EdgeData } from "../../src/sqlite/entities/edgeData.js";
-import { HeapString } from "../../src/sqlite/entities/heapString.js";
-import { Node } from "../../src/sqlite/entities/node.js";
-import { Snapshot } from "../../src/sqlite/entities/snapshot.js";
 import { createTestSQLiteDB } from "../_factories/db.js";
 import { createSnapshot } from "../_factories/snapshot.js";
 
@@ -50,7 +53,7 @@ test("createEdgeDataLoader", async () => {
     .into(Node)
     .values([
       {
-        type: "object",
+        type: NodeType.Object,
         name: "Foo",
         edgeCount: 4,
         index: 0,
@@ -60,7 +63,7 @@ test("createEdgeDataLoader", async () => {
         detached: false,
       },
       {
-        type: "string",
+        type: NodeType.String,
         name: "a",
         edgeCount: 0,
         index: 7,
@@ -70,7 +73,7 @@ test("createEdgeDataLoader", async () => {
         detached: false,
       },
       {
-        type: "string",
+        type: NodeType.String,
         name: "b",
         edgeCount: 0,
         index: 14,
@@ -80,7 +83,7 @@ test("createEdgeDataLoader", async () => {
         detached: false,
       },
       {
-        type: "string",
+        type: NodeType.String,
         name: "c",
         edgeCount: 0,
         index: 21,
@@ -90,7 +93,7 @@ test("createEdgeDataLoader", async () => {
         detached: false,
       },
       {
-        type: "string",
+        type: NodeType.String,
         name: "d",
         edgeCount: 0,
         index: 28,
@@ -174,7 +177,7 @@ test("processEdges", async () => {
     .into(Node)
     .values([
       {
-        type: "object",
+        type: NodeType.Object,
         name: "Foo",
         edgeCount: 4,
         index: 0,
@@ -184,7 +187,7 @@ test("processEdges", async () => {
         detached: false,
       },
       {
-        type: "string",
+        type: NodeType.String,
         name: "a",
         edgeCount: 0,
         index: 7,
@@ -194,7 +197,7 @@ test("processEdges", async () => {
         detached: false,
       },
       {
-        type: "string",
+        type: NodeType.String,
         name: "b",
         edgeCount: 0,
         index: 14,
@@ -204,7 +207,7 @@ test("processEdges", async () => {
         detached: false,
       },
       {
-        type: "string",
+        type: NodeType.String,
         name: "c",
         edgeCount: 0,
         index: 21,
@@ -214,7 +217,7 @@ test("processEdges", async () => {
         detached: false,
       },
       {
-        type: "string",
+        type: NodeType.String,
         name: "d",
         edgeCount: 0,
         index: 28,

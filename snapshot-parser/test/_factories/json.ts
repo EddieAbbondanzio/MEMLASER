@@ -1,4 +1,5 @@
-import { MetaJSON, SnapshotJSON } from "../../src/json/schema.js";
+import { MetaJSON } from "@memlaser/database";
+import { SnapshotJSON } from "../../src/json/schema.js";
 
 export function createSnapshotJSON(p?: Partial<SnapshotJSON>): SnapshotJSON {
   return {

@@ -1,6 +1,6 @@
 import { DataSource } from "typeorm";
-import { initializeSQLite } from "../../src/sqlite/utils.js";
+import { initializeSQLiteDB } from "@memlaser/database";
 
 export async function createTestSQLiteDB(): Promise<DataSource> {
-  return await initializeSQLite(":memory:");
+  return await initializeSQLiteDB(":memory:");
 }

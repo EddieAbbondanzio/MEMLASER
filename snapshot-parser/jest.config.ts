@@ -5,6 +5,7 @@ const jestConfig: JestConfigWithTsJest = {
   preset: "ts-jest/presets/default-esm",
   rootDir: "test",
   moduleNameMapper: {
+    "^@memlaser/database": "<rootDir>/../../database/src/index.ts",
     "^(\\.{1,2}/.*)\\.js$": "$1",
   },
   transform: {

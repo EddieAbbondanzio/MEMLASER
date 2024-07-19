@@ -1,9 +1,7 @@
+import { Node, NodeData, NodeType, batchSelectAll } from "@memlaser/database";
 import { buildNodeFieldIndices, getSnapshot } from "./snapshot.js";
-import { batchSelectAll } from "../sqlite/utils.js";
 import { getStringsByIndex } from "./strings.js";
 import { DataSource } from "typeorm";
-import { Node } from "../sqlite/entities/node.js";
-import { NodeData } from "../sqlite/entities/nodeData.js";
 
 const NODE_BATCH_SIZE = 1000;
 
@@ -38,7 +36,7 @@ export async function processNodes(db: DataSource): Promise<void> {
 
     const nodes = nodeData.map(({ index, fieldValues }) => ({
       index,
-      type: nodeTypes[fieldValues[fieldIndices["type"]]],
+      type: nodeTypes[fieldValues[fieldIndices["type"]]] as NodeType,
       name: nameLookup[fieldValues[fieldIndices["name"]]].value,
       nodeId: fieldValues[fieldIndices["id"]],
       selfSize: fieldValues[fieldIndices["self_size"]],

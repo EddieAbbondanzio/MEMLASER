@@ -1,6 +1,6 @@
+import { HeapString } from "@memlaser/database";
 import _ from "lodash";
 import { DataSource, In } from "typeorm";
-import { HeapString } from "../sqlite/entities/heapString.js";
 
 export async function getStringsByIndex(
   db: DataSource,

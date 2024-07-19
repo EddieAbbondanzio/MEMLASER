@@ -1,12 +1,14 @@
-import { batchSelectAll } from "../sqlite/utils.js";
+import {
+  batchSelectAll,
+  Node,
+  EdgeType,
+  Edge,
+  EdgeData,
+} from "@memlaser/database";
 import { buildEdgeFieldIndices, getSnapshot } from "./snapshot.js";
 import { getStringsByIndex } from "./strings.js";
 import _ from "lodash";
-import { Node } from "../sqlite/entities/node.js";
-import { EdgeData } from "../sqlite/entities/edgeData.js";
 import { DataSource, In } from "typeorm";
-import { Edge } from "../sqlite/entities/edge.js";
-import { EdgeType } from "../json/schema.js";
 
 const NODE_BATCH_SIZE = 1000;
 const EDGE_DATA_BATCH_SIZE = 1000;

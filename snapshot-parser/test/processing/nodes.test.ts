@@ -1,8 +1,5 @@
+import { Snapshot, NodeData, HeapString, Node } from "@memlaser/database";
 import { processNodes } from "../../src/processing/nodes.js";
-import { HeapString } from "../../src/sqlite/entities/heapString.js";
-import { Node } from "../../src/sqlite/entities/node.js";
-import { NodeData } from "../../src/sqlite/entities/nodeData.js";
-import { Snapshot } from "../../src/sqlite/entities/snapshot.js";
 import { createTestSQLiteDB } from "../_factories/db.js";
 import { createSnapshot } from "../_factories/snapshot.js";
 

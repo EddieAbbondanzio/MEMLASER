@@ -18,5 +18,6 @@
     "declaration": true,
     "declarationMap": true,
     "composite": true
-  }
+  },
+  "references": [{ "path": "../database" }]
 }

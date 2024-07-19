@@ -9,7 +9,7 @@ import { Init1720318566156 } from "./migrations/1_init.js";
 import { SnakeCaseNamingStrategy } from "./snakeCaseNamingStrategy.js";
 import { SnapshotStats } from "./entities/snapshotStats.js";
 
-export async function initializeSQLite(
+export async function initializeSQLiteDB(
   outputPath: string,
 ): Promise<DataSource> {
   const dataSource = new DataSource({

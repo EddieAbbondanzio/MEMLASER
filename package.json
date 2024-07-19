@@ -4,7 +4,8 @@
   "workspaces": [
     "api",
     "snapshot-parser",
-    "snapshot-generator"
+    "snapshot-generator",
+    "database"
   ],
   "devDependencies": {
     "@eslint/js": "^9.5.0",

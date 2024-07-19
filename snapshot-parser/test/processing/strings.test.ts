@@ -1,5 +1,5 @@
+import { HeapString } from "@memlaser/database";
 import { getStringsByIndex } from "../../src/processing/strings.js";
-import { HeapString } from "../../src/sqlite/entities/heapString.js";
 import { createTestSQLiteDB } from "../_factories/db.js";
 
 test("getStringsByIndex", async () => {

@@ -1,6 +1,5 @@
+import { EdgeField, NodeField, Snapshot } from "@memlaser/database";
 import { DataSource } from "typeorm";
-import { EdgeFieldJSON, NodeFieldJSON } from "../json/schema.js";
-import { Snapshot } from "../sqlite/entities/snapshot.js";
 
 export async function getSnapshot(db: DataSource): Promise<Snapshot> {
   const snapshot = await db.getRepository(Snapshot).find();
@@ -8,24 +7,24 @@ export async function getSnapshot(db: DataSource): Promise<Snapshot> {
   return snapshot[0];
 }
 
-export type NodeFieldIndices = Record<NodeFieldJSON, number>;
+export type NodeFieldIndices = Record<NodeField, number>;
 export function buildNodeFieldIndices(snapshot: Snapshot): NodeFieldIndices {
   const { node_fields: nodeFields } = snapshot.meta;
 
   const lookup = nodeFields.reduce((lookup, key, index) => {
-    lookup[key as NodeFieldJSON] = index;
+    lookup[key as NodeField] = index;
     return lookup;
   }, {} as Partial<NodeFieldIndices>);
 
   return lookup as NodeFieldIndices;
 }
 
-export type EdgeFieldIndices = Record<EdgeFieldJSON, number>;
+export type EdgeFieldIndices = Record<EdgeField, number>;
 export function buildEdgeFieldIndices(snapshot: Snapshot): EdgeFieldIndices {
   const { edge_fields: edgeFields } = snapshot.meta;
 
   const lookup = edgeFields.reduce((lookup, key, index) => {
-    lookup[key as EdgeFieldJSON] = index;
+    lookup[key as EdgeField] = index;
     return lookup;
   }, {} as Partial<EdgeFieldIndices>);
 
