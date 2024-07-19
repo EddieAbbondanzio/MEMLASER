@@ -2,6 +2,7 @@ import * as fs from "fs";
 import * as sj from "stream-json";
 import {
   EdgeJSON,
+  MetaJSON,
   NodeJSON,
   SnapshotJSON,
   edgeJSONSchema,
@@ -248,7 +249,7 @@ export async function buildSnapshot(queue: TokenQueue): Promise<SnapshotJSON> {
   return validated;
 }
 
-export async function buildMeta(queue: TokenQueue): Promise<Meta> {
+export async function buildMeta(queue: TokenQueue): Promise<MetaJSON> {
   const raw = await buildObject(queue, async (q, key) => {
     switch (key) {
       case "node_types":
@@ -267,16 +268,7 @@ export async function buildMeta(queue: TokenQueue): Promise<Meta> {
   });
 
   const validated = await metaJSONSchema.parseAsync(raw);
-  return {
-    nodeFields: validated.node_fields,
-    nodeTypes: validated.node_types,
-    edgeFields: validated.edge_fields,
-    edgeTypes: validated.edge_types,
-    locationFields: validated.location_fields,
-    sampleFields: validated.sample_fields,
-    traceFunctionInfoFields: validated.trace_function_info_fields,
-    traceNodeFields: validated.trace_node_fields,
-  };
+  return validated;
 }
 
 async function buildStringArrayWithNestedArray(
