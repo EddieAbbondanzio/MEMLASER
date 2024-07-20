@@ -2,10 +2,10 @@
   "name": "memlaser",
   "private": true,
   "workspaces": [
-    "api",
-    "snapshot-parser",
-    "snapshot-generator",
-    "database"
+    "apps/api",
+    "libs/snapshot-parser",
+    "libs/snapshot-generator",
+    "libs/database"
   ],
   "devDependencies": {
     "@eslint/js": "^9.5.0",

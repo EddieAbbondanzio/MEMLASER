@@ -11,7 +11,7 @@
         "reveal": "always"
       },
       "options": {
-        "cwd": "api"
+        "cwd": "apps/api"
       }
     },
     {
@@ -24,11 +24,11 @@
         "reveal": "always"
       },
       "options": {
-        "cwd": "api"
+        "cwd": "apps/api"
       }
     },
     {
-      "label": "app:run",
+      "label": "desktop-app:run",
       "command": "flutter run lib/main.dart",
       "type": "shell",
       "args": [],
@@ -37,7 +37,7 @@
         "reveal": "always"
       },
       "options": {
-        "cwd": "app"
+        "cwd": "apps/desktop-app"
       }
     },
     {
@@ -50,7 +50,7 @@
         "reveal": "always"
       },
       "options": {
-        "cwd": "snapshot-parser"
+        "cwd": "libs/snapshot-parser"
       }
     },
     {
@@ -63,7 +63,7 @@
         "reveal": "always"
       },
       "options": {
-        "cwd": "snapshot-parser"
+        "cwd": "libs/snapshot-parser"
       }
     },
     {
@@ -76,7 +76,7 @@
         "reveal": "always"
       },
       "options": {
-        "cwd": "snapshot-parser"
+        "cwd": "libs/snapshot-parser"
       }
     },
     {
@@ -89,7 +89,7 @@
         "reveal": "always"
       },
       "options": {
-        "cwd": "snapshot-parser"
+        "cwd": "libs/snapshot-parser"
       }
     },
     {
@@ -102,7 +102,7 @@
         "reveal": "always"
       },
       "options": {
-        "cwd": "snapshot-generator"
+        "cwd": "libs/snapshot-generator"
       }
     },
     {
@@ -115,7 +115,7 @@
         "reveal": "always"
       },
       "options": {
-        "cwd": "snapshot-generator"
+        "cwd": "libs/snapshot-generator"
       }
     }
   ]
