@@ -2,7 +2,6 @@ import dotenv from "dotenv";
 dotenv.config();
 
 import { NestFactory } from "@nestjs/core";
-import { EditorModule } from "./editor/editor.module.js";
 import { ValidationPipe } from "@nestjs/common";
 import { HTTP_PORT } from "./core/config.js";
 import { AppModule } from "./app.module.js";

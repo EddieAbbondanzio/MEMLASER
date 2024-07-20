@@ -10,23 +10,22 @@ import {
   NodeData,
   EdgeData,
   SnapshotStats,
-  Meta,
 } from "@memlaser/database";
 import { processEdges } from "./processing/edges.js";
 import * as fs from "fs";
 import { DataSource } from "typeorm";
 
 // TODO: Move this to a debug function for testing
-async function main(): Promise<void> {
-  console.log("main()");
-  await parseSnapshotToSQLite({
-    snapshotPath: "samples/foo-bar.heapsnapshot",
-    outputPath: "out/foo-bar.sqlite",
-    overwriteExisting: true,
-  });
-  console.log("-- done!");
-}
-void main();
+// async function main(): Promise<void> {
+//   console.log("main()");
+//   await parseSnapshotToSQLite({
+//     snapshotPath: "samples/foo-bar.heapsnapshot",
+//     outputPath: "out/foo-bar.sqlite",
+//     overwriteExisting: true,
+//   });
+//   console.log("-- done!");
+// }
+// void main();
 
 interface ParseSnapshotToSQLiteOptions {
   snapshotPath: string;

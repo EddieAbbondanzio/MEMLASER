@@ -17,5 +17,8 @@
     "noImplicitAny": true,
     "strictBindCallApply": false
   },
-  "references": [{ "path": "../snapshot-parser" }]
+  "references": [
+    { "path": "../../libs/snapshot-parser" },
+    { "path": "../../libs/database" }
+  ]
 }

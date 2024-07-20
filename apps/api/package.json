@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "@memlaser/snapshot-parser": "^1.0.0",
+    "@memlaser/database": "^1.0.0",
     "@nestjs/common": "^10.3.10",
     "@nestjs/core": "^10.3.10",
     "@nestjs/platform-express": "^10.3.10",
@@ -34,6 +35,7 @@
     "nanoid": "^5.0.7",
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.8.1",
+    "typeorm": "^0.3.20",
     "ws": "^8.18.0"
   },
   "devDependencies": {

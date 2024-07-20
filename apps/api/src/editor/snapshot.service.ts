@@ -3,9 +3,7 @@ import { DATA_DIR } from "../core/config.js";
 import fs from "node:fs";
 import path from "node:path";
 import { Snapshot } from "./snapshot.js";
-import { parseSnapshotToSQLite } from "@memlaser/snapshot-parser";
-
-// Snapshots (.sqlite) files live inside a snapshot dir within the data dir.
+import { initializeSQLiteDB, SnapshotStats } from "@memlaser/database";
 
 @Injectable()
 export class SnapshotService implements OnModuleInit {
@@ -26,26 +24,25 @@ export class SnapshotService implements OnModuleInit {
   }
 
   async getAvailableSnapshots(): Promise<Snapshot[]> {
-    const snapshots = (await fs.promises.readdir(this.snapshotDirectoryPath))
-      .filter((f) => /.*\.sqlite/.test(f))
-      .map((f) => {
-        const snapshotPath = path.join(this.snapshotDirectoryPath, f);
-        const nameNoExtension = path.parse(snapshotPath).name;
+    const snapshotFiles = (
+      await fs.promises.readdir(this.snapshotDirectoryPath)
+    ).filter((f) => /.*\.sqlite/.test(f));
 
-        // TODO: Devise how to store imported date, and OG heap file size.
-        // We need to either store this in a separate json file ex: (appState.json)
-        // or put it in the SQLite files and query each one we render in the sidebar.
+    const snapshots: Snapshot[] = [];
+    for (const sf of snapshotFiles) {
+      const snapshotPath = path.join(this.snapshotDirectoryPath, sf);
+      const nameNoExtension = path.parse(snapshotPath).name;
+      const stats = await this._getSnapshotStats(snapshotPath);
 
-        const fstat = fs.statSync(snapshotPath);
-        const importedAt = new Date(fstat.birthtimeMs);
-
-        return new Snapshot(
+      snapshots.push(
+        new Snapshot(
           nameNoExtension,
           snapshotPath,
-          "100 mb",
-          importedAt,
-        );
-      });
+          stats.size,
+          stats.importedAt,
+        ),
+      );
+    }
 
     return snapshots;
   }
@@ -56,13 +53,24 @@ export class SnapshotService implements OnModuleInit {
       this.snapshotDirectoryPath,
       `${importPath.name}.sqlite`,
     );
+    const stats = await this._getSnapshotStats(outputPath);
 
-    const ds = await parseSnapshotToSQLite({
-      snapshotPath: p,
+    return new Snapshot(
+      importPath.name,
       outputPath,
-    });
-    await ds.destroy();
+      stats.size,
+      stats.importedAt,
+    );
+  }
 
-    return new Snapshot(importPath.name, outputPath, "101mb", new Date());
+  async _getSnapshotStats(snapshotPath: string): Promise<SnapshotStats> {
+    const db = await initializeSQLiteDB(snapshotPath);
+    const stats = await db
+      .createQueryBuilder(SnapshotStats, "snapshot_stats")
+      .select()
+      .getOneOrFail();
+    await db.destroy();
+
+    return stats;
   }
 }
