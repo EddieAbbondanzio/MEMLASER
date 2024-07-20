@@ -1,0 +1,28 @@
+{
+  "name": "@memlaser/database",
+  "version": "1.0.0",
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "import": "./dist/src/index.js"
+    }
+  },
+  "scripts": {
+    "start": "tsx watch src",
+    "build": "tsc",
+    "buildProd": "tsc --project tsconfig.build.json"
+  },
+  "license": "GPL-3.0-only",
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "typeorm": "^0.3.20"
+  },
+  "devDependencies": {
+    "@types/node": "^18",
+    "tsx": "^4.16.2",
+    "typescript": "^5.5.3"
+  }
+}

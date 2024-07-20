@@ -1,3 +1,4 @@
 {
-  "cSpell.words": ["detachedness", "LTRB", "memlaser"]
+  "cSpell.words": ["detachedness", "LTRB", "memlaser", "typeorm"],
+  "editor.formatOnSave": true
 }

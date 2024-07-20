@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "sourceMap": false
+  },
+  // We don't include test directory to keep build size small.
+  // Src: https://stackoverflow.com/a/60223923
+  "exclude": ["node_modules", "test", "jest.config.ts"]
+}
