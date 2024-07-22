@@ -1,44 +1,113 @@
-// import { fs } from "memfs";
+import { test, describe, beforeEach, mock } from "node:test";
 import { DATA_DIR } from "../../../src/core/config.js";
-// import { Test } from "@nestjs/testing";
-// import { SnapshotService } from "../../../src/editor/snapshot.service.js";
-
-// jest.mock("fs", () => fs);
-// jest.mock("fs/promises", () => fs.promises);
+import assert from "node:assert";
+import { SnapshotService } from "../../../src/editor/snapshot.service.js";
+import esmock from "esmock";
+import * as memfs from "memfs";
+import path from "node:path";
+import { subDays } from "date-fns";
 
 describe("SnapshotService", async () => {
-  // let snapshotService: SnapshotService;
+  const fs = memfs.fs;
 
-  // beforeEach(async () => {
-  //   const moduleRef = await Test.createTestingModule({
-  //     providers: [SnapshotService],
-  //   }).compile();
-  //   snapshotService = moduleRef.get<SnapshotService>(SnapshotService);
-  // });
+  const { createSnapshotService } = await esmock(
+    "./createSnapshotService.js",
+    {},
+    {
+      fs: memfs.fs,
+      "@memlaser/snapshot-parser": {
+        parseSnapshotToSQLite: () => {},
+      },
+    },
+  );
 
-  test("onModuleInit creates data dir if missing", async () => {
-    expect(1).toBe(2);
-    console.log(DATA_DIR);
-    // Creates data dir
-    // Creates snapshot dir
+  let snapshotService: SnapshotService;
+
+  beforeEach(async () => {
+    memfs.vol.reset();
+    snapshotService = await createSnapshotService();
+  });
+
+  test("onModuleInit creates data dir and snapshot dir if missing", async (t) => {
+    // Empty FS, no data dir
+    memfs.vol.fromJSON({});
+    await snapshotService.onModuleInit();
+
+    assert.strictEqual(
+      fs.existsSync(DATA_DIR),
+      true,
+      "Data directory was missing.",
+    );
+
+    assert.strictEqual(
+      fs.existsSync(snapshotService.snapshotDirectoryPath),
+      true,
+      "Snapshot directory was missing.",
+    );
   });
 
   test("onModuleInit creates snapshot dir if missing", async () => {
-    // Creates snapshot dir, but not data dir
-  });
+    memfs.vol.fromJSON({
+      [DATA_DIR]: null,
+    });
+    await snapshotService.onModuleInit();
 
-  test("onModuleInit", async () => {
-    // Doesn't call mkdir if it exists
+    assert.strictEqual(
+      fs.existsSync(snapshotService.snapshotDirectoryPath),
+      true,
+      "Snapshot directory was missing.",
+    );
   });
 
   test("getAvailableSnapshots", async () => {
-    // Ignores non snapshot files
-    // Builds a snapshot for each sqlite file
+    const { snapshotDirectoryPath } = snapshotService;
+
+    memfs.vol.fromJSON({
+      [path.join(snapshotDirectoryPath, "foo.sqlite")]: "",
+      [path.join(snapshotDirectoryPath, "bar.sqlite")]: "",
+      // Should be ignored
+      [path.join(snapshotDirectoryPath, "random.txt")]: "",
+    });
+
+    snapshotService._getSnapshotStats = mock.fn(async (path: string) => {
+      if (path.endsWith("foo.sqlite")) {
+        return {
+          id: 1,
+          size: 1000,
+          importedAt: subDays(new Date(), 1),
+          createdAt: subDays(new Date(), 1),
+        };
+      } else if (path.endsWith("bar.sqlite")) {
+        return {
+          id: 2,
+          size: 2000,
+          importedAt: subDays(new Date(), 2),
+          createdAt: subDays(new Date(), 2),
+        };
+      } else {
+        throw new Error(`Unexpected path ${path}`);
+      }
+    });
+
+    const snapshots = await snapshotService.getAvailableSnapshots();
+    assert.strictEqual(snapshots[0].name, "bar");
+    assert.strictEqual(snapshots[1].name, "foo");
   });
 
   test("importSnapshot", async () => {
-    // Imports snapshot (mock parseSnapshotToSqlite and check calls)
-    // Mock return value to give it fake stats
-    // Confirm it returns matching snapshot
+    memfs.vol.fromJSON({
+      [snapshotService.snapshotDirectoryPath]: null,
+    });
+    snapshotService._getSnapshotStats = mock.fn(async (path: string) => {
+      return {
+        id: 1,
+        size: 1000,
+        importedAt: subDays(new Date(), 1),
+        createdAt: subDays(new Date(), 1),
+      };
+    });
+    const snapshot = await snapshotService.importSnapshot("bar.heapsnapshot");
+    assert.strictEqual(snapshot.name, "bar");
+    assert.strictEqual(snapshot.fileSizeBytes, 1000);
   });
 });

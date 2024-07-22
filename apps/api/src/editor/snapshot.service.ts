@@ -6,13 +6,13 @@ import { Snapshot } from "./snapshot.js";
 import { initializeSQLiteDB, SnapshotStats } from "@memlaser/database";
 import { parseSnapshotToSQLite } from "@memlaser/snapshot-parser";
 import { DataSource } from "typeorm";
+import { sortBy } from "lodash-es";
 
 @Injectable()
 export class SnapshotService implements OnModuleInit {
   snapshotDirectoryPath: string = path.join(DATA_DIR, "snapshots");
 
   async onModuleInit(): Promise<void> {
-    console.log("ON MODULE INIT!@");
     // Create data directory if it doesn't exist.
     if (!fs.existsSync(DATA_DIR)) {
       await fs.promises.mkdir(DATA_DIR);
@@ -44,7 +44,9 @@ export class SnapshotService implements OnModuleInit {
       );
     }
 
-    return snapshots;
+    // Sort by imported at to ensure we consistently sort the snapshots in the
+    // sidebar. Eventually we should make this user customizable.
+    return sortBy(snapshots, ["importedAt", "DESC"]);
   }
 
   async importSnapshot(p: string): Promise<Snapshot> {

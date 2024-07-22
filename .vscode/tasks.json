@@ -18,7 +18,7 @@
     },
     {
       "label": "api:test",
-      "command": "yarn -s run test",
+      "command": "yarn -s run test:unit",
       "type": "shell",
       "args": [],
       "problemMatcher": ["$tsc"],
