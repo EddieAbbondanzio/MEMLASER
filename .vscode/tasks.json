@@ -134,6 +134,19 @@
       "options": {
         "cwd": "libs/snapshot-generator"
       }
+    },
+    {
+      "label": "database:build",
+      "command": "yarn -s run build",
+      "type": "shell",
+      "args": [],
+      "problemMatcher": ["$tsc"],
+      "presentation": {
+        "reveal": "always"
+      },
+      "options": {
+        "cwd": "libs/database"
+      }
     }
   ]
 }
