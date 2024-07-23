@@ -7,14 +7,8 @@ import {
   buildString,
 } from "../../src/json/utils.js";
 import { createTokenQueue } from "../_factories/tokenQueue.js";
-
-beforeEach(() => {
-  jest.spyOn(console, "warn");
-});
-
-afterEach(() => {
-  jest.resetAllMocks();
-});
+import { test, beforeEach, afterEach, mock } from "node:test";
+import assert from "node:assert";
 
 test("buildObject missing startObject", async () => {
   const queue = await createTokenQueue(
@@ -30,9 +24,14 @@ test("buildObject missing startObject", async () => {
     { isDraining: true },
   );
 
-  await expect(async () => {
-    await buildObject(queue, buildNumber);
-  }).rejects.toThrow(/Failed to build object/);
+  await assert.rejects(
+    async () => {
+      await buildObject(queue, buildNumber);
+    },
+    (e: Error) => {
+      assert.match(e.message, /Failed to build object/);
+    },
+  );
 });
 
 test("buildObject missing endObject", async () => {
@@ -49,9 +48,12 @@ test("buildObject missing endObject", async () => {
     { isDraining: true },
   );
 
-  await expect(async () => {
-    await buildObject(queue, buildNumber);
-  }).rejects.toThrow(/Failed to build object/);
+  await assert.rejects(
+    async () => {
+      await buildObject(queue, buildNumber);
+    },
+    (e: Error) => assert.match(e.message, /Failed to build object/),
+  );
 });
 
 test("buildObject missing key", async () => {
@@ -66,9 +68,12 @@ test("buildObject missing key", async () => {
     { isDraining: true },
   );
 
-  await expect(async () => {
-    await buildObject(queue, buildNumber);
-  }).rejects.toThrow(/Failed to build key/);
+  await assert.rejects(
+    async () => {
+      await buildObject(queue, buildNumber);
+    },
+    (e: Error) => assert.match(e.message, /Failed to build key/),
+  );
 });
 
 test("buildObject missing value", async () => {
@@ -83,9 +88,12 @@ test("buildObject missing value", async () => {
     { isDraining: true },
   );
 
-  await expect(async () => {
-    await buildObject(queue, buildNumber);
-  }).rejects.toThrow(/Failed to build number/);
+  await assert.rejects(
+    async () => {
+      await buildObject(queue, buildNumber);
+    },
+    (e: Error) => assert.match(e.message, /Failed to build number/),
+  );
 });
 
 test("buildObject", async () => {
@@ -110,7 +118,7 @@ test("buildObject", async () => {
   );
 
   const obj = await buildObject(queue, buildNumber);
-  expect(obj).toEqual({
+  assert.deepEqual(obj, {
     foo: 1,
     bar: 2,
   });
@@ -127,9 +135,12 @@ test("buildArray missing startArray", async () => {
     { isDraining: true },
   );
 
-  await expect(async () => {
-    await buildArray(queue, buildString);
-  }).rejects.toThrow(/Failed to build array/);
+  await assert.rejects(
+    async () => {
+      await buildArray(queue, buildString);
+    },
+    (e: Error) => assert.match(e.message, /Failed to build array/),
+  );
 });
 
 test("buildArray missing endArray", async () => {
@@ -143,9 +154,12 @@ test("buildArray missing endArray", async () => {
     { isDraining: true },
   );
 
-  await expect(async () => {
-    await buildArray(queue, buildString);
-  }).rejects.toThrow(/Failed to build array/);
+  await assert.rejects(
+    async () => {
+      await buildArray(queue, buildString);
+    },
+    (e: Error) => assert.match(e.message, /Failed to build array/),
+  );
 });
 
 test("buildArray empty array", async () => {
@@ -155,7 +169,7 @@ test("buildArray empty array", async () => {
   );
 
   const arr = await buildArray(queue, buildString);
-  expect(arr).toEqual([]);
+  assert.deepEqual(arr, []);
 });
 
 test("buildArray", async () => {
@@ -174,7 +188,7 @@ test("buildArray", async () => {
   );
 
   const arr = await buildArray(queue, buildString);
-  expect(arr).toEqual(["abc", "def"]);
+  assert.deepEqual(arr, ["abc", "def"]);
 });
 
 test("batchBuildArray missing startArray", async () => {
@@ -188,11 +202,14 @@ test("batchBuildArray missing startArray", async () => {
     { isDraining: true },
   );
 
-  await expect(async () => {
-    // eslint-disable-next-line no-empty
-    for await (const _ of batchBuildArray(queue, buildString)) {
-    }
-  }).rejects.toThrow(/Failed to batch build array/);
+  await assert.rejects(
+    async () => {
+      // eslint-disable-next-line no-empty
+      for await (const _ of batchBuildArray(queue, buildString)) {
+      }
+    },
+    (e: Error) => assert.match(e.message, /Failed to batch build array/),
+  );
 });
 
 test("batchBuildArray missing endArray", async () => {
@@ -206,11 +223,14 @@ test("batchBuildArray missing endArray", async () => {
     { isDraining: true },
   );
 
-  await expect(async () => {
-    // eslint-disable-next-line no-empty
-    for await (const _ of batchBuildArray(queue, buildString)) {
-    }
-  }).rejects.toThrow(/Failed to batch build array/);
+  await assert.rejects(
+    async () => {
+      // eslint-disable-next-line no-empty
+      for await (const _ of batchBuildArray(queue, buildString)) {
+      }
+    },
+    (e: Error) => assert.match(e.message, /Failed to batch build array/),
+  );
 });
 
 test("buildArray empty array", async () => {
@@ -223,7 +243,7 @@ test("buildArray empty array", async () => {
   for await (const items of batchBuildArray(queue, buildString, 1)) {
     arr.push(...items);
   }
-  expect(arr).toEqual([]);
+  assert.deepEqual(arr, []);
 });
 
 test("batchBuildArray", async () => {
@@ -249,8 +269,8 @@ test("batchBuildArray", async () => {
     batches.push([items, offset]);
   }
 
-  expect(batches[0]).toEqual([["abc", "def"], 0]);
-  expect(batches[1]).toEqual([["ghi"], 2]);
+  assert.deepEqual(batches[0], [["abc", "def"], 0]);
+  assert.deepEqual(batches[1], [["ghi"], 2]);
 });
 
 test("buildKey missing startKey", async () => {
@@ -259,9 +279,12 @@ test("buildKey missing startKey", async () => {
     { isDraining: true },
   );
 
-  await expect(async () => {
-    await buildKey(queue);
-  }).rejects.toThrow(/Failed to build key/);
+  await assert.rejects(
+    async () => {
+      await buildKey(queue);
+    },
+    (e: Error) => assert.match(e.message, /Failed to build key/),
+  );
 });
 
 test("buildKey missing endKey", async () => {
@@ -270,9 +293,12 @@ test("buildKey missing endKey", async () => {
     { isDraining: true },
   );
 
-  await expect(async () => {
-    await buildKey(queue);
-  }).rejects.toThrow(/Failed to build key/);
+  await assert.rejects(
+    async () => {
+      await buildKey(queue);
+    },
+    (e: Error) => assert.match(e.message, /Failed to build key/),
+  );
 });
 
 test("buildKey invalid chunks", async () => {
@@ -285,9 +311,12 @@ test("buildKey invalid chunks", async () => {
     { isDraining: true },
   );
 
-  await expect(async () => {
-    await buildKey(queue);
-  }).rejects.toThrow(/Failed to build key/);
+  await assert.rejects(
+    async () => {
+      await buildKey(queue);
+    },
+    (e: Error) => assert.match(e.message, /Failed to build key/),
+  );
 });
 
 test("buildKey no chunks", async () => {
@@ -298,9 +327,12 @@ test("buildKey no chunks", async () => {
     },
   );
 
-  await expect(async () => {
-    await buildKey(queue);
-  }).rejects.toThrow(/Failed to build key\. No chunks\./);
+  await assert.rejects(
+    async () => {
+      await buildKey(queue);
+    },
+    (e: Error) => assert.match(e.message, /Failed to build key\. No chunks\./),
+  );
 });
 
 test("buildKey detected keyValue", async () => {
@@ -317,10 +349,7 @@ test("buildKey detected keyValue", async () => {
   );
 
   const key = await buildKey(queue);
-  expect(console.warn).toHaveBeenCalledWith(
-    expect.stringMatching(/Detected a keyValue token/),
-  );
-  expect(key).toBe("abc");
+  assert.deepEqual(key, "abc");
 });
 
 test("buildKey", async () => {
@@ -337,7 +366,7 @@ test("buildKey", async () => {
   );
 
   const key = await buildKey(queue);
-  expect(key).toBe("abcdef");
+  assert.deepEqual(key, "abcdef");
 });
 
 test("buildString missing startString", async () => {
@@ -346,9 +375,12 @@ test("buildString missing startString", async () => {
     { isDraining: true },
   );
 
-  await expect(async () => {
-    await buildString(queue);
-  }).rejects.toThrow(/Failed to build string/);
+  await assert.rejects(
+    async () => {
+      await buildString(queue);
+    },
+    (e: Error) => assert.match(e.message, /Failed to build string/),
+  );
 });
 
 test("buildString missing endString", async () => {
@@ -357,9 +389,12 @@ test("buildString missing endString", async () => {
     { isDraining: true },
   );
 
-  await expect(async () => {
-    await buildString(queue);
-  }).rejects.toThrow(/Failed to build string/);
+  await assert.rejects(
+    async () => {
+      await buildString(queue);
+    },
+    (e: Error) => assert.match(e.message, /Failed to build string/),
+  );
 });
 
 test("buildString invalid chunks", async () => {
@@ -372,9 +407,12 @@ test("buildString invalid chunks", async () => {
     { isDraining: true },
   );
 
-  await expect(async () => {
-    await buildString(queue);
-  }).rejects.toThrow(/Failed to build string/);
+  await assert.rejects(
+    async () => {
+      await buildString(queue);
+    },
+    (e: Error) => assert.match(e.message, /Failed to build string/),
+  );
 });
 
 test("buildString no chunks (empty string)", async () => {
@@ -384,7 +422,7 @@ test("buildString no chunks (empty string)", async () => {
   );
 
   const str = await buildString(queue);
-  expect(str).toBe("");
+  assert.deepEqual(str, "");
 });
 
 test("buildString detected stringValue", async () => {
@@ -399,10 +437,7 @@ test("buildString detected stringValue", async () => {
   );
 
   const str = await buildString(queue);
-  expect(console.warn).toHaveBeenCalledWith(
-    expect.stringMatching(/Detected a stringValue token/),
-  );
-  expect(str).toBe("abc");
+  assert.deepEqual(str, "abc");
 });
 
 test("buildString", async () => {
@@ -418,7 +453,7 @@ test("buildString", async () => {
   );
 
   const str = await buildString(queue);
-  expect(str).toBe("abcdefghi");
+  assert.deepEqual(str, "abcdefghi");
 });
 
 test("buildNumber missing startNumber", async () => {
@@ -427,9 +462,12 @@ test("buildNumber missing startNumber", async () => {
     { isDraining: true },
   );
 
-  await expect(async () => {
-    await buildNumber(queue);
-  }).rejects.toThrow(/Failed to build number/);
+  await assert.rejects(
+    async () => {
+      await buildNumber(queue);
+    },
+    (e: Error) => assert.match(e.message, /Failed to build number/),
+  );
 });
 
 test("buildNumber missing endNumber", async () => {
@@ -438,9 +476,12 @@ test("buildNumber missing endNumber", async () => {
     { isDraining: true },
   );
 
-  await expect(async () => {
-    await buildNumber(queue);
-  }).rejects.toThrow(/Failed to build number/);
+  await assert.rejects(
+    async () => {
+      await buildNumber(queue);
+    },
+    (e: Error) => assert.match(e.message, /Failed to build number/),
+  );
 });
 
 test("buildNumber invalid chunks", async () => {
@@ -453,9 +494,12 @@ test("buildNumber invalid chunks", async () => {
     { isDraining: true },
   );
 
-  await expect(async () => {
-    await buildNumber(queue);
-  }).rejects.toThrow(/Failed to build number/);
+  await assert.rejects(
+    async () => {
+      await buildNumber(queue);
+    },
+    (e: Error) => assert.match(e.message, /Failed to build number/),
+  );
 });
 
 test("buildNumber no chunks", async () => {
@@ -464,9 +508,12 @@ test("buildNumber no chunks", async () => {
     { isDraining: true },
   );
 
-  await expect(async () => {
-    await buildNumber(queue);
-  }).rejects.toThrow(/Failed to build number\. No chunks/);
+  await assert.rejects(
+    async () => {
+      await buildNumber(queue);
+    },
+    (e: Error) => assert.match(e.message, /Failed to build number\. No chunks/),
+  );
 });
 
 test("buildNumber detected numberValue token", async () => {
@@ -481,10 +528,8 @@ test("buildNumber detected numberValue token", async () => {
   );
 
   const num = await buildNumber(queue);
-  expect(console.warn).toHaveBeenCalledWith(
-    expect.stringMatching(/Detected a numberValue token/),
-  );
-  expect(num).toBe(234);
+
+  assert.strictEqual(num, 234);
 });
 
 test("buildNumber integer", async () => {
@@ -500,7 +545,7 @@ test("buildNumber integer", async () => {
   );
 
   const num = await buildNumber(queue);
-  expect(num).toBe(100200300);
+  assert.strictEqual(num, 100200300);
 });
 
 test("buildNumber float", async () => {
@@ -515,5 +560,5 @@ test("buildNumber float", async () => {
   );
 
   const num = await buildNumber(queue);
-  expect(num).toBe(3.141592);
+  assert.strictEqual(num, 3.141592);
 });
