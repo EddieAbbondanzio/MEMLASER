@@ -1,8 +1,8 @@
 import { TokenQueue } from "../../src/json/tokenQueue.js";
 import { Token } from "../../src/json/tokens.js";
-import { chain } from "stream-chain";
+import streamChain from "stream-chain";
 import * as fs from "fs";
-import { parser } from "stream-json";
+import streamJSON from "stream-json";
 
 // Pass a path to read a JSON file, pass a token array to simulate one.
 export async function createTokenQueue(path: string): Promise<TokenQueue>;
@@ -17,9 +17,13 @@ export async function createTokenQueue(
   const tokenQueue = new TokenQueue();
 
   if (typeof pathOrTokens === "string") {
-    const pipeline = chain([
+    const pipeline = streamChain.chain([
       fs.createReadStream(pathOrTokens),
-      parser({ packKeys: false, packStrings: false, packNumbers: false }),
+      streamJSON.parser({
+        packKeys: false,
+        packStrings: false,
+        packNumbers: false,
+      }),
       token => tokenQueue.onToken(token),
     ]);
 

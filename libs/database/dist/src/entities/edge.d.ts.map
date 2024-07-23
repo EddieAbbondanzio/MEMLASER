@@ -1,1 +1,0 @@
-{"version":3,"file":"edge.d.ts","sourceRoot":"","sources":["../../../src/entities/edge.ts"],"names":[],"mappings":"AAEA,OAAO,EAAE,QAAQ,EAAE,MAAM,yBAAyB,CAAC;AAEnD,qBACa,IAAI;IAEf,EAAE,EAAG,MAAM,CAAC;IAEZ,KAAK,EAAG,MAAM,CAAC;IAEf,IAAI,EAAG,QAAQ,CAAC;IAEhB,IAAI,EAAG,MAAM,CAAC;IAGd,UAAU,EAAG,MAAM,CAAC;IAGpB,QAAQ,EAAG,MAAM,CAAC;CACnB"}

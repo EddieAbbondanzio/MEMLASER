@@ -97,6 +97,19 @@
       }
     },
     {
+      "label": "snapshot-parser:test:only",
+      "command": "yarn -s run test-only",
+      "type": "shell",
+      "args": [],
+      "problemMatcher": ["$tsc"],
+      "presentation": {
+        "reveal": "always"
+      },
+      "options": {
+        "cwd": "libs/snapshot-parser"
+      }
+    },
+    {
       "label": "snapshot-generator:dev",
       "command": "yarn -s run start",
       "type": "shell",

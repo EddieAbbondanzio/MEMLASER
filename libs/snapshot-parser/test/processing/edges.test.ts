@@ -12,6 +12,8 @@ import {
 } from "../../src/processing/edges.js";
 import { createTestSQLiteDB } from "../_factories/db.js";
 import { createSnapshot } from "../_factories/snapshot.js";
+import { test } from "node:test";
+import assert from "node:assert";
 
 test("createEdgeDataLoader throws if cannot get next n edges", async () => {
   const db = await createTestSQLiteDB();
@@ -24,7 +26,12 @@ test("createEdgeDataLoader throws if cannot get next n edges", async () => {
     .execute();
 
   const loader = await createEdgeDataLoader(db);
-  expect(loader.getNext(3)).rejects.toThrow(/Cannot get next 3 edges/);
+  await assert.rejects(async () => {
+    await loader.getNext(3),
+      (err: Error) => {
+        assert.match(err.message, /Cannot get next 3 edges/);
+      };
+  });
 });
 
 test("createEdgeDataLoader", async () => {
@@ -129,22 +136,22 @@ test("createEdgeDataLoader", async () => {
 
   const loader = await createEdgeDataLoader(db, 2);
   const edges = await loader.getNext(4);
-  expect(edges[0]).toEqual({
+  assert.deepEqual(edges[0], {
     id: 1,
     index: 0,
     fieldValues: [2, 0, 7],
   });
-  expect(edges[1]).toEqual({
+  assert.deepEqual(edges[1], {
     id: 2,
     index: 3,
     fieldValues: [2, 1, 14],
   });
-  expect(edges[2]).toEqual({
+  assert.deepEqual(edges[2], {
     id: 3,
     index: 6,
     fieldValues: [2, 2, 21],
   });
-  expect(edges[3]).toEqual({
+  assert.deepEqual(edges[3], {
     id: 4,
     index: 9,
     fieldValues: [2, 3, 28],
@@ -259,7 +266,7 @@ test("processEdges", async () => {
     },
   });
 
-  expect(edges[0]).toEqual({
+  assert.deepEqual(edges[0], {
     id: 1,
     index: 0,
     type: "property",
@@ -267,7 +274,7 @@ test("processEdges", async () => {
     fromNodeId: 1,
     toNodeId: 2,
   });
-  expect(edges[1]).toEqual({
+  assert.deepEqual(edges[1], {
     id: 2,
     index: 3,
     type: "property",
@@ -275,7 +282,7 @@ test("processEdges", async () => {
     fromNodeId: 1,
     toNodeId: 3,
   });
-  expect(edges[2]).toEqual({
+  assert.deepEqual(edges[2], {
     id: 3,
     index: 6,
     type: "property",
@@ -283,7 +290,7 @@ test("processEdges", async () => {
     fromNodeId: 1,
     toNodeId: 4,
   });
-  expect(edges[3]).toEqual({
+  assert.deepEqual(edges[3], {
     id: 4,
     index: 9,
     type: "property",

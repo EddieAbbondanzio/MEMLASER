@@ -6,6 +6,8 @@ import {
 } from "../../src/processing/snapshot.js";
 import { createTestSQLiteDB } from "../_factories/db.js";
 import { createMeta, createSnapshot } from "../_factories/snapshot.js";
+import { test } from "node:test";
+import assert from "node:assert";
 
 test("getSnapshot", async () => {
   const db = await createTestSQLiteDB();
@@ -22,10 +24,10 @@ test("getSnapshot", async () => {
     .execute();
 
   const snapshot = await getSnapshot(db);
-  expect(snapshot.nodeCount).toBe(7);
-  expect(snapshot.edgeCount).toBe(0);
-  expect(snapshot.traceFunctionCount).toBe(0);
-  expect(snapshot.meta.edgeFields).toEqual([EdgeField.NameOrIndex]);
+  assert.strictEqual(snapshot.nodeCount, 7);
+  assert.strictEqual(snapshot.edgeCount, 0);
+  assert.strictEqual(snapshot.traceFunctionCount, 0);
+  assert.deepEqual(snapshot.meta.edgeFields, [EdgeField.NameOrIndex]);
 });
 
 test("buildNodeFieldIndices", () => {
@@ -44,13 +46,13 @@ test("buildNodeFieldIndices", () => {
   });
 
   const lookup = buildNodeFieldIndices(snapshot);
-  expect(lookup.type).toBe(0);
-  expect(lookup.name).toBe(1);
-  expect(lookup.id).toBe(2);
-  expect(lookup.self_size).toBe(3);
-  expect(lookup.edge_count).toBe(4);
-  expect(lookup.trace_node_id).toBe(5);
-  expect(lookup.detachedness).toBe(6);
+  assert.strictEqual(lookup.type, 0);
+  assert.strictEqual(lookup.name, 1);
+  assert.strictEqual(lookup.id, 2);
+  assert.strictEqual(lookup.self_size, 3);
+  assert.strictEqual(lookup.edge_count, 4);
+  assert.strictEqual(lookup.trace_node_id, 5);
+  assert.strictEqual(lookup.detachedness, 6);
 });
 
 test("buildEdgeFieldIndices", () => {
@@ -61,7 +63,7 @@ test("buildEdgeFieldIndices", () => {
   });
 
   const lookup = buildEdgeFieldIndices(snapshot);
-  expect(lookup.type).toBe(0);
-  expect(lookup.name_or_index).toBe(1);
-  expect(lookup.to_node).toBe(2);
+  assert.strictEqual(lookup.type, 0);
+  assert.strictEqual(lookup.name_or_index, 1);
+  assert.strictEqual(lookup.to_node, 2);
 });

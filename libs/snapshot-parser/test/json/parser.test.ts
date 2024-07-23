@@ -6,20 +6,25 @@ import {
 } from "../../src/json/parser.js";
 import { createSnapshotJSON } from "../_factories/json.js";
 import { createTokenQueue } from "../_factories/tokenQueue.js";
+import { test } from "node:test";
+import assert from "node:assert";
+import { fileURLToPath } from "node:url";
+
+const dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // This also tests buildMeta
 test("buildSnapshot", async () => {
   const queue = await createTokenQueue(
-    path.join(__dirname, "../_fixtures/snapshot.json"),
+    path.join(dirname, "../_fixtures/snapshot.json"),
   );
 
   const snapshot = await buildSnapshot(queue);
-  expect(snapshot.node_count).toBe(140112);
-  expect(snapshot.edge_count).toBe(508875);
-  expect(snapshot.trace_function_count).toBe(0);
+  assert.strictEqual(snapshot.node_count, 140112);
+  assert.strictEqual(snapshot.edge_count, 508875);
+  assert.strictEqual(snapshot.trace_function_count, 0);
 
   const { meta } = snapshot;
-  expect(meta.node_fields).toEqual([
+  assert.deepEqual(meta.node_fields, [
     "type",
     "name",
     "id",
@@ -28,7 +33,7 @@ test("buildSnapshot", async () => {
     "trace_node_id",
     "detachedness",
   ]);
-  expect(meta.node_types).toEqual([
+  assert.deepEqual(meta.node_types, [
     [
       "hidden",
       "array",
@@ -53,8 +58,8 @@ test("buildSnapshot", async () => {
     "number",
     "number",
   ]);
-  expect(meta.edge_fields).toEqual(["type", "name_or_index", "to_node"]);
-  expect(meta.edge_types).toEqual([
+  assert.deepEqual(meta.edge_fields, ["type", "name_or_index", "to_node"]);
+  assert.deepEqual(meta.edge_types, [
     [
       "context",
       "element",
@@ -67,7 +72,7 @@ test("buildSnapshot", async () => {
     "string_or_number",
     "node",
   ]);
-  expect(meta.trace_function_info_fields).toEqual([
+  assert.deepEqual(meta.trace_function_info_fields, [
     "function_id",
     "name",
     "script_name",
@@ -75,15 +80,15 @@ test("buildSnapshot", async () => {
     "line",
     "column",
   ]);
-  expect(meta.trace_node_fields).toEqual([
+  assert.deepEqual(meta.trace_node_fields, [
     "id",
     "function_info_index",
     "count",
     "size",
     "children",
   ]);
-  expect(meta.sample_fields).toEqual(["timestamp_us", "last_assigned_id"]);
-  expect(meta.location_fields).toEqual([
+  assert.deepEqual(meta.sample_fields, ["timestamp_us", "last_assigned_id"]);
+  assert.deepEqual(meta.location_fields, [
     "object_index",
     "script_id",
     "line",
@@ -93,7 +98,7 @@ test("buildSnapshot", async () => {
 
 test("buildNodeFieldValues", async () => {
   const queue = await createTokenQueue(
-    path.join(__dirname, "../_fixtures/nodes.json"),
+    path.join(dirname, "../_fixtures/nodes.json"),
   );
   const snapshot = createSnapshotJSON({
     node_count: 35,
@@ -105,26 +110,26 @@ test("buildNodeFieldValues", async () => {
   }
 
   const [batch1, batch2, batch3] = batches;
-  expect(batch1).toEqual([
+  assert.deepEqual(batch1, [
     [
       [0, 1, 2, 3, 4, 5, 6],
       [7, 8, 9, 10, 11, 12, 13],
     ],
     0,
   ]);
-  expect(batch2).toEqual([
+  assert.deepEqual(batch2, [
     [
       [14, 15, 16, 17, 18, 19, 20],
       [21, 22, 23, 24, 25, 26, 27],
     ],
     14,
   ]);
-  expect(batch3).toEqual([[[28, 29, 30, 31, 32, 33, 34]], 28]);
+  assert.deepEqual(batch3, [[[28, 29, 30, 31, 32, 33, 34]], 28]);
 });
 
 test("buildEdgeFieldValues", async () => {
   const queue = await createTokenQueue(
-    path.join(__dirname, "../_fixtures/edges.json"),
+    path.join(dirname, "../_fixtures/edges.json"),
   );
   const snapshot = createSnapshotJSON({
     edge_count: 15,
@@ -136,19 +141,19 @@ test("buildEdgeFieldValues", async () => {
   }
 
   const [batch1, batch2, batch3] = batches;
-  expect(batch1).toEqual([
+  assert.deepEqual(batch1, [
     [
       [1, 1, 7],
       [2, 2, 14],
     ],
     0,
   ]);
-  expect(batch2).toEqual([
+  assert.deepEqual(batch2, [
     [
       [3, 3, 21],
       [4, 4, 28],
     ],
     6,
   ]);
-  expect(batch3).toEqual([[[5, 5, 35]], 12]);
+  assert.deepEqual(batch3, [[[5, 5, 35]], 12]);
 });

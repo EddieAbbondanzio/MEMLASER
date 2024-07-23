@@ -1,6 +1,8 @@
 import { HeapString } from "@memlaser/database";
 import { getStringsByIndex } from "../../src/processing/strings.js";
 import { createTestSQLiteDB } from "../_factories/db.js";
+import { test } from "node:test";
+import assert from "node:assert";
 
 test("getStringsByIndex", async () => {
   const db = await createTestSQLiteDB();
@@ -18,6 +20,7 @@ test("getStringsByIndex", async () => {
     .execute();
 
   const dict = await getStringsByIndex(db, [2, 3]);
-  expect(dict["2"]).toEqual({ id: 2, index: 2, value: "b" });
-  expect(dict["3"]).toEqual({ id: 3, index: 3, value: "c" });
+
+  assert.deepEqual(dict["2"], { id: 2, index: 2, value: "b" });
+  assert.deepEqual(dict["3"], { id: 3, index: 3, value: "c" });
 });

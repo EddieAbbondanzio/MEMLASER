@@ -1,4 +1,6 @@
 import { createTokenQueue } from "../_factories/tokenQueue.js";
+import { test } from "node:test";
+import assert from "node:assert";
 
 test("tokenQueue peek leaves token in queue", async () => {
   const tokenQueue = await createTokenQueue(
@@ -8,8 +10,8 @@ test("tokenQueue peek leaves token in queue", async () => {
     },
   );
 
-  expect(await tokenQueue.peek()).toEqual({ name: "startArray" });
-  expect(await tokenQueue.peek()).toEqual({ name: "startArray" });
+  assert.deepEqual(await tokenQueue.peek(), { name: "startArray" });
+  assert.deepEqual(await tokenQueue.peek(), { name: "startArray" });
 });
 
 test("tokenQueue peek waits if not draining", async () => {
@@ -19,7 +21,7 @@ test("tokenQueue peek waits if not draining", async () => {
 
   const peekPromise = tokenQueue.peek();
   tokenQueue.onToken({ name: "startObject" });
-  expect(await peekPromise).toEqual({ name: "startObject" });
+  assert.deepEqual(await peekPromise, { name: "startObject" });
 });
 
 test("tokenQueue peek returns null if draining and cache is empty", async () => {
@@ -27,7 +29,8 @@ test("tokenQueue peek returns null if draining and cache is empty", async () => 
     isDraining: true,
   });
 
-  expect(await tokenQueue.peek()).toBe(null);
+  const p = await tokenQueue.peek();
+  assert.strictEqual(await tokenQueue.peek(), null);
 });
 
 test("tokenQueue take removes token from queue", async () => {
@@ -38,8 +41,8 @@ test("tokenQueue take removes token from queue", async () => {
     },
   );
 
-  expect(await tokenQueue.take()).toEqual({ name: "startArray" });
-  expect(await tokenQueue.take()).toEqual({ name: "endArray" });
+  assert.deepEqual(await tokenQueue.take(), { name: "startArray" });
+  assert.deepEqual(await tokenQueue.take(), { name: "endArray" });
 });
 
 test("tokenQueue take waits if not draining", async () => {
@@ -49,7 +52,7 @@ test("tokenQueue take waits if not draining", async () => {
 
   const takePromise = tokenQueue.take();
   tokenQueue.onToken({ name: "startObject" });
-  expect(await takePromise).toEqual({ name: "startObject" });
+  assert.deepEqual(await takePromise, { name: "startObject" });
 });
 
 test("tokenQueue take returns null if draining and cache is empty", async () => {
@@ -57,5 +60,5 @@ test("tokenQueue take returns null if draining and cache is empty", async () => 
     isDraining: true,
   });
 
-  expect(await tokenQueue.take()).toBe(null);
+  assert.equal(await tokenQueue.take(), null);
 });
