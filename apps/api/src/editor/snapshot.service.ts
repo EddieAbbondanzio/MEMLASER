@@ -4,12 +4,13 @@ import fs from "node:fs";
 import path from "node:path";
 import { Snapshot } from "./snapshot.js";
 import { initializeSQLiteDB, SnapshotStats } from "@memlaser/database";
+import { parseSnapshotToSQLite } from "@memlaser/snapshot-parser";
+import { DataSource } from "typeorm";
+import { sortBy } from "lodash-es";
 
 @Injectable()
 export class SnapshotService implements OnModuleInit {
-  // Safe to assert as non-null because onModuleInit runs before the API starts
-  // handling incoming requests.
-  snapshotDirectoryPath!: string;
+  snapshotDirectoryPath: string = path.join(DATA_DIR, "snapshots");
 
   async onModuleInit(): Promise<void> {
     // Create data directory if it doesn't exist.
@@ -17,7 +18,6 @@ export class SnapshotService implements OnModuleInit {
       await fs.promises.mkdir(DATA_DIR);
     }
 
-    this.snapshotDirectoryPath = path.join(DATA_DIR, "snapshots");
     if (!fs.existsSync(this.snapshotDirectoryPath)) {
       await fs.promises.mkdir(this.snapshotDirectoryPath);
     }
@@ -44,7 +44,9 @@ export class SnapshotService implements OnModuleInit {
       );
     }
 
-    return snapshots;
+    // Sort by imported at to ensure we consistently sort the snapshots in the
+    // sidebar. Eventually we should make this user customizable.
+    return sortBy(snapshots, ["importedAt", "DESC"]);
   }
 
   async importSnapshot(p: string): Promise<Snapshot> {
@@ -53,7 +55,13 @@ export class SnapshotService implements OnModuleInit {
       this.snapshotDirectoryPath,
       `${importPath.name}.sqlite`,
     );
-    const stats = await this._getSnapshotStats(outputPath);
+
+    const db = await parseSnapshotToSQLite({
+      snapshotPath: p,
+      outputPath,
+      overwriteExisting: false,
+    });
+    const stats = await this._getSnapshotStats(db);
 
     return new Snapshot(
       importPath.name,
@@ -63,8 +71,17 @@ export class SnapshotService implements OnModuleInit {
     );
   }
 
-  async _getSnapshotStats(snapshotPath: string): Promise<SnapshotStats> {
-    const db = await initializeSQLiteDB(snapshotPath);
+  // Accepts either the path to a sqlite file, or the loaded SQLite db.
+  async _getSnapshotStats(
+    snapshot: string | DataSource,
+  ): Promise<SnapshotStats> {
+    let db;
+    if (typeof snapshot === "string") {
+      db = await initializeSQLiteDB(snapshot);
+    } else {
+      db = snapshot;
+    }
+
     const stats = await db
       .createQueryBuilder(SnapshotStats, "snapshot_stats")
       .select()
