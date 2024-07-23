@@ -21,6 +21,6 @@ test("getStringsByIndex", async () => {
 
   const dict = await getStringsByIndex(db, [2, 3]);
 
-  assert.strictEqual(dict["2"], { id: 2, index: 2, value: "b" });
-  assert.strictEqual(dict["3"], { id: 3, index: 3, value: "c" });
+  assert.deepEqual(dict["2"], { id: 2, index: 2, value: "b" });
+  assert.deepEqual(dict["3"], { id: 3, index: 3, value: "c" });
 });

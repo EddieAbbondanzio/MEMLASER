@@ -2,6 +2,8 @@ import { Snapshot, NodeData, HeapString, Node } from "@memlaser/database";
 import { processNodes } from "../../src/processing/nodes.js";
 import { createTestSQLiteDB } from "../_factories/db.js";
 import { createSnapshot } from "../_factories/snapshot.js";
+import { test } from "node:test";
+import assert from "node:assert";
 
 test("processNodes throws if node count doesn't match node data count", async () => {
   const db = await createTestSQLiteDB();
@@ -15,9 +17,10 @@ test("processNodes throws if node count doesn't match node data count", async ()
     .values(snapshot)
     .execute();
 
-  await expect(processNodes(db)).rejects.toThrow(
-    /Size of node_data table .* doesn't match/,
-  );
+  await assert.rejects(async () => processNodes(db)),
+    (err: Error) => {
+      assert.match(err.message, /Size of node_data table .* doesn't match/);
+    };
 });
 
 test("processNodes", async () => {
@@ -71,7 +74,7 @@ test("processNodes", async () => {
 
   const nodes = await db.getRepository(Node).find({ order: { index: "ASC" } });
 
-  expect(nodes[0]).toEqual({
+  assert.deepEqual(nodes[0], {
     id: 1,
     index: 0,
     type: "array",
@@ -82,7 +85,7 @@ test("processNodes", async () => {
     traceNodeId: 0,
     detached: 0,
   });
-  expect(nodes[1]).toEqual({
+  assert.deepEqual(nodes[1], {
     id: 2,
     index: 7,
     type: "object",
@@ -93,7 +96,7 @@ test("processNodes", async () => {
     traceNodeId: 0,
     detached: 0,
   });
-  expect(nodes[2]).toEqual({
+  assert.deepEqual(nodes[2], {
     id: 3,
     index: 14,
     type: "closure",
@@ -104,7 +107,7 @@ test("processNodes", async () => {
     traceNodeId: 0,
     detached: 0,
   });
-  expect(nodes[3]).toEqual({
+  assert.deepEqual(nodes[3], {
     id: 4,
     index: 21,
     type: "string",
