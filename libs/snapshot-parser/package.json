@@ -14,7 +14,7 @@
   },
   "scripts": {
     "start": "tsx watch src",
-    "test": "node --test --loader ts-node/esm test/**/**.test.ts",
+    "test": "node --no-warnings=ExperimentalWarning --test --loader ts-node/esm test/**/**.test.ts",
     "build": "tsc",
     "buildProd": "tsc --project tsconfig.build.json"
   },

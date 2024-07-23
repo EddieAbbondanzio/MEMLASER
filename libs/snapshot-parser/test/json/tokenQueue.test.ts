@@ -19,7 +19,7 @@ test("tokenQueue peek waits if not draining", async () => {
     isDraining: false,
   });
 
-  const peekPromise = await tokenQueue.peek();
+  const peekPromise = tokenQueue.peek();
   tokenQueue.onToken({ name: "startObject" });
   assert.deepEqual(await peekPromise, { name: "startObject" });
 });
