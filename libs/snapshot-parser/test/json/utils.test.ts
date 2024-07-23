@@ -10,6 +10,8 @@ import { createTokenQueue } from "../_factories/tokenQueue.js";
 import { test, beforeEach, afterEach, mock } from "node:test";
 import assert from "node:assert";
 
+global.console.warn = mock.fn();
+
 test("buildObject missing startObject", async () => {
   const queue = await createTokenQueue(
     [
@@ -30,6 +32,7 @@ test("buildObject missing startObject", async () => {
     },
     (e: Error) => {
       assert.match(e.message, /Failed to build object/);
+      return true;
     },
   );
 });
@@ -52,7 +55,10 @@ test("buildObject missing endObject", async () => {
     async () => {
       await buildObject(queue, buildNumber);
     },
-    (e: Error) => assert.match(e.message, /Failed to build object/),
+    (e: Error) => {
+      assert.match(e.message, /Failed to build object/);
+      return true;
+    },
   );
 });
 
@@ -72,7 +78,10 @@ test("buildObject missing key", async () => {
     async () => {
       await buildObject(queue, buildNumber);
     },
-    (e: Error) => assert.match(e.message, /Failed to build key/),
+    (e: Error) => {
+      assert.match(e.message, /Failed to build key/);
+      return true;
+    },
   );
 });
 
@@ -92,7 +101,10 @@ test("buildObject missing value", async () => {
     async () => {
       await buildObject(queue, buildNumber);
     },
-    (e: Error) => assert.match(e.message, /Failed to build number/),
+    (e: Error) => {
+      assert.match(e.message, /Failed to build number/);
+      return true;
+    },
   );
 });
 
@@ -139,7 +151,10 @@ test("buildArray missing startArray", async () => {
     async () => {
       await buildArray(queue, buildString);
     },
-    (e: Error) => assert.match(e.message, /Failed to build array/),
+    (e: Error) => {
+      assert.match(e.message, /Failed to build array/);
+      return true;
+    },
   );
 });
 
@@ -158,7 +173,10 @@ test("buildArray missing endArray", async () => {
     async () => {
       await buildArray(queue, buildString);
     },
-    (e: Error) => assert.match(e.message, /Failed to build array/),
+    (e: Error) => {
+      assert.match(e.message, /Failed to build array/);
+      return true;
+    },
   );
 });
 
@@ -208,7 +226,10 @@ test("batchBuildArray missing startArray", async () => {
       for await (const _ of batchBuildArray(queue, buildString)) {
       }
     },
-    (e: Error) => assert.match(e.message, /Failed to batch build array/),
+    (e: Error) => {
+      assert.match(e.message, /Failed to batch build array/);
+      return true;
+    },
   );
 });
 
@@ -229,7 +250,10 @@ test("batchBuildArray missing endArray", async () => {
       for await (const _ of batchBuildArray(queue, buildString)) {
       }
     },
-    (e: Error) => assert.match(e.message, /Failed to batch build array/),
+    (e: Error) => {
+      assert.match(e.message, /Failed to batch build array/);
+      return true;
+    },
   );
 });
 
@@ -283,7 +307,10 @@ test("buildKey missing startKey", async () => {
     async () => {
       await buildKey(queue);
     },
-    (e: Error) => assert.match(e.message, /Failed to build key/),
+    (e: Error) => {
+      assert.match(e.message, /Failed to build key/);
+      return true;
+    },
   );
 });
 
@@ -297,7 +324,10 @@ test("buildKey missing endKey", async () => {
     async () => {
       await buildKey(queue);
     },
-    (e: Error) => assert.match(e.message, /Failed to build key/),
+    (e: Error) => {
+      assert.match(e.message, /Failed to build key/);
+      return true;
+    },
   );
 });
 
@@ -315,7 +345,10 @@ test("buildKey invalid chunks", async () => {
     async () => {
       await buildKey(queue);
     },
-    (e: Error) => assert.match(e.message, /Failed to build key/),
+    (e: Error) => {
+      assert.match(e.message, /Failed to build key/);
+      return true;
+    },
   );
 });
 
@@ -331,7 +364,10 @@ test("buildKey no chunks", async () => {
     async () => {
       await buildKey(queue);
     },
-    (e: Error) => assert.match(e.message, /Failed to build key\. No chunks\./),
+    (e: Error) => {
+      assert.match(e.message, /Failed to build key\. No chunks\./);
+      return true;
+    },
   );
 });
 
@@ -379,7 +415,10 @@ test("buildString missing startString", async () => {
     async () => {
       await buildString(queue);
     },
-    (e: Error) => assert.match(e.message, /Failed to build string/),
+    (e: Error) => {
+      assert.match(e.message, /Failed to build string/);
+      return true;
+    },
   );
 });
 
@@ -393,7 +432,10 @@ test("buildString missing endString", async () => {
     async () => {
       await buildString(queue);
     },
-    (e: Error) => assert.match(e.message, /Failed to build string/),
+    (e: Error) => {
+      assert.match(e.message, /Failed to build string/);
+      return true;
+    },
   );
 });
 
@@ -411,7 +453,10 @@ test("buildString invalid chunks", async () => {
     async () => {
       await buildString(queue);
     },
-    (e: Error) => assert.match(e.message, /Failed to build string/),
+    (e: Error) => {
+      assert.match(e.message, /Failed to build string/);
+      return true;
+    },
   );
 });
 
@@ -466,7 +511,10 @@ test("buildNumber missing startNumber", async () => {
     async () => {
       await buildNumber(queue);
     },
-    (e: Error) => assert.match(e.message, /Failed to build number/),
+    (e: Error) => {
+      assert.match(e.message, /Failed to build number/);
+      return true;
+    },
   );
 });
 
@@ -480,7 +528,10 @@ test("buildNumber missing endNumber", async () => {
     async () => {
       await buildNumber(queue);
     },
-    (e: Error) => assert.match(e.message, /Failed to build number/),
+    (e: Error) => {
+      assert.match(e.message, /Failed to build number/);
+      return true;
+    },
   );
 });
 
@@ -498,7 +549,10 @@ test("buildNumber invalid chunks", async () => {
     async () => {
       await buildNumber(queue);
     },
-    (e: Error) => assert.match(e.message, /Failed to build number/),
+    (e: Error) => {
+      assert.match(e.message, /Failed to build number/);
+      return true;
+    },
   );
 });
 
@@ -512,7 +566,10 @@ test("buildNumber no chunks", async () => {
     async () => {
       await buildNumber(queue);
     },
-    (e: Error) => assert.match(e.message, /Failed to build number\. No chunks/),
+    (e: Error) => {
+      assert.match(e.message, /Failed to build number\. No chunks/);
+      return true;
+    },
   );
 });
 
