@@ -26,7 +26,7 @@ class APIClient {
 
       switch (parsed["type"]) {
         case "CLIENT_ID":
-          _setClientId(parsed["data"]);
+          _setClientId(parsed["clientId"]);
       }
     });
   }

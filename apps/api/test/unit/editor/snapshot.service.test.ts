@@ -1,11 +1,15 @@
 import { test, describe, beforeEach, mock } from "node:test";
 import { DATA_DIR } from "../../../src/core/config.js";
 import assert from "node:assert";
-import { SnapshotService } from "../../../src/editor/snapshot.service.js";
+import {
+  ImportSnapshotCallbacks,
+  SnapshotService,
+} from "../../../src/editor/snapshot.service.js";
 import esmock from "esmock";
 import * as memfs from "memfs";
 import path from "node:path";
 import { subDays } from "date-fns";
+import { SnapshotState } from "../../../src/editor/dtos/snapshot.js";
 
 describe("SnapshotService", async () => {
   const fs = memfs.fs;
@@ -28,7 +32,7 @@ describe("SnapshotService", async () => {
     snapshotService = await createSnapshotService();
   });
 
-  test("onModuleInit creates data dir and snapshot dir if missing", async (t) => {
+  test("onModuleInit creates data dir and snapshot dir if missing", async () => {
     // Empty FS, no data dir
     memfs.vol.fromJSON({});
     await snapshotService.onModuleInit();
@@ -98,7 +102,7 @@ describe("SnapshotService", async () => {
     memfs.vol.fromJSON({
       [snapshotService.snapshotDirectoryPath]: null,
     });
-    snapshotService._getSnapshotStats = mock.fn(async (path: string) => {
+    snapshotService._getSnapshotStats = mock.fn(async (_path: string) => {
       return {
         id: 1,
         size: 1000,
@@ -106,8 +110,18 @@ describe("SnapshotService", async () => {
         createdAt: subDays(new Date(), 1),
       };
     });
-    const snapshot = await snapshotService.importSnapshot("bar.heapsnapshot");
+
+    const callbacks: ImportSnapshotCallbacks = {
+      onSuccess: () => {},
+      onFailure: () => {},
+      onProgress: () => {},
+    };
+    const snapshot = await snapshotService.importSnapshot(
+      "bar.heapsnapshot",
+      callbacks,
+    );
     assert.strictEqual(snapshot.name, "bar");
-    assert.strictEqual(snapshot.fileSizeBytes, 1000);
+    assert.strictEqual(snapshot.state, SnapshotState.Importing);
+    assert.strictEqual(snapshot.state, SnapshotState.Importing);
   });
 });

@@ -4,7 +4,6 @@ import {
   OnGatewayDisconnect,
   WebSocketServer,
 } from "@nestjs/websockets";
-import { WEBSOCKET_PORT } from "./config.js";
 import { ClientService } from "./clientService.js";
 import { WsAdapter } from "@nestjs/platform-ws";
 import { WebSocket } from "ws";
@@ -26,7 +25,7 @@ export class WebsocketGateway
     const client = this.clientService.registerClient(socket);
     client.dispatchEvent({
       type: "CLIENT_ID",
-      data: client.id,
+      clientId: client.id,
     });
   }
 
