@@ -29,7 +29,6 @@ import {
 import { TokenQueue } from "./tokenQueue.js";
 import _ from "lodash";
 import sc from "stream-chain";
-import { Meta } from "@memlaser/database";
 
 // N.B. The parser doesn't account for nullValue, trueValue, or falseValue
 // tokens and could crash if the heapsnapshot file format is ever changed to use
@@ -45,8 +44,16 @@ const LOCATIONS_BATCH_SIZE = 1000;
 
 interface WalkTokenCallbacks {
   onSnapshot?: (snapshot: SnapshotJSON) => Promise<void>;
-  onNodeBatch?: (nodes: NodeJSON[], offset: number) => Promise<void>;
-  onEdgeBatch?: (edges: EdgeJSON[], offset: number) => Promise<void>;
+  onNodeBatch?: (
+    nodes: NodeJSON[],
+    offset: number,
+    total: number,
+  ) => Promise<void>;
+  onEdgeBatch?: (
+    edges: EdgeJSON[],
+    offset: number,
+    total: number,
+  ) => Promise<void>;
   onStringBatch?: (strings: string[], offset: number) => Promise<void>;
   onTraceFunctionInfoBatch?: (
     traceFunctionInfos: number[],
@@ -118,14 +125,13 @@ async function buildHeapSnapshot(
         if (snapshot === null) {
           throw new Error("Missing snapshot data. Can't build nodes.");
         }
-
         for await (const [nodeFieldValues, offset] of buildNodeFieldValues(
           queue,
           snapshot,
           NODE_BATCH_SIZE,
         )) {
           if (onNodeBatch) {
-            await onNodeBatch(nodeFieldValues, offset);
+            await onNodeBatch(nodeFieldValues, offset, snapshot.node_count);
           }
         }
         break;
@@ -142,7 +148,7 @@ async function buildHeapSnapshot(
           EDGE_BATCH_SIZE,
         )) {
           if (onEdgeBatch) {
-            await onEdgeBatch(edgeFieldValues, offset);
+            await onEdgeBatch(edgeFieldValues, offset, snapshot.edge_count);
           }
         }
         break;

@@ -80,11 +80,11 @@ export class SnapshotService implements OnModuleInit {
     // snapshot in the background.
     (async () => {
       try {
-        // TODO: Add logger param so we can pass progress events to client
         const db = await parseSnapshotToSQLite({
           snapshotPath: path,
           outputPath,
           overwriteExisting: false,
+          logger: callbacks.onProgress,
         });
         const stats = await this._getSnapshotStats(db);
         await db.destroy();

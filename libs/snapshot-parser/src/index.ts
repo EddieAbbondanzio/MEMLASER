@@ -22,6 +22,7 @@ import { DataSource } from "typeorm";
 //     snapshotPath: "samples/foo-bar.heapsnapshot",
 //     outputPath: "out/foo-bar.sqlite",
 //     overwriteExisting: true,
+//     logger: console.log,
 //   });
 //   console.log("-- done!");
 // }
@@ -31,12 +32,13 @@ interface ParseSnapshotToSQLiteOptions {
   snapshotPath: string;
   outputPath: string;
   overwriteExisting?: boolean;
+  logger?: (message: string) => void;
 }
 
 export async function parseSnapshotToSQLite(
   options: ParseSnapshotToSQLiteOptions,
 ): Promise<DataSource> {
-  const { snapshotPath, outputPath, overwriteExisting } = options;
+  const { snapshotPath, outputPath, overwriteExisting, logger } = options;
 
   if (fs.existsSync(outputPath)) {
     if (!overwriteExisting) {
@@ -49,6 +51,7 @@ export async function parseSnapshotToSQLite(
     }
   }
 
+  logger?.("Beginning import of snapshot");
   const db = await initializeSQLiteDB(outputPath);
   const snapshotStats = fs.statSync(snapshotPath);
   await db
@@ -61,6 +64,7 @@ export async function parseSnapshotToSQLite(
       importedAt: new Date(),
     })
     .execute();
+  logger?.("Snapshot stats saved");
 
   // Snapshot will always be read before anything else so it's safe to use these
   // variables in other callbacks such as onNodeBatch, onEdgeBatch.
@@ -91,11 +95,13 @@ export async function parseSnapshotToSQLite(
         traceFunctionCount: json.trace_function_count,
       })
       .execute();
+    logger?.("Snapshot metadata saved");
   };
 
   const onNodeBatch = async (
     nodes: NodeJSON[],
     offset: number,
+    total: number,
   ): Promise<void> => {
     await db
       .createQueryBuilder()
@@ -111,11 +117,15 @@ export async function parseSnapshotToSQLite(
         })),
       )
       .execute();
+    logger?.(
+      `${(offset / nodeFieldCount).toLocaleString()} nodes of ${total.toLocaleString()} saved`,
+    );
   };
 
   const onEdgeBatch = async (
     edges: EdgeJSON[],
     offset: number,
+    total: number,
   ): Promise<void> => {
     await db
       .createQueryBuilder()
@@ -131,6 +141,9 @@ export async function parseSnapshotToSQLite(
         })),
       )
       .execute();
+    logger?.(
+      `${(offset / edgeFieldCount).toLocaleString()} edges of ${total.toLocaleString()} imported`,
+    );
   };
 
   const onStringBatch = async (
@@ -148,6 +161,7 @@ export async function parseSnapshotToSQLite(
         })),
       )
       .execute();
+    logger?.(`${offset.toLocaleString()} strings imported`);
   };
 
   await parseSnapshotFile(snapshotPath, {
@@ -157,8 +171,11 @@ export async function parseSnapshotToSQLite(
     onStringBatch,
   });
 
+  logger?.("Processing nodes");
   await processNodes(db);
+  logger?.("Rebuilding object graph");
   await processEdges(db);
+  logger?.("Done!");
 
   return db;
 }

@@ -14,7 +14,6 @@ import { SnapshotService } from "./snapshot.service.js";
 import { SnapshotBeingImportedDTO, SnapshotDTO } from "./dtos/snapshot.js";
 import { IsNotEmpty } from "class-validator";
 import { Request } from "express";
-import { nanoid } from "nanoid";
 
 class ImportSnapshotDTO {
   @IsNotEmpty()
