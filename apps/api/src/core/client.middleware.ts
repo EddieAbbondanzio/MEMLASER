@@ -4,6 +4,7 @@ import { ClientService } from "./clientService.js";
 import { Client } from "./client.js";
 
 declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Express {
     export interface Request {
       client: Client;
@@ -18,7 +19,6 @@ export class ClientMiddleware implements NestMiddleware {
   constructor(private readonly clientService: ClientService) {}
 
   use(req: Request, res: Response, next: NextFunction): void {
-    console.log(req.headers);
     const clientId = req.headers[CLIENT_ID_HEADER] as string | undefined;
     if (clientId === undefined) {
       res.status(404);

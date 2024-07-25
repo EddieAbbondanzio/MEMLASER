@@ -4,13 +4,17 @@ import {
   ConflictException,
   Controller,
   Get,
+  HttpCode,
+  HttpStatus,
   Post,
-  ServiceUnavailableException,
+  Req,
   UseInterceptors,
 } from "@nestjs/common";
 import { SnapshotService } from "./snapshot.service.js";
-import { Snapshot } from "./snapshot.js";
+import { SnapshotBeingImportedDTO, SnapshotDTO } from "./dtos/snapshot.js";
 import { IsNotEmpty } from "class-validator";
+import { Request } from "express";
+import { nanoid } from "nanoid";
 
 class ImportSnapshotDTO {
   @IsNotEmpty()
@@ -23,22 +27,45 @@ export class SnapshotController {
 
   @UseInterceptors(ClassSerializerInterceptor)
   @Get()
-  async getAvailable(): Promise<Snapshot[]> {
+  async getAvailable(): Promise<SnapshotDTO[]> {
     const snapshots = await this.snapshotService.getAvailableSnapshots();
     return snapshots;
   }
 
   @Post("import")
-  async import(@Body() { path }: ImportSnapshotDTO): Promise<Snapshot> {
-    try {
-      const snapshot = await this.snapshotService.importSnapshot(path);
-      return snapshot;
-    } catch (err) {
-      if (/already exists/.test((err as Error).message)) {
-        throw new ConflictException("Snapshot has already been imported.");
-      } else {
-        throw new ServiceUnavailableException();
-      }
+  @HttpCode(HttpStatus.ACCEPTED)
+  async import(
+    @Req() { client }: Request,
+    @Body() { path }: ImportSnapshotDTO,
+  ): Promise<SnapshotBeingImportedDTO> {
+    if (await this.snapshotService.wasSnapshotAlreadyImported(path)) {
+      throw new ConflictException("Snapshot was already imported.");
     }
+
+    const snapshot = await this.snapshotService.importSnapshot(path, {
+      onProgress: (message) => {
+        client.dispatchEvent({
+          type: "IMPORT_SNAPSHOT_PROGRESS",
+          snapshotName: snapshot.name,
+          message,
+        });
+      },
+      onSuccess: (stats) => {
+        client.dispatchEvent({
+          type: "IMPORT_SNAPSHOT_SUCCESS",
+          snapshotName: snapshot.name,
+          stats,
+        });
+      },
+      onFailure: (message) => {
+        client.dispatchEvent({
+          type: "IMPORT_SNAPSHOT_FAILURE",
+          snapshotName: snapshot.name,
+          message,
+        });
+      },
+    });
+
+    return snapshot;
   }
 }
