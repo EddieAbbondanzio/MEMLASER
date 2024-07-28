@@ -40,6 +40,20 @@ class APIClient {
     _readyCompleter.complete();
   }
 
+// TODO: Create a message type, and fix this pseudo code lol
+  Stream<Object> listenForMessagesOfType(messageTypes) async {
+    _channel.stream.listen((m) {
+      // TODO: Add helper for parsing!
+      final parsed = json.decode(m);
+
+
+      if(messageTypes.includes(parsed.type)) {
+        yield parsed;
+      }
+
+    })
+  }
+
   Future<B> get<B extends Object>(String path) async {
     if (clientId == "") {
       throw Exception("API client doesn't have an id set.");

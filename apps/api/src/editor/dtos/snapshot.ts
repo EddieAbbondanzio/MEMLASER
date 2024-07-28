@@ -10,7 +10,7 @@ export class SnapshotDTO {
   constructor(
     public name: string,
     public path: string,
-    public fileSizeBytes: number,
+    public fileSize: number,
     public importedAt: Date,
   ) {}
 }

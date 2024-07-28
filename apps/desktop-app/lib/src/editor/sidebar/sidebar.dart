@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:memlaser/src/api/services/snapshot_service.dart';
 import 'package:memlaser/src/editor/sidebar/sidebar_header.dart';
-import 'package:memlaser/src/editor/sidebar/sidebar_snapshot.dart';
+import 'package:memlaser/src/editor/sidebar/snapshot_tile.dart';
 
 import 'package:provider/provider.dart';
 
@@ -28,7 +28,7 @@ class EditorSidebar extends StatelessWidget {
             ListView.builder(
               itemCount: snapshots.length,
               itemBuilder: (context, index) =>
-                  EditorSidebarSnapshot(snapshot: snapshots[index]),
+                  SnapshotTile(snapshot: snapshots[index]),
               shrinkWrap: true,
               scrollDirection: Axis.vertical,
             )
