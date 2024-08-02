@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:memlaser/src/api/config.dart';
+import 'package:memlaser/src/api/dtos/api_events.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -20,14 +21,10 @@ class APIClient {
     _readyCompleter = Completer<void>();
     ready = _readyCompleter.future;
 
-    _channel.stream.listen((m) {
-      // TODO: Introduce a type for messages.
-      final parsed = json.decode(m);
-
-      switch (parsed["type"]) {
-        case "CLIENT_ID":
-          _setClientId(parsed["clientId"]);
-      }
+    listenForMessagesOfType([ApiEventType.clientId]).listen((ApiEvent ev) {
+      ClientIdAssigned clientIdAssigned = ev as ClientIdAssigned;
+      clientId = clientIdAssigned.id;
+      _readyCompleter.complete();
     });
   }
 
@@ -35,23 +32,12 @@ class APIClient {
     _httpClient.close();
   }
 
-  void _setClientId(String id) {
-    clientId = id;
-    _readyCompleter.complete();
-  }
-
-// TODO: Create a message type, and fix this pseudo code lol
-  Stream<Object> listenForMessagesOfType(messageTypes) async {
-    _channel.stream.listen((m) {
-      // TODO: Add helper for parsing!
-      final parsed = json.decode(m);
-
-
-      if(messageTypes.includes(parsed.type)) {
-        yield parsed;
-      }
-
-    })
+  Stream<ApiEvent> listenForMessagesOfType(
+      List<ApiEventType> messageTypes) async* {
+    await for (final m in _channel.stream) {
+      ApiEvent ev = ApiEvent.parse(m);
+      if (messageTypes.contains(ev.type)) yield ev;
+    }
   }
 
   Future<B> get<B extends Object>(String path) async {
