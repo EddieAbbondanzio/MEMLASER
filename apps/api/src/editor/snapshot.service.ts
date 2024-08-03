@@ -2,7 +2,11 @@ import { Injectable, OnModuleInit } from "@nestjs/common";
 import { DATA_DIR } from "../core/config.js";
 import fs from "node:fs";
 import pathLib from "node:path";
-import { SnapshotBeingImportedDTO, SnapshotDTO } from "./dtos/snapshot.js";
+import {
+  SnapshotBeingImportedDTO,
+  SnapshotDTO,
+  SnapshotState,
+} from "./dtos/snapshot.js";
 import { initializeSQLiteDB, SnapshotStats } from "@memlaser/database";
 import { parseSnapshotToSQLite } from "@memlaser/snapshot-parser";
 import { DataSource } from "typeorm";
@@ -40,14 +44,13 @@ export class SnapshotService implements OnModuleInit {
       const nameNoExtension = pathLib.parse(snapshotPath).name;
       const stats = await this._getSnapshotStats(snapshotPath);
 
-      snapshots.push(
-        new SnapshotDTO(
-          nameNoExtension,
-          snapshotPath,
-          stats.size,
-          stats.importedAt,
-        ),
-      );
+      snapshots.push({
+        state: SnapshotState.Imported,
+        name: nameNoExtension,
+        path: snapshotPath,
+        fileSize: stats.fileSize,
+        importedAt: stats.importedAt,
+      });
     }
 
     // Sort by imported at to ensure we consistently sort the snapshots in the
@@ -95,7 +98,11 @@ export class SnapshotService implements OnModuleInit {
       }
     })();
 
-    return new SnapshotBeingImportedDTO(name, outputPath);
+    return {
+      state: SnapshotState.Importing,
+      name,
+      path: outputPath,
+    };
   }
 
   // Accepts either the path to a sqlite file, or the loaded SQLite db.

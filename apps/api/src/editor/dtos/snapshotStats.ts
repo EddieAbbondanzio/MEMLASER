@@ -1,7 +1,5 @@
-export class SnapshotStatsDTO {
-  constructor(
-    public size: number,
-    public createdAt: Date,
-    public importedAt: Date,
-  ) {}
+export interface SnapshotStatsDTO {
+  readonly fileSize: number;
+  readonly createdAt: Date;
+  readonly importedAt: Date;
 }

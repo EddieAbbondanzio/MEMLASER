@@ -4,22 +4,16 @@ export enum SnapshotState {
   Invalid = "INVALID",
 }
 
-export class SnapshotDTO {
-  readonly state = SnapshotState.Imported;
-
-  constructor(
-    public name: string,
-    public path: string,
-    public fileSize: number,
-    public importedAt: Date,
-  ) {}
+export interface SnapshotDTO {
+  readonly state: SnapshotState.Imported;
+  readonly name: string;
+  readonly path: string;
+  readonly fileSize: number;
+  readonly importedAt: Date;
 }
 
-export class SnapshotBeingImportedDTO {
-  readonly state = SnapshotState.Importing;
-
-  constructor(
-    public name: string,
-    public path: string,
-  ) {}
+export interface SnapshotBeingImportedDTO {
+  readonly state: SnapshotState.Importing;
+  readonly name: string;
+  readonly path: string;
 }

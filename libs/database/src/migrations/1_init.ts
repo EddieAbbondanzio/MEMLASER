@@ -213,7 +213,7 @@ export class Init1720318566156 implements MigrationInterface {
             generationStrategy: "increment",
           },
           {
-            name: "size",
+            name: "file_size",
             type: "integer",
             isNullable: false,
           },

@@ -50,7 +50,7 @@ class SnapshotService extends ChangeNotifier {
     switch (result.type) {
       case ApiEventType.importSnapshotSuccess:
         SnapshotStats stats = (result as ImportSnapshotSuccess).stats;
-        updatedSnapshot = Snapshot(snapshotName, snapshotPath, stats.size);
+        updatedSnapshot = Snapshot(snapshotName, snapshotPath, stats.fileSize);
       case ApiEventType.importSnapshotFailure:
         String errorMessage = (result as ImportSnapshotFailure).errorMessage;
         updatedSnapshot =

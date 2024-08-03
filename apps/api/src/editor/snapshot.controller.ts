@@ -53,7 +53,11 @@ export class SnapshotController {
         client.dispatchEvent({
           type: "IMPORT_SNAPSHOT_SUCCESS",
           snapshotName: name,
-          stats,
+          stats: {
+            fileSize: stats.fileSize,
+            createdAt: stats.createdAt,
+            importedAt: stats.importedAt,
+          },
         });
       },
       onFailure: (name, errorMessage) => {
