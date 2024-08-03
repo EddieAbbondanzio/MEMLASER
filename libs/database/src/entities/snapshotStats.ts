@@ -5,7 +5,7 @@ export class SnapshotStats {
   @PrimaryGeneratedColumn()
   id!: number;
   @Column({ type: "integer" })
-  size!: number;
+  fileSize!: number;
   @Column({ type: "datetime" })
   createdAt!: Date;
   @Column({ type: "datetime" })

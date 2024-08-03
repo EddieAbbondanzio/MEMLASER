@@ -22,7 +22,7 @@ class SnapshotTile extends StatelessWidget {
       trailing =
           Transform.scale(scale: 0.5, child: const CircularProgressIndicator());
     } else {
-      subtitle = Text(formatBytes(snapshot.fileSize));
+      subtitle = Text(formatBytes(snapshot.stats?.fileSize));
 
       trailing = PopupMenuButton<String>(
         enabled: !isBeingImported,

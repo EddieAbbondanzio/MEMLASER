@@ -59,7 +59,7 @@ export async function parseSnapshotToSQLite(
     .insert()
     .into(SnapshotStats)
     .values({
-      size: snapshotStats.size,
+      fileSize: snapshotStats.size,
       createdAt: snapshotStats.birthtime,
       importedAt: new Date(),
     })

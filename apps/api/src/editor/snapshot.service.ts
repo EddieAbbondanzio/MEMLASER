@@ -2,11 +2,15 @@ import { Injectable, OnModuleInit } from "@nestjs/common";
 import { DATA_DIR } from "../core/config.js";
 import fs from "node:fs";
 import pathLib from "node:path";
-import { SnapshotBeingImportedDTO, SnapshotDTO } from "./dtos/snapshot.js";
+import {
+  SnapshotBeingImportedDTO,
+  SnapshotDTO,
+  SnapshotState,
+} from "./dtos/snapshot.js";
 import { initializeSQLiteDB, SnapshotStats } from "@memlaser/database";
 import { parseSnapshotToSQLite } from "@memlaser/snapshot-parser";
 import { DataSource } from "typeorm";
-import { sortBy } from "lodash-es";
+import { pick, sortBy } from "lodash-es";
 
 export interface ImportSnapshotCallbacks {
   onProgress(snapshotName: string, message: string): void;
@@ -40,19 +44,17 @@ export class SnapshotService implements OnModuleInit {
       const nameNoExtension = pathLib.parse(snapshotPath).name;
       const stats = await this._getSnapshotStats(snapshotPath);
 
-      snapshots.push(
-        new SnapshotDTO(
-          nameNoExtension,
-          snapshotPath,
-          stats.size,
-          stats.importedAt,
-        ),
-      );
+      snapshots.push({
+        state: SnapshotState.Imported,
+        name: nameNoExtension,
+        path: snapshotPath,
+        stats: pick(stats, ["createdAt", "importedAt", "fileSize"]),
+      });
     }
 
     // Sort by imported at to ensure we consistently sort the snapshots in the
     // sidebar. Eventually we should make this user customizable.
-    return sortBy(snapshots, ["importedAt", "DESC"]);
+    return sortBy(snapshots, (s) => s.stats.importedAt);
   }
 
   async wasSnapshotAlreadyImported(path: string): Promise<boolean> {
@@ -95,7 +97,11 @@ export class SnapshotService implements OnModuleInit {
       }
     })();
 
-    return new SnapshotBeingImportedDTO(name, outputPath);
+    return {
+      state: SnapshotState.Importing,
+      name,
+      path: outputPath,
+    };
   }
 
   // Accepts either the path to a sqlite file, or the loaded SQLite db.

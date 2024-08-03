@@ -1,5 +1,5 @@
 import { WebSocket } from "ws";
-import { SnapshotStatsDTO } from "../editor/dtos/snapshotStats.js";
+import { SnapshotStatsDTO } from "../editor/dtos/snapshot.js";
 
 export type ClientEvent =
   | { type: "CLIENT_ID"; clientId: string }

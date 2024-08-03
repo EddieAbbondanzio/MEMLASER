@@ -77,14 +77,14 @@ describe("SnapshotService", async () => {
       if (path.endsWith("foo.sqlite")) {
         return {
           id: 1,
-          size: 1000,
+          fileSize: 1000,
           importedAt: subDays(new Date(), 1),
           createdAt: subDays(new Date(), 1),
         };
       } else if (path.endsWith("bar.sqlite")) {
         return {
           id: 2,
-          size: 2000,
+          fileSize: 2000,
           importedAt: subDays(new Date(), 2),
           createdAt: subDays(new Date(), 2),
         };
@@ -105,7 +105,7 @@ describe("SnapshotService", async () => {
     snapshotService._getSnapshotStats = mock.fn(async (_path: string) => {
       return {
         id: 1,
-        size: 1000,
+        fileSize: 1000,
         importedAt: subDays(new Date(), 1),
         createdAt: subDays(new Date(), 1),
       };

@@ -1,11 +1,11 @@
 class SnapshotStats {
-  int size;
+  int fileSize;
   DateTime createdAt;
   DateTime importedAt;
 
-  SnapshotStats(this.size, this.createdAt, this.importedAt);
+  SnapshotStats(this.fileSize, this.createdAt, this.importedAt);
   SnapshotStats.fromJSON(Map<String, dynamic> json)
-      : size = json['size'],
+      : fileSize = json['fileSize'],
         createdAt = DateTime.parse(json['createdAt']),
         importedAt = DateTime.parse(json['importedAt']);
 }

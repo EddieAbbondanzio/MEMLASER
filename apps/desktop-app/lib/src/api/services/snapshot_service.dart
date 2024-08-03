@@ -19,7 +19,8 @@ class SnapshotService extends ChangeNotifier {
   Future<void> loadSnapshots() async {
     final snapshotsJSON = await _apiClient.get<List<dynamic>>("snapshots");
     snapshots = snapshotsJSON
-        .map((json) => Snapshot(json["name"], json["path"], json["fileSize"]))
+        .map((json) => Snapshot(
+            json["name"], json["path"], SnapshotStats.fromJSON(json["stats"])))
         .toList();
     notifyListeners();
   }
@@ -50,7 +51,7 @@ class SnapshotService extends ChangeNotifier {
     switch (result.type) {
       case ApiEventType.importSnapshotSuccess:
         SnapshotStats stats = (result as ImportSnapshotSuccess).stats;
-        updatedSnapshot = Snapshot(snapshotName, snapshotPath, stats.size);
+        updatedSnapshot = Snapshot(snapshotName, snapshotPath, stats);
       case ApiEventType.importSnapshotFailure:
         String errorMessage = (result as ImportSnapshotFailure).errorMessage;
         updatedSnapshot =
