@@ -1,5 +1,5 @@
-import { SnapshotStats } from "@memlaser/database";
 import { WebSocket } from "ws";
+import { SnapshotStatsDTO } from "../editor/dtos/snapshotStats.js";
 
 export type ClientEvent =
   | { type: "CLIENT_ID"; clientId: string }
@@ -7,9 +7,13 @@ export type ClientEvent =
   | {
       type: "IMPORT_SNAPSHOT_SUCCESS";
       snapshotName: string;
-      stats: SnapshotStats;
+      stats: SnapshotStatsDTO;
     }
-  | { type: "IMPORT_SNAPSHOT_FAILURE"; snapshotName: string; message: string };
+  | {
+      type: "IMPORT_SNAPSHOT_FAILURE";
+      snapshotName: string;
+      errorMessage: string;
+    };
 
 export class Client {
   constructor(
