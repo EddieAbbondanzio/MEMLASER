@@ -21,14 +21,11 @@ export class ClientService {
     this.clients.set(id, client);
     (socket as ExtendedWebSocket).id = client.id;
 
-    console.log("Registered client ", id);
     return client;
   }
 
   deregisterClient(client: ws.WebSocket): void {
     const { id } = client as ExtendedWebSocket;
     this.clients.delete(id);
-
-    console.log("Deregistered client ", id);
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:memlaser/src/api/dtos/snapshot.dart';
+import 'package:memlaser/src/api/services/snapshot_service.dart';
 
 class SnapshotTile extends StatelessWidget {
   final Snapshot snapshot;
@@ -8,16 +9,21 @@ class SnapshotTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isBeingImported = snapshot.state != SnapshotState.importing;
+    final isBeingImported = snapshot.state == SnapshotState.importing;
     Widget subtitle, trailing;
+
     if (isBeingImported) {
-      subtitle = const Text("Importing!");
+      subtitle = StreamBuilder<String>(
+          stream: snapshot.progressStream,
+          builder: (context, asyncSnapshot) {
+            return Text(asyncSnapshot.data ?? '');
+          });
+
       trailing =
           Transform.scale(scale: 0.5, child: const CircularProgressIndicator());
     } else {
-      subtitle = Text(snapshot.fileSize ?? "");
+      subtitle = Text(formatBytes(snapshot.fileSize));
 
-      // TODO: Pull menu out to it's own comp?
       trailing = PopupMenuButton<String>(
         enabled: !isBeingImported,
         onSelected: (value) => print(value),

@@ -2,8 +2,11 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:memlaser/src/api/client.dart';
+import 'package:memlaser/src/api/dtos/api_events.dart';
 import 'package:memlaser/src/api/dtos/snapshot.dart';
 import 'dart:convert';
+
+import 'package:memlaser/src/api/dtos/snapshot_stats.dart';
 
 class SnapshotService extends ChangeNotifier {
   final APIClient _apiClient;
@@ -16,8 +19,7 @@ class SnapshotService extends ChangeNotifier {
   Future<void> loadSnapshots() async {
     final snapshotsJSON = await _apiClient.get<List<dynamic>>("snapshots");
     snapshots = snapshotsJSON
-        .map((json) => Snapshot(
-            json["name"], json["path"], formatBytes((json["fileSize"]))))
+        .map((json) => Snapshot(json["name"], json["path"], json["fileSize"]))
         .toList();
     notifyListeners();
   }
@@ -25,17 +27,47 @@ class SnapshotService extends ChangeNotifier {
   Future<void> importSnapshot(String path) async {
     final snapshotJSON =
         await _apiClient.post("snapshots/import", jsonEncode({'path': path}));
+    final snapshotName = snapshotJSON["name"];
+    final snapshotPath = snapshotJSON["path"];
+
+    final progressStream = _apiClient.eventStream
+        .where((ev) =>
+            ev.type == ApiEventType.importSnapshotProgress &&
+            (ev as ImportSnapshotProgress).snapshotName == snapshotName)
+        .map((ev) => (ev as ImportSnapshotProgress).message)
+        .asBroadcastStream();
 
     final snapshotBeingImported =
-        Snapshot.importing(snapshotJSON["name"], snapshotJSON["path"]);
+        Snapshot.importing(snapshotName, snapshotPath, progressStream);
     snapshots.add(snapshotBeingImported);
+    notifyListeners();
+
+    final result = await _apiClient.eventStream.firstWhere((ev) =>
+        ev.type == ApiEventType.importSnapshotSuccess ||
+        ev.type == ApiEventType.importSnapshotFailure);
+
+    Snapshot updatedSnapshot;
+    switch (result.type) {
+      case ApiEventType.importSnapshotSuccess:
+        SnapshotStats stats = (result as ImportSnapshotSuccess).stats;
+        updatedSnapshot = Snapshot(snapshotName, snapshotPath, stats.size);
+      case ApiEventType.importSnapshotFailure:
+        String errorMessage = (result as ImportSnapshotFailure).errorMessage;
+        updatedSnapshot =
+            Snapshot.invalid(snapshotName, snapshotPath, errorMessage);
+      default:
+        throw Exception('Unexpected event type ${result.type}');
+    }
+
+    var index = snapshots.indexWhere((s) => s.name == snapshotName);
+    snapshots[index] = updatedSnapshot;
     notifyListeners();
   }
 }
 
 // Src: https://gist.github.com/zzpmaster/ec51afdbbfa5b2bf6ced13374ff891d9
-String formatBytes(int bytes, {int decimals = 0}) {
-  if (bytes <= 0) return "0b";
+String formatBytes(int? bytes, {int decimals = 0}) {
+  if (bytes == null || bytes <= 0) return "0b";
   const suffixes = [
     "b",
     "kb",

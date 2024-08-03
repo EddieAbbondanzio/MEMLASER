@@ -9,9 +9,9 @@ import { DataSource } from "typeorm";
 import { sortBy } from "lodash-es";
 
 export interface ImportSnapshotCallbacks {
-  onProgress(message: string): void;
-  onSuccess(snapshotStats: SnapshotStats): void;
-  onFailure(message: string): void;
+  onProgress(snapshotName: string, message: string): void;
+  onSuccess(snapshotName: string, snapshotStats: SnapshotStats): void;
+  onFailure(snapshotName: string, errorMessage: string): void;
 }
 
 @Injectable()
@@ -69,10 +69,10 @@ export class SnapshotService implements OnModuleInit {
     path: string,
     callbacks: ImportSnapshotCallbacks,
   ): Promise<SnapshotBeingImportedDTO> {
-    const importPath = pathLib.parse(path);
+    const { name } = pathLib.parse(path);
     const outputPath = pathLib.join(
       this.snapshotDirectoryPath,
-      `${importPath.name}.sqlite`,
+      `${name}.sqlite`,
     );
 
     // Import is ran within an immediately invoked function to break it out of
@@ -84,18 +84,18 @@ export class SnapshotService implements OnModuleInit {
           snapshotPath: path,
           outputPath,
           overwriteExisting: false,
-          logger: callbacks.onProgress,
+          logger: (m) => callbacks.onProgress(name, m),
         });
         const stats = await this._getSnapshotStats(db);
-        await db.destroy();
 
-        callbacks.onSuccess(stats);
+        callbacks.onSuccess(name, stats);
       } catch (err) {
-        callbacks.onFailure((err as Error).message);
+        console.error("Failed to import snapshot.", err);
+        callbacks.onFailure(name, (err as Error).message);
       }
     })();
 
-    return new SnapshotBeingImportedDTO(importPath.name, outputPath);
+    return new SnapshotBeingImportedDTO(name, outputPath);
   }
 
   // Accepts either the path to a sqlite file, or the loaded SQLite db.

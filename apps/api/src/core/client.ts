@@ -9,7 +9,11 @@ export type ClientEvent =
       snapshotName: string;
       stats: SnapshotStatsDTO;
     }
-  | { type: "IMPORT_SNAPSHOT_FAILURE"; snapshotName: string; message: string };
+  | {
+      type: "IMPORT_SNAPSHOT_FAILURE";
+      snapshotName: string;
+      errorMessage: string;
+    };
 
 export class Client {
   constructor(

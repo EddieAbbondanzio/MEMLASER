@@ -42,25 +42,25 @@ export class SnapshotController {
     }
 
     const snapshot = await this.snapshotService.importSnapshot(path, {
-      onProgress: (message) => {
+      onProgress: (name, message) => {
         client.dispatchEvent({
           type: "IMPORT_SNAPSHOT_PROGRESS",
-          snapshotName: snapshot.name,
+          snapshotName: name,
           message,
         });
       },
-      onSuccess: (stats) => {
+      onSuccess: (name, stats) => {
         client.dispatchEvent({
           type: "IMPORT_SNAPSHOT_SUCCESS",
-          snapshotName: snapshot.name,
+          snapshotName: name,
           stats,
         });
       },
-      onFailure: (message) => {
+      onFailure: (name, errorMessage) => {
         client.dispatchEvent({
           type: "IMPORT_SNAPSHOT_FAILURE",
-          snapshotName: snapshot.name,
-          message,
+          snapshotName: name,
+          errorMessage,
         });
       },
     });
