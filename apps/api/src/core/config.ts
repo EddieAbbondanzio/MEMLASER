@@ -2,8 +2,11 @@ import envPaths from "env-paths";
 
 export const APP_NAME = "memlaser";
 
+export const NODE_ENV: NodeEnv = process.env.NODE_ENV! as NodeEnv;
+type NodeEnv = "development" | "test" | "production";
+
 export let DATA_DIR: string;
-switch (process.env.NODE_ENV) {
+switch (NODE_ENV) {
   case "production":
     {
       const osPaths = envPaths(APP_NAME, { suffix: "" });

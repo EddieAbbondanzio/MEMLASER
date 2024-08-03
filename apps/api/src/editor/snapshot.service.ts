@@ -10,7 +10,7 @@ import {
 import { initializeSQLiteDB, SnapshotStats } from "@memlaser/database";
 import { parseSnapshotToSQLite } from "@memlaser/snapshot-parser";
 import { DataSource } from "typeorm";
-import { sortBy } from "lodash-es";
+import { pick, sortBy } from "lodash-es";
 
 export interface ImportSnapshotCallbacks {
   onProgress(snapshotName: string, message: string): void;
@@ -48,14 +48,13 @@ export class SnapshotService implements OnModuleInit {
         state: SnapshotState.Imported,
         name: nameNoExtension,
         path: snapshotPath,
-        fileSize: stats.fileSize,
-        importedAt: stats.importedAt,
+        stats: pick(stats, ["createdAt", "importedAt", "fileSize"]),
       });
     }
 
     // Sort by imported at to ensure we consistently sort the snapshots in the
     // sidebar. Eventually we should make this user customizable.
-    return sortBy(snapshots, ["importedAt", "DESC"]);
+    return sortBy(snapshots, (s) => s.stats.importedAt);
   }
 
   async wasSnapshotAlreadyImported(path: string): Promise<boolean> {

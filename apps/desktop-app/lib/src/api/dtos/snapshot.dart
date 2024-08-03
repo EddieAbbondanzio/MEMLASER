@@ -1,24 +1,26 @@
+import 'package:memlaser/src/api/dtos/snapshot_stats.dart';
+
 enum SnapshotState { importing, imported, invalid }
 
 class Snapshot {
+  final SnapshotState state;
   final String name;
   final String path;
-  final int? fileSize;
-  final SnapshotState state;
+  final SnapshotStats? stats;
   final Stream<String>? progressStream;
   final String? errorMessage;
 
   Snapshot.importing(this.name, this.path, this.progressStream)
       : state = SnapshotState.importing,
-        fileSize = null,
+        stats = null,
         errorMessage = null;
 
   Snapshot.invalid(this.name, this.path, this.errorMessage)
       : state = SnapshotState.invalid,
         progressStream = null,
-        fileSize = null;
+        stats = null;
 
-  Snapshot(this.name, this.path, this.fileSize)
+  Snapshot(this.name, this.path, this.stats)
       : state = SnapshotState.imported,
         progressStream = null,
         errorMessage = null;
