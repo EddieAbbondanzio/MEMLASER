@@ -164,12 +164,23 @@ export async function parseSnapshotToSQLite(
     logger?.(`${offset.toLocaleString()} strings imported`);
   };
 
-  await parseSnapshotFile(snapshotPath, {
-    onSnapshot,
-    onNodeBatch,
-    onEdgeBatch,
-    onStringBatch,
-  });
+  let reject: (err: Error) => void;
+  await Promise.race([
+    new Promise((_, rej) => {
+      reject = rej;
+    }),
+    parseSnapshotFile(snapshotPath, {
+      onSnapshot,
+      onNodeBatch,
+      onEdgeBatch,
+      onStringBatch,
+      async onError(err) {
+        logger?.("Invalid file contents.");
+        await fs.promises.rm(outputPath);
+        reject(err);
+      },
+    }),
+  ]);
 
   logger?.("Processing nodes");
   await processNodes(db);

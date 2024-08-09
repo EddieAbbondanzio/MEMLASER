@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:memlaser/src/api/dtos/snapshot.dart';
 import 'package:memlaser/src/api/services/snapshot_service.dart';
-import 'package:memlaser/src/app.dart';
 
 class SnapshotTile extends StatelessWidget {
   final Snapshot snapshot;

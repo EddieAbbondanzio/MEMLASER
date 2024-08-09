@@ -67,8 +67,15 @@ class SnapshotService extends ChangeNotifier {
               context: navigatorKey.currentContext!,
               builder: (context) {
                 return AcknowledgeErrorDialog(
-                    title: "Failed to import", message: result.errorMessage);
+                  title: "Failed to import",
+                  message: result.errorMessage,
+                  onOk: () {
+                    removeInvalidSnapshots();
+                    notifyListeners();
+                  },
+                );
               });
+
         default:
           throw Exception('Unexpected event type ${result.type}');
       }

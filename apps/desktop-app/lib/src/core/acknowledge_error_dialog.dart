@@ -3,9 +3,10 @@ import 'package:flutter/material.dart';
 class AcknowledgeErrorDialog extends StatelessWidget {
   final String title;
   final String message;
+  final Function? onOk;
 
   const AcknowledgeErrorDialog(
-      {super.key, required this.title, required this.message});
+      {super.key, required this.title, required this.message, this.onOk});
 
   @override
   Widget build(BuildContext context) {
@@ -16,6 +17,9 @@ class AcknowledgeErrorDialog extends StatelessWidget {
         TextButton(
             onPressed: () {
               Navigator.pop(context);
+              if (onOk != null) {
+                onOk!();
+              }
             },
             child: const Text("Ok"))
       ],
