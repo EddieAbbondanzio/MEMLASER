@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:memlaser/src/api/dtos/snapshot.dart';
 import 'package:memlaser/src/api/services/snapshot_service.dart';
+import 'package:memlaser/src/app.dart';
 
 class SnapshotTile extends StatelessWidget {
   final Snapshot snapshot;
@@ -22,7 +23,11 @@ class SnapshotTile extends StatelessWidget {
       trailing =
           Transform.scale(scale: 0.5, child: const CircularProgressIndicator());
     } else {
-      subtitle = Text(formatBytes(snapshot.stats?.fileSize));
+      if (snapshot.state == SnapshotState.imported) {
+        subtitle = Text(formatBytes(snapshot.stats?.fileSize));
+      } else {
+        subtitle = const Text("invalid");
+      }
 
       trailing = PopupMenuButton<String>(
         enabled: !isBeingImported,

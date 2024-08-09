@@ -9,6 +9,8 @@ import 'dart:convert';
 
 import 'package:memlaser/src/api/dtos/snapshot_stats.dart';
 import 'package:memlaser/src/api/exceptions.dart';
+import 'package:memlaser/src/app.dart';
+import 'package:memlaser/src/core/acknowledge_error_dialog.dart';
 
 class SnapshotService extends ChangeNotifier {
   final APIClient _apiClient;
@@ -60,6 +62,13 @@ class SnapshotService extends ChangeNotifier {
           String errorMessage = (result as ImportSnapshotFailure).errorMessage;
           updatedSnapshot =
               Snapshot.invalid(snapshotName, snapshotPath, errorMessage);
+
+          showDialog(
+              context: navigatorKey.currentContext!,
+              builder: (context) {
+                return AcknowledgeErrorDialog(
+                    title: "Failed to import", message: result.errorMessage);
+              });
         default:
           throw Exception('Unexpected event type ${result.type}');
       }
