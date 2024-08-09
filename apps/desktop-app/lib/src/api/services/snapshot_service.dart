@@ -66,6 +66,7 @@ class SnapshotService extends ChangeNotifier {
 
       var index = snapshots.indexWhere((s) => s.name == snapshotName);
       snapshots[index] = updatedSnapshot;
+
       notifyListeners();
     } on HttpException catch (e) {
       if (e.statusCode == StatusCode.CONFLICT) {
@@ -78,6 +79,11 @@ class SnapshotService extends ChangeNotifier {
       // TODO: Flesh out unknown error case better.
       rethrow;
     }
+  }
+
+  void removeInvalidSnapshots() {
+    snapshots.removeWhere((s) => s.state == SnapshotState.invalid);
+    notifyListeners();
   }
 }
 

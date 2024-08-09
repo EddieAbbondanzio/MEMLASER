@@ -21,28 +21,12 @@ class ImportSnapshotButton extends StatelessWidget {
 
           try {
             await snapshotService.importSnapshot(file.path);
-          } on SnapshotAlreadyImportedException catch (e) {
+          } on ApiException catch (e) {
             showDialog(
                 context: navigatorKey.currentContext!,
                 builder: (BuildContext context) {
                   return AlertDialog(
-                    title: const Text("Duplicate snapshot"),
-                    content: Text(e.message),
-                    actions: [
-                      TextButton(
-                          onPressed: () {
-                            Navigator.pop(context);
-                          },
-                          child: const Text("Ok"))
-                    ],
-                  );
-                });
-          } on InvalidSnapshotFileException catch (e) {
-            showDialog(
-                context: navigatorKey.currentContext!,
-                builder: (BuildContext context) {
-                  return AlertDialog(
-                    title: const Text("Invalid snapshot file"),
+                    title: Text(e.title),
                     content: Text(e.message),
                     actions: [
                       TextButton(
