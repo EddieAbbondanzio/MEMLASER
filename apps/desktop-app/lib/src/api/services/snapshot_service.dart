@@ -71,6 +71,9 @@ class SnapshotService extends ChangeNotifier {
       if (e.statusCode == StatusCode.CONFLICT) {
         throw SnapshotAlreadyImportedException(e.message);
       }
+      if (e.statusCode == StatusCode.BAD_REQUEST) {
+        throw InvalidSnapshotFileException(e.message);
+      }
 
       // TODO: Flesh out unknown error case better.
       rethrow;

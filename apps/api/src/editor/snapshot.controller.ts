@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   ClassSerializerInterceptor,
   ConflictException,
@@ -11,7 +12,11 @@ import {
   UseInterceptors,
 } from "@nestjs/common";
 import { SnapshotService } from "./snapshot.service.js";
-import { SnapshotBeingImportedDTO, SnapshotDTO } from "./dtos/snapshot.js";
+import {
+  ImportSnapshotErrorCode,
+  SnapshotBeingImportedDTO,
+  SnapshotDTO,
+} from "./dtos/snapshot.js";
 import { IsNotEmpty } from "class-validator";
 import { Request } from "express";
 
@@ -37,8 +42,16 @@ export class SnapshotController {
     @Req() { client }: Request,
     @Body() { path }: ImportSnapshotDTO,
   ): Promise<SnapshotBeingImportedDTO> {
-    if (await this.snapshotService.wasSnapshotAlreadyImported(path)) {
-      throw new ConflictException("Snapshot was already imported.");
+    const res = await this.snapshotService.canImportFile(path);
+    if (!res.valid) {
+      switch (res.errorCode) {
+        case ImportSnapshotErrorCode.Duplicate:
+          throw new ConflictException(res.errorMessage);
+        case ImportSnapshotErrorCode.InvalidFile:
+          throw new BadRequestException(res.errorMessage);
+        default:
+          throw new Error(`Unknown validation result: ${res.errorMessage}`);
+      }
     }
 
     const snapshot = await this.snapshotService.importSnapshot(path, {

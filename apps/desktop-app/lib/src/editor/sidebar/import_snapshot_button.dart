@@ -26,7 +26,23 @@ class ImportSnapshotButton extends StatelessWidget {
                 context: navigatorKey.currentContext!,
                 builder: (BuildContext context) {
                   return AlertDialog(
-                    title: const Text("Import failed"),
+                    title: const Text("Duplicate snapshot"),
+                    content: Text(e.message),
+                    actions: [
+                      TextButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
+                          child: const Text("Ok"))
+                    ],
+                  );
+                });
+          } on InvalidSnapshotFileException catch (e) {
+            showDialog(
+                context: navigatorKey.currentContext!,
+                builder: (BuildContext context) {
+                  return AlertDialog(
+                    title: const Text("Invalid snapshot file"),
                     content: Text(e.message),
                     actions: [
                       TextButton(
