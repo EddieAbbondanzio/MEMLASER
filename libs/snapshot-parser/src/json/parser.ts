@@ -29,6 +29,7 @@ import {
 import { TokenQueue } from "./tokenQueue.js";
 import _ from "lodash";
 import sc from "stream-chain";
+import { assertUnreachable } from "@memlaser/core";
 
 // N.B. The parser doesn't account for nullValue, trueValue, or falseValue
 // tokens and could crash if the heapsnapshot file format is ever changed to use
@@ -225,6 +226,9 @@ async function buildHeapSnapshot(
         }
         break;
       }
+
+      default:
+        assertUnreachable(key);
     }
 
     nextToken = await queue.peek();

@@ -19,6 +19,7 @@
   },
   "references": [
     { "path": "../../libs/snapshot-parser" },
-    { "path": "../../libs/database" }
+    { "path": "../../libs/database" },
+    { "path": "../../libs/core" }
   ]
 }
