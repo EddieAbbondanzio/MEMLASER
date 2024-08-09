@@ -28,6 +28,7 @@
     "typescript": "^5.4.5"
   },
   "dependencies": {
+    "@memlaser/core": "^1.0.0",
     "@memlaser/database": "^1.0.0",
     "@types/lodash": "^4.17.5",
     "better-sqlite3": "^11.0.0",

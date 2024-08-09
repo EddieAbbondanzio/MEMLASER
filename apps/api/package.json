@@ -18,6 +18,7 @@
     "test:e2e": "cross-env NODE_ENV=test node --no-warnings=ExperimentalWarning --test --loader ts-node/esm test/e2e/**/**.test.ts"
   },
   "dependencies": {
+    "@memlaser/core": "^1.0.0",
     "@memlaser/database": "^1.0.0",
     "@memlaser/snapshot-parser": "^1.0.0",
     "@nestjs/common": "^10.3.10",

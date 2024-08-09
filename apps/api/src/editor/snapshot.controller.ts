@@ -19,6 +19,7 @@ import {
 } from "./dtos/snapshot.js";
 import { IsNotEmpty } from "class-validator";
 import { Request } from "express";
+import { assertUnreachable } from "@memlaser/core";
 
 class ImportSnapshotDTO {
   @IsNotEmpty()
@@ -50,7 +51,7 @@ export class SnapshotController {
         case ImportSnapshotErrorCode.InvalidFile:
           throw new BadRequestException(res.errorMessage);
         default:
-          throw new Error(`Unknown validation result: ${res.errorMessage}`);
+          assertUnreachable(res.errorCode);
       }
     }
 
