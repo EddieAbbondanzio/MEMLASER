@@ -1,12 +1,14 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:http_status_code/http_status_code.dart';
 import 'package:memlaser/src/api/client.dart';
 import 'package:memlaser/src/api/dtos/api_events.dart';
 import 'package:memlaser/src/api/dtos/snapshot.dart';
 import 'dart:convert';
 
 import 'package:memlaser/src/api/dtos/snapshot_stats.dart';
+import 'package:memlaser/src/api/exceptions.dart';
 
 class SnapshotService extends ChangeNotifier {
   final APIClient _apiClient;
@@ -26,43 +28,56 @@ class SnapshotService extends ChangeNotifier {
   }
 
   Future<void> importSnapshot(String path) async {
-    final snapshotJSON =
-        await _apiClient.post("snapshots/import", jsonEncode({'path': path}));
-    final snapshotName = snapshotJSON["name"];
-    final snapshotPath = snapshotJSON["path"];
+    try {
+      final snapshotJSON =
+          await _apiClient.post("snapshots/import", jsonEncode({'path': path}));
 
-    final progressStream = _apiClient.eventStream
-        .where((ev) =>
-            ev.type == ApiEventType.importSnapshotProgress &&
-            (ev as ImportSnapshotProgress).snapshotName == snapshotName)
-        .map((ev) => (ev as ImportSnapshotProgress).message)
-        .asBroadcastStream();
+      final snapshotName = snapshotJSON["name"];
+      final snapshotPath = snapshotJSON["path"];
 
-    final snapshotBeingImported =
-        Snapshot.importing(snapshotName, snapshotPath, progressStream);
-    snapshots.add(snapshotBeingImported);
-    notifyListeners();
+      final progressStream = _apiClient.eventStream
+          .where((ev) =>
+              ev.type == ApiEventType.importSnapshotProgress &&
+              (ev as ImportSnapshotProgress).snapshotName == snapshotName)
+          .map((ev) => (ev as ImportSnapshotProgress).message)
+          .asBroadcastStream();
 
-    final result = await _apiClient.eventStream.firstWhere((ev) =>
-        ev.type == ApiEventType.importSnapshotSuccess ||
-        ev.type == ApiEventType.importSnapshotFailure);
+      final snapshotBeingImported =
+          Snapshot.importing(snapshotName, snapshotPath, progressStream);
+      snapshots.add(snapshotBeingImported);
+      notifyListeners();
 
-    Snapshot updatedSnapshot;
-    switch (result.type) {
-      case ApiEventType.importSnapshotSuccess:
-        SnapshotStats stats = (result as ImportSnapshotSuccess).stats;
-        updatedSnapshot = Snapshot(snapshotName, snapshotPath, stats);
-      case ApiEventType.importSnapshotFailure:
-        String errorMessage = (result as ImportSnapshotFailure).errorMessage;
-        updatedSnapshot =
-            Snapshot.invalid(snapshotName, snapshotPath, errorMessage);
-      default:
-        throw Exception('Unexpected event type ${result.type}');
+      final result = await _apiClient.eventStream.firstWhere((ev) =>
+          ev.type == ApiEventType.importSnapshotSuccess ||
+          ev.type == ApiEventType.importSnapshotFailure);
+
+      Snapshot updatedSnapshot;
+      switch (result.type) {
+        case ApiEventType.importSnapshotSuccess:
+          SnapshotStats stats = (result as ImportSnapshotSuccess).stats;
+          updatedSnapshot = Snapshot(snapshotName, snapshotPath, stats);
+        case ApiEventType.importSnapshotFailure:
+          String errorMessage = (result as ImportSnapshotFailure).errorMessage;
+          updatedSnapshot =
+              Snapshot.invalid(snapshotName, snapshotPath, errorMessage);
+        default:
+          throw Exception('Unexpected event type ${result.type}');
+      }
+
+      var index = snapshots.indexWhere((s) => s.name == snapshotName);
+      snapshots[index] = updatedSnapshot;
+      notifyListeners();
+    } on HttpException catch (e) {
+      if (e.statusCode == StatusCode.CONFLICT) {
+        throw SnapshotAlreadyImportedException(e.message);
+      }
+      if (e.statusCode == StatusCode.BAD_REQUEST) {
+        throw InvalidSnapshotFileException(e.message);
+      }
+
+      // TODO: Flesh out unknown error case better.
+      rethrow;
     }
-
-    var index = snapshots.indexWhere((s) => s.name == snapshotName);
-    snapshots[index] = updatedSnapshot;
-    notifyListeners();
   }
 }
 

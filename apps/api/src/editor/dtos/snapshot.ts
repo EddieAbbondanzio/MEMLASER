@@ -22,3 +22,11 @@ export interface SnapshotStatsDTO {
   readonly createdAt: Date;
   readonly importedAt: Date;
 }
+
+export enum ImportSnapshotErrorCode {
+  InvalidFile = "INVALID_FILE",
+  Duplicate = "DUPLICATE",
+}
+export type ImportSnapshotValidationDTO =
+  | { valid: true }
+  | { valid: false; errorMessage: string; errorCode: ImportSnapshotErrorCode };

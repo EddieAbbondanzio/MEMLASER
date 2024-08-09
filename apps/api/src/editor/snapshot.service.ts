@@ -3,6 +3,8 @@ import { DATA_DIR } from "../core/config.js";
 import fs from "node:fs";
 import pathLib from "node:path";
 import {
+  ImportSnapshotErrorCode,
+  ImportSnapshotValidationDTO,
   SnapshotBeingImportedDTO,
   SnapshotDTO,
   SnapshotState,
@@ -57,14 +59,29 @@ export class SnapshotService implements OnModuleInit {
     return sortBy(snapshots, (s) => s.stats.importedAt);
   }
 
-  async wasSnapshotAlreadyImported(path: string): Promise<boolean> {
+  async canImportFile(path: string): Promise<ImportSnapshotValidationDTO> {
     const importPath = pathLib.parse(path);
+    if (importPath.ext !== ".heapsnapshot") {
+      return {
+        valid: false,
+        errorCode: ImportSnapshotErrorCode.InvalidFile,
+        errorMessage: "Only .heapsnapshot files can be imported.",
+      };
+    }
+
     const outputPath = pathLib.join(
       this.snapshotDirectoryPath,
       `${importPath.name}.sqlite`,
     );
+    if (fs.existsSync(outputPath)) {
+      return {
+        valid: false,
+        errorCode: ImportSnapshotErrorCode.Duplicate,
+        errorMessage: `Snapshot ${importPath.base} has already been imported.`,
+      };
+    }
 
-    return fs.existsSync(outputPath);
+    return { valid: true };
   }
 
   async importSnapshot(
