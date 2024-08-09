@@ -1,7 +1,9 @@
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:memlaser/src/api/exceptions.dart';
 import 'package:memlaser/src/api/services/snapshot_service.dart';
+import 'package:memlaser/src/app.dart';
 import 'package:provider/provider.dart';
 
 class ImportSnapshotButton extends StatelessWidget {
@@ -16,7 +18,26 @@ class ImportSnapshotButton extends StatelessWidget {
 
         if (result != null) {
           File file = File(result.files.single.path!);
-          await snapshotService.importSnapshot(file.path);
+
+          try {
+            await snapshotService.importSnapshot(file.path);
+          } on SnapshotAlreadyImportedException catch (e) {
+            showDialog(
+                context: navigatorKey.currentContext!,
+                builder: (BuildContext context) {
+                  return AlertDialog(
+                    title: const Text("Import failed"),
+                    content: Text(e.message),
+                    actions: [
+                      TextButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
+                          child: const Text("Ok"))
+                    ],
+                  );
+                });
+          }
         }
       }
 

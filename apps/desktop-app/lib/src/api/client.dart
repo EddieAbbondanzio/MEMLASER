@@ -67,7 +67,8 @@ class APIClient {
         body: payload);
 
     if (res.statusCode >= 300) {
-      throw Exception("Failed to POST ${res.body}");
+      final bodyJSON = jsonDecode(res.body);
+      throw HttpException(bodyJSON["message"], bodyJSON["statusCode"]);
     }
 
     return jsonDecode(res.body);
@@ -76,4 +77,11 @@ class APIClient {
   Uri _buildURL(String path) {
     return Uri.parse("$httpURL/$path");
   }
+}
+
+class HttpException implements Exception {
+  final String message;
+  final int statusCode;
+
+  const HttpException(this.message, this.statusCode);
 }
