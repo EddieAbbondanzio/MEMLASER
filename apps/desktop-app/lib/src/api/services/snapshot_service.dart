@@ -9,6 +9,8 @@ import 'dart:convert';
 
 import 'package:memlaser/src/api/dtos/snapshot_stats.dart';
 import 'package:memlaser/src/api/exceptions.dart';
+import 'package:memlaser/src/app.dart';
+import 'package:memlaser/src/core/acknowledge_error_dialog.dart';
 
 class SnapshotService extends ChangeNotifier {
   final APIClient _apiClient;
@@ -60,12 +62,27 @@ class SnapshotService extends ChangeNotifier {
           String errorMessage = (result as ImportSnapshotFailure).errorMessage;
           updatedSnapshot =
               Snapshot.invalid(snapshotName, snapshotPath, errorMessage);
+
+          showDialog(
+              context: navigatorKey.currentContext!,
+              builder: (context) {
+                return AcknowledgeErrorDialog(
+                  title: "Failed to import",
+                  message: result.errorMessage,
+                  onOk: () {
+                    _removeInvalidSnapshots();
+                    notifyListeners();
+                  },
+                );
+              });
+
         default:
           throw Exception('Unexpected event type ${result.type}');
       }
 
       var index = snapshots.indexWhere((s) => s.name == snapshotName);
       snapshots[index] = updatedSnapshot;
+
       notifyListeners();
     } on HttpException catch (e) {
       if (e.statusCode == StatusCode.CONFLICT) {
@@ -79,16 +96,31 @@ class SnapshotService extends ChangeNotifier {
       rethrow;
     }
   }
+
+  Future<void> deleteSnapshot(String name) async {
+    try {
+      await _apiClient.delete('snapshots/$name');
+      snapshots = snapshots.where((s) => s.name != name).toList();
+      notifyListeners();
+    } catch (e) {
+      throw SnapshotDeleteFailedException("Unable to delete snapshot $name");
+    }
+  }
+
+  void _removeInvalidSnapshots() {
+    snapshots.removeWhere((s) => s.state == SnapshotState.invalid);
+    notifyListeners();
+  }
 }
 
 // Src: https://gist.github.com/zzpmaster/ec51afdbbfa5b2bf6ced13374ff891d9
 String formatBytes(int? bytes, {int decimals = 0}) {
-  if (bytes == null || bytes <= 0) return "0b";
+  if (bytes == null || bytes <= 0) return '0b';
   const suffixes = [
-    "b",
-    "kb",
-    "mb",
-    "gb",
+    'b',
+    'kb',
+    'mb',
+    'gb',
   ];
   var i = (log(bytes) / log(1024)).floor();
   return '${(bytes / pow(1024, i)).toStringAsFixed(decimals)}${suffixes[i]}';

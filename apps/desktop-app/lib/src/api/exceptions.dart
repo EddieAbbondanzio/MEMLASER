@@ -1,9 +1,28 @@
-class SnapshotAlreadyImportedException implements Exception {
-  final String message;
-  const SnapshotAlreadyImportedException(this.message);
+abstract class ApiException implements Exception {
+  abstract final String title;
+  abstract final String message;
 }
 
-class InvalidSnapshotFileException implements Exception {
+class SnapshotAlreadyImportedException implements ApiException {
+  @override
+  String title = "Duplicate import";
+  @override
   final String message;
-  const InvalidSnapshotFileException(this.message);
+  SnapshotAlreadyImportedException(this.message);
+}
+
+class InvalidSnapshotFileException implements ApiException {
+  @override
+  String title = "Invalid snapshot";
+  @override
+  final String message;
+  InvalidSnapshotFileException(this.message);
+}
+
+class SnapshotDeleteFailedException implements ApiException {
+  @override
+  String title = "Delete failed";
+  @override
+  final String message;
+  SnapshotDeleteFailedException(this.message);
 }

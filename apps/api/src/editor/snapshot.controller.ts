@@ -4,9 +4,11 @@ import {
   ClassSerializerInterceptor,
   ConflictException,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
+  Param,
   Post,
   Req,
   UseInterceptors,
@@ -84,5 +86,13 @@ export class SnapshotController {
     });
 
     return snapshot;
+  }
+
+  @Delete(":name")
+  async deleteSnapshot(@Param("name") name: string): Promise<void> {
+    const success = await this.snapshotService.deleteSnapshot(name);
+    if (!success) {
+      throw new BadRequestException(`Failed to delete snapshot ${name}`);
+    }
   }
 }

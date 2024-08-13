@@ -63,6 +63,7 @@ interface WalkTokenCallbacks {
   onTraceTreeBatch?: (traceTrees: number[], offset: number) => Promise<void>;
   onSampleBatch?: (samples: number[], offset: number) => Promise<void>;
   onLocationBatch?: (samples: number[], offset: number) => Promise<void>;
+  onError: (err: Error) => Promise<void>;
 }
 
 export async function parseSnapshotFile(
@@ -82,6 +83,10 @@ export async function parseSnapshotFile(
   ]);
 
   pipeline.on("end", () => tokenQueue.setIsDraining());
+  pipeline.on("error", err => {
+    callbacks.onError(err);
+  });
+
   await buildHeapSnapshot(tokenQueue, callbacks);
 }
 

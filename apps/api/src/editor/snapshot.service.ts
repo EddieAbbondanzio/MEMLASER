@@ -121,6 +121,16 @@ export class SnapshotService implements OnModuleInit {
     };
   }
 
+  async deleteSnapshot(name: string): Promise<boolean> {
+    const fullPath = pathLib.join(this.snapshotDirectoryPath, `${name}.sqlite`);
+    if (!fs.existsSync(fullPath)) {
+      return false;
+    }
+
+    await fs.promises.rm(fullPath);
+    return true;
+  }
+
   // Accepts either the path to a sqlite file, or the loaded SQLite db.
   async _getSnapshotStats(
     snapshot: string | DataSource,

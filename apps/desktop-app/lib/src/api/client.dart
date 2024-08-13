@@ -74,6 +74,21 @@ class APIClient {
     return jsonDecode(res.body);
   }
 
+  Future<void> delete(String path, [Object? payload]) async {
+    if (clientId == "") {
+      throw Exception("API client doesn't have an id set.");
+    }
+
+    final res = await _httpClient.delete(_buildURL(path),
+        headers: {'x-client-id': clientId, "Content-Type": "application/json"},
+        body: payload);
+
+    if (res.statusCode >= 300) {
+      final bodyJSON = jsonDecode(res.body);
+      throw HttpException(bodyJSON["message"], bodyJSON["statusCode"]);
+    }
+  }
+
   Uri _buildURL(String path) {
     return Uri.parse("$httpURL/$path");
   }

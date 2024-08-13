@@ -5,6 +5,7 @@ import 'package:memlaser/src/api/exceptions.dart';
 import 'package:memlaser/src/api/services/snapshot_service.dart';
 import 'package:memlaser/src/app.dart';
 import 'package:provider/provider.dart';
+import 'package:memlaser/src/core/acknowledge_error_dialog.dart';
 
 class ImportSnapshotButton extends StatelessWidget {
   const ImportSnapshotButton({super.key});
@@ -21,37 +22,12 @@ class ImportSnapshotButton extends StatelessWidget {
 
           try {
             await snapshotService.importSnapshot(file.path);
-          } on SnapshotAlreadyImportedException catch (e) {
+          } on ApiException catch (e) {
             showDialog(
                 context: navigatorKey.currentContext!,
                 builder: (BuildContext context) {
-                  return AlertDialog(
-                    title: const Text("Duplicate snapshot"),
-                    content: Text(e.message),
-                    actions: [
-                      TextButton(
-                          onPressed: () {
-                            Navigator.pop(context);
-                          },
-                          child: const Text("Ok"))
-                    ],
-                  );
-                });
-          } on InvalidSnapshotFileException catch (e) {
-            showDialog(
-                context: navigatorKey.currentContext!,
-                builder: (BuildContext context) {
-                  return AlertDialog(
-                    title: const Text("Invalid snapshot file"),
-                    content: Text(e.message),
-                    actions: [
-                      TextButton(
-                          onPressed: () {
-                            Navigator.pop(context);
-                          },
-                          child: const Text("Ok"))
-                    ],
-                  );
+                  return AcknowledgeErrorDialog(
+                      title: e.title, message: e.message);
                 });
           }
         }
