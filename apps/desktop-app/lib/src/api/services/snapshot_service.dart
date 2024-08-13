@@ -70,7 +70,7 @@ class SnapshotService extends ChangeNotifier {
                   title: "Failed to import",
                   message: result.errorMessage,
                   onOk: () {
-                    removeInvalidSnapshots();
+                    _removeInvalidSnapshots();
                     notifyListeners();
                   },
                 );
@@ -97,7 +97,17 @@ class SnapshotService extends ChangeNotifier {
     }
   }
 
-  void removeInvalidSnapshots() {
+  Future<void> deleteSnapshot(String name) async {
+    try {
+      await _apiClient.delete('snapshots/$name');
+      snapshots = snapshots.where((s) => s.name != name).toList();
+      notifyListeners();
+    } catch (e) {
+      throw SnapshotDeleteFailedException("Unable to delete snapshot $name");
+    }
+  }
+
+  void _removeInvalidSnapshots() {
     snapshots.removeWhere((s) => s.state == SnapshotState.invalid);
     notifyListeners();
   }
@@ -105,12 +115,12 @@ class SnapshotService extends ChangeNotifier {
 
 // Src: https://gist.github.com/zzpmaster/ec51afdbbfa5b2bf6ced13374ff891d9
 String formatBytes(int? bytes, {int decimals = 0}) {
-  if (bytes == null || bytes <= 0) return "0b";
+  if (bytes == null || bytes <= 0) return '0b';
   const suffixes = [
-    "b",
-    "kb",
-    "mb",
-    "gb",
+    'b',
+    'kb',
+    'mb',
+    'gb',
   ];
   var i = (log(bytes) / log(1024)).floor();
   return '${(bytes / pow(1024, i)).toStringAsFixed(decimals)}${suffixes[i]}';

@@ -18,3 +18,11 @@ class InvalidSnapshotFileException implements ApiException {
   final String message;
   InvalidSnapshotFileException(this.message);
 }
+
+class SnapshotDeleteFailedException implements ApiException {
+  @override
+  String title = "Delete failed";
+  @override
+  final String message;
+  SnapshotDeleteFailedException(this.message);
+}
