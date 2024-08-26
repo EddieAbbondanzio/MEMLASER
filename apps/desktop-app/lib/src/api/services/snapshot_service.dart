@@ -15,6 +15,7 @@ import 'package:memlaser/src/core/acknowledge_error_dialog.dart';
 class SnapshotService extends ChangeNotifier {
   final APIClient _apiClient;
   List<Snapshot> snapshots = [];
+  Snapshot? selectedSnapshot;
 
   SnapshotService(this._apiClient) {
     loadSnapshots();
@@ -26,6 +27,8 @@ class SnapshotService extends ChangeNotifier {
         .map((json) => Snapshot(
             json["name"], json["path"], SnapshotStats.fromJSON(json["stats"])))
         .toList();
+
+    selectedSnapshot = snapshots.first;
     notifyListeners();
   }
 
@@ -83,6 +86,8 @@ class SnapshotService extends ChangeNotifier {
       var index = snapshots.indexWhere((s) => s.name == snapshotName);
       snapshots[index] = updatedSnapshot;
 
+      selectedSnapshot = updatedSnapshot;
+
       notifyListeners();
     } on HttpException catch (e) {
       if (e.statusCode == StatusCode.CONFLICT) {
@@ -97,10 +102,20 @@ class SnapshotService extends ChangeNotifier {
     }
   }
 
+  void setSelectedSnapshot(Snapshot snapshot) {
+    selectedSnapshot = snapshot;
+    notifyListeners();
+  }
+
   Future<void> deleteSnapshot(String name) async {
     try {
       await _apiClient.delete('snapshots/$name');
       snapshots = snapshots.where((s) => s.name != name).toList();
+
+      if (selectedSnapshot?.name == name) {
+        selectedSnapshot = snapshots.first;
+      }
+
       notifyListeners();
     } catch (e) {
       throw SnapshotDeleteFailedException("Unable to delete snapshot $name");

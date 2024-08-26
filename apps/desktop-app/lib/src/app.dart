@@ -17,6 +17,11 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    var theme = ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: (Colors.blue)),
+        listTileTheme:
+            ListTileThemeData(selectedTileColor: Colors.blueGrey[50]));
+
     // Glue the SettingsController to the MaterialApp.
     //
     // The ListenableBuilder Widget listens to the SettingsController for changes.
@@ -53,8 +58,7 @@ class MyApp extends StatelessWidget {
           onGenerateTitle: (BuildContext context) =>
               AppLocalizations.of(context)!.appTitle,
 
-          theme: ThemeData.from(
-              colorScheme: ColorScheme.fromSeed(seedColor: (Colors.blue))),
+          theme: theme,
 
           // Define a function to handle named routes in order to support
           // Flutter web url navigation and deep linking.
