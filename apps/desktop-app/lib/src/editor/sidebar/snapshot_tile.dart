@@ -61,6 +61,7 @@ class SnapshotTile extends StatelessWidget {
           contentPadding: const EdgeInsets.fromLTRB(8.0, 0, 8.0, 0),
           dense: true,
           enabled: !isBeingImported,
+          selected: snapshotService.selectedSnapshot?.name == snapshot.name,
           title: Text(
             snapshot.name,
           ),
@@ -69,7 +70,7 @@ class SnapshotTile extends StatelessWidget {
           subtitle: subtitle,
           subtitleTextStyle: const TextStyle(color: Colors.black54),
           onTap: () {
-            print("Snapshot ${snapshot.name} was clicked.");
+            snapshotService.setSelectedSnapshot(snapshot);
           },
           hoverColor: Colors.black12,
           trailing: trailing);
