@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:memlaser/src/editor/main/summary_table.dart';
 
 class EditorMain extends StatelessWidget {
   const EditorMain({super.key});
@@ -8,10 +9,7 @@ class EditorMain extends StatelessWidget {
     return const Expanded(
       child: ColoredBox(
         color: Colors.white,
-        child: Text(
-          'Epic main content here!',
-          style: TextStyle(color: Colors.black),
-        ),
+        child: SummaryTable(),
       ),
     );
   }
