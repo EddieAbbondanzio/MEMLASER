@@ -59,6 +59,16 @@ export class SnapshotService implements OnModuleInit {
     return sortBy(snapshots, (s) => s.stats.importedAt);
   }
 
+  async doesSnapshotExist(name: string): Promise<boolean> {
+    const path = this.buildSnapshotPath(name);
+    return fs.existsSync(path);
+  }
+
+  buildSnapshotPath(name: string): string {
+    const path = pathLib.join(this.snapshotDirectoryPath, `${name}.sqlite`);
+    return path;
+  }
+
   async canImportFile(path: string): Promise<ImportSnapshotValidationDTO> {
     const importPath = pathLib.parse(path);
     if (importPath.ext !== ".heapsnapshot") {

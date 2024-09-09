@@ -8,6 +8,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  NotFoundException,
   Param,
   Post,
   Req,
@@ -18,10 +19,12 @@ import {
   ImportSnapshotErrorCode,
   SnapshotBeingImportedDTO,
   SnapshotDTO,
+  SummaryGroupDTO,
 } from "./dtos/snapshot.js";
 import { IsNotEmpty } from "class-validator";
 import { Request } from "express";
 import { assertUnreachable } from "@memlaser/core";
+import { SummaryService } from "./summary.service.js";
 
 class ImportSnapshotDTO {
   @IsNotEmpty()
@@ -30,13 +33,28 @@ class ImportSnapshotDTO {
 
 @Controller("snapshots")
 export class SnapshotController {
-  constructor(private readonly snapshotService: SnapshotService) {}
+  constructor(
+    private readonly snapshotService: SnapshotService,
+    private readonly summaryService: SummaryService,
+  ) {}
 
   @UseInterceptors(ClassSerializerInterceptor)
   @Get()
   async getAvailable(): Promise<SnapshotDTO[]> {
     const snapshots = await this.snapshotService.getAvailableSnapshots();
     return snapshots;
+  }
+
+  @UseInterceptors(ClassSerializerInterceptor)
+  @Get(":name/summary")
+  async getSummary(@Param("name") name: string): Promise<SummaryGroupDTO[]> {
+    if (!(await this.snapshotService.doesSnapshotExist(name))) {
+      throw new NotFoundException(`Snapshot "${name}" not found.`);
+    }
+
+    const path = this.snapshotService.buildSnapshotPath(name);
+    const summaryGroups = await this.summaryService.getSummary(path);
+    return summaryGroups;
   }
 
   @Post("import")

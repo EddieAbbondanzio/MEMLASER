@@ -8,26 +8,43 @@ import { HeapString } from "./entities/heapString.js";
 import { Init1720318566156 } from "./migrations/1_init.js";
 import { SnakeCaseNamingStrategy } from "./snakeCaseNamingStrategy.js";
 import { SnapshotStats } from "./entities/snapshotStats.js";
+import * as fsLib from "node:fs";
+
+// TODO: Load entities and migrations auto-magically!
+const ENTITIES = [
+  Snapshot,
+  Edge,
+  EdgeData,
+  Node,
+  NodeData,
+  SnapshotStats,
+  HeapString,
+];
+
+function createDataSource(path: string): DataSource {
+  return new DataSource({
+    type: "better-sqlite3",
+    database: path,
+    entities: ENTITIES,
+    migrations: [Init1720318566156],
+    namingStrategy: new SnakeCaseNamingStrategy(),
+  });
+}
+
+export async function openSQLiteDB(path: string): Promise<DataSource> {
+  const dataSource = createDataSource(path);
+  await dataSource.initialize();
+  await dataSource.runMigrations({ transaction: "all" });
+  return dataSource;
+}
 
 export async function initializeSQLiteDB(
   outputPath: string,
 ): Promise<DataSource> {
-  const dataSource = new DataSource({
-    type: "better-sqlite3",
-    database: outputPath,
-    // TODO: Load entities and migrations auto-magically!
-    entities: [
-      Snapshot,
-      Edge,
-      EdgeData,
-      Node,
-      NodeData,
-      SnapshotStats,
-      HeapString,
-    ],
-    migrations: [Init1720318566156],
-    namingStrategy: new SnakeCaseNamingStrategy(),
-  });
+  if (fsLib.existsSync(outputPath)) {
+    throw new Error(`Database "${outputPath} already exists.`);
+  }
+  const dataSource = createDataSource(outputPath);
   await dataSource.initialize();
   await dataSource.runMigrations({ transaction: "all" });
   return dataSource;
