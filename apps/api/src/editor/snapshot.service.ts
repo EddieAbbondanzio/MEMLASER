@@ -9,7 +9,7 @@ import {
   SnapshotDTO,
   SnapshotState,
 } from "./dtos/snapshot.js";
-import { initializeSQLiteDB, SnapshotStats } from "@memlaser/database";
+import { openSQLiteDB, SnapshotStats } from "@memlaser/database";
 import { parseSnapshotToSQLite } from "@memlaser/snapshot-parser";
 import { DataSource } from "typeorm";
 import { pick, sortBy } from "lodash-es";
@@ -147,7 +147,7 @@ export class SnapshotService implements OnModuleInit {
   ): Promise<SnapshotStats> {
     let db;
     if (typeof snapshot === "string") {
-      db = await initializeSQLiteDB(snapshot);
+      db = await openSQLiteDB(snapshot);
     } else {
       db = snapshot;
     }

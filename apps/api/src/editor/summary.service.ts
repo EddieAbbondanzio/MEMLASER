@@ -13,11 +13,16 @@ export class SummaryService {
     const snapshot = await openSQLiteDB(snapshotPath);
 
     const constructors = await getConstructors(snapshot);
+    console.log(constructors.length);
     await snapshot.destroy();
 
-    // How do we generate list of summary groups?
-    // -- Do we build list of constructors, and then get instance count
-    //    / retained size / shallow size from them?
+    // How do we get shallow size, retained size, and (average) distance for
+    // each constructor? I can't see any other way besides running a recursive
+    // CTE that iterates the object graph for each instance of a ctor
+
+    // OH. We should do it when parsing the snapshot!
+    // We can add distance, shallow size, retained size to each node
+    // Then when querying constructors we sum or average the values as needed!
 
     return [];
   }

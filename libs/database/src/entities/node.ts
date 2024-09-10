@@ -14,7 +14,9 @@ export class Node {
   @Column({ type: "integer" })
   nodeId!: number;
   @Column({ type: "integer" })
-  selfSize!: number;
+  shallowSize!: number;
+  @Column({ type: "integer", nullable: true })
+  retainedSize!: number | null;
   @Column({ type: "integer" })
   edgeCount!: number;
   @Column({ type: "integer" })

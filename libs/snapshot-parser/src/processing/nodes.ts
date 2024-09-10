@@ -1,7 +1,14 @@
-import { Node, NodeData, NodeType, batchSelectAll } from "@memlaser/database";
+import {
+  Node,
+  NodeData,
+  NodeType,
+  batchSelectAll,
+  isPrimitive,
+} from "@memlaser/database";
 import { buildNodeFieldIndices, getSnapshot } from "./snapshot.js";
 import { getStringsByIndex } from "./strings.js";
 import { DataSource } from "typeorm";
+import { QueryDeepPartialEntity } from "typeorm/query-builder/QueryPartialEntity.js";
 
 const NODE_BATCH_SIZE = 1000;
 
@@ -34,16 +41,34 @@ export async function processNodes(db: DataSource): Promise<void> {
       nodeData.map(n => n.fieldValues[fieldIndices["name"]]),
     );
 
-    const nodes = nodeData.map(({ index, fieldValues }) => ({
-      index,
-      type: nodeTypes[fieldValues[fieldIndices["type"]]] as NodeType,
-      name: nameLookup[fieldValues[fieldIndices["name"]]].value,
-      nodeId: fieldValues[fieldIndices["id"]],
-      selfSize: fieldValues[fieldIndices["self_size"]],
-      edgeCount: fieldValues[fieldIndices["edge_count"]],
-      detached: Boolean(fieldValues[fieldIndices["detachedness"]]),
-      traceNodeId: fieldValues[fieldIndices["trace_node_id"]],
-    }));
+    const nodes: QueryDeepPartialEntity<Node>[] = [];
+    for (const { index, fieldValues } of nodeData) {
+      const type = nodeTypes[fieldValues[fieldIndices["type"]]] as NodeType;
+
+      const shallowSize = fieldValues[fieldIndices["self_size"]];
+      let retainedSize = null;
+
+      // Primitives that don't hold references will have a retained size
+      // equivalent to their shallow size. Ex: number, string.
+      if (isPrimitive(type)) {
+        retainedSize = shallowSize;
+      } else {
+        // We can't calculate retained size for objects that have references
+        // until we've loaded in all the other nodes first.
+      }
+
+      nodes.push({
+        index,
+        type,
+        name: nameLookup[fieldValues[fieldIndices["name"]]].value,
+        nodeId: fieldValues[fieldIndices["id"]],
+        shallowSize,
+        retainedSize,
+        edgeCount: fieldValues[fieldIndices["edge_count"]],
+        detached: Boolean(fieldValues[fieldIndices["detachedness"]]),
+        traceNodeId: fieldValues[fieldIndices["trace_node_id"]],
+      });
+    }
 
     await db.createQueryBuilder().insert().into(Node).values(nodes).execute();
   }
