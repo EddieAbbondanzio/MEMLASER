@@ -44,8 +44,16 @@ export async function processNodes(db: DataSource): Promise<void> {
     const nodes: QueryDeepPartialEntity<Node>[] = [];
     for (const { index, fieldValues } of nodeData) {
       const type = nodeTypes[fieldValues[fieldIndices["type"]]] as NodeType;
-
+      const name = nameLookup[fieldValues[fieldIndices["name"]]].value;
+      const nodeId = fieldValues[fieldIndices["id"]];
       const shallowSize = fieldValues[fieldIndices["self_size"]];
+      const edgeCount = fieldValues[fieldIndices["edge_count"]];
+      const detached = Boolean(fieldValues[fieldIndices["detachedness"]]);
+      const traceNodeId = fieldValues[fieldIndices["trace_node_id"]];
+
+      if (shallowSize == null) {
+        throw new Error(`Shallow size cannot be null for node ID: ${nodeId}`);
+      }
       let retainedSize = null;
 
       // Primitives that don't hold references will have a retained size
@@ -60,14 +68,16 @@ export async function processNodes(db: DataSource): Promise<void> {
       nodes.push({
         index,
         type,
-        name: nameLookup[fieldValues[fieldIndices["name"]]].value,
-        nodeId: fieldValues[fieldIndices["id"]],
+        name,
+        nodeId,
         shallowSize,
         retainedSize,
-        edgeCount: fieldValues[fieldIndices["edge_count"]],
-        detached: Boolean(fieldValues[fieldIndices["detachedness"]]),
-        traceNodeId: fieldValues[fieldIndices["trace_node_id"]],
+        edgeCount,
+        detached,
+        traceNodeId,
       });
+
+      console.log(nodes[nodes.length - 1]);
     }
 
     await db.createQueryBuilder().insert().into(Node).values(nodes).execute();
