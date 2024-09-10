@@ -13,6 +13,7 @@ import { openSQLiteDB, SnapshotStats } from "@memlaser/database";
 import { parseSnapshotToSQLite } from "@memlaser/snapshot-parser";
 import { DataSource } from "typeorm";
 import { pick, sortBy } from "lodash-es";
+import * as fsLib from "node:fs";
 
 export interface ImportSnapshotCallbacks {
   onProgress(snapshotName: string, message: string): void;
@@ -121,6 +122,12 @@ export class SnapshotService implements OnModuleInit {
       } catch (err) {
         console.error("Failed to import snapshot.", err);
         callbacks.onFailure(name, (err as Error).message);
+      } finally {
+        // Output file might not exist if the file errored out before the first
+        // insert.
+        if (fsLib.existsSync(outputPath)) {
+          await fsLib.promises.rm(outputPath);
+        }
       }
     })();
 
