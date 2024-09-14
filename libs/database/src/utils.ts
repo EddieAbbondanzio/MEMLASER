@@ -10,6 +10,8 @@ import { SnakeCaseNamingStrategy } from "./snakeCaseNamingStrategy.js";
 import { SnapshotStats } from "./entities/snapshotStats.js";
 import * as fsLib from "node:fs";
 
+export const SQLITE_IN_MEMORY = ":memory:";
+
 // TODO: Load entities and migrations auto-magically!
 const ENTITIES = [
   Snapshot,

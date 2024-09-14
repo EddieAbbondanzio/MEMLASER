@@ -75,7 +75,7 @@
       "command": "yarn -s run watch",
       "type": "shell",
       "args": [],
-      "problemMatcher": ["$tsc"],
+      "problemMatcher": ["$tsc-watch"],
       "presentation": {
         "reveal": "always"
       },
