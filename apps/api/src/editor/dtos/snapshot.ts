@@ -34,7 +34,7 @@ export type ImportSnapshotValidationDTO =
 // Groups of instances categorized by their constructor.
 export interface SummaryGroupDTO {
   constructor: string;
-  distance: number;
+  averageDistance: number;
   shallowSize: string;
   retainedSize: string;
   instanceCount: number;
