@@ -30,3 +30,12 @@ export enum ImportSnapshotErrorCode {
 export type ImportSnapshotValidationDTO =
   | { valid: true }
   | { valid: false; errorMessage: string; errorCode: ImportSnapshotErrorCode };
+
+// Groups of instances categorized by their constructor.
+export interface SummaryGroupDTO {
+  constructor: string;
+  averageDistance: number;
+  shallowSize: string;
+  retainedSize: string;
+  instanceCount: number;
+}

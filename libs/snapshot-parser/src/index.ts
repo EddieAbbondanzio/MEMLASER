@@ -14,19 +14,7 @@ import {
 import { processEdges } from "./processing/edges.js";
 import * as fs from "fs";
 import { DataSource } from "typeorm";
-
-// TODO: Move this to a debug function for testing
-// async function main(): Promise<void> {
-//   console.log("main()");
-//   await parseSnapshotToSQLite({
-//     snapshotPath: "samples/foo-bar.heapsnapshot",
-//     outputPath: "out/foo-bar.sqlite",
-//     overwriteExisting: true,
-//     logger: console.log,
-//   });
-//   console.log("-- done!");
-// }
-// void main();
+import { processGraph } from "./processing/graph.js";
 
 interface ParseSnapshotToSQLiteOptions {
   snapshotPath: string;
@@ -184,8 +172,10 @@ export async function parseSnapshotToSQLite(
 
   logger?.("Processing nodes");
   await processNodes(db);
-  logger?.("Rebuilding object graph");
+  logger?.("Processing edges");
   await processEdges(db);
+  logger?.("Analyzing object graph");
+  await processGraph(db);
   logger?.("Done!");
 
   return db;

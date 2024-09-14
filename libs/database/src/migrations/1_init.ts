@@ -138,9 +138,16 @@ export class Init1720318566156 implements MigrationInterface {
             isUnique: true,
           },
           {
-            name: "self_size",
+            name: "shallow_size",
             type: "integer",
             isNullable: false,
+          },
+          {
+            name: "retained_size",
+            type: "integer",
+            // We can't calculate retained size until every edge is in the DB
+            // so it has to support null.
+            isNullable: true,
           },
           {
             name: "edge_count",

@@ -13,11 +13,12 @@
     "node": ">=18"
   },
   "scripts": {
-    "start": "tsx watch src",
+    "watch": "tsx watch src",
     "test": "node --no-warnings=ExperimentalWarning --test --loader ts-node/esm test/**/**.test.ts",
     "test-only": "node --no-warnings=ExperimentalWarning --test --loader ts-node/esm --test-only test/**/**.test.ts",
     "build": "tsc",
-    "buildProd": "tsc --project tsconfig.build.json"
+    "buildProd": "tsc --project tsconfig.build.json",
+    "repl": "node dist/src/repl.js"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.10",

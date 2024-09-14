@@ -71,11 +71,11 @@
       }
     },
     {
-      "label": "snapshot-parser:dev",
-      "command": "yarn -s run start",
+      "label": "snapshot-parser:watch",
+      "command": "yarn -s run watch",
       "type": "shell",
       "args": [],
-      "problemMatcher": ["$tsc"],
+      "problemMatcher": ["$tsc-watch"],
       "presentation": {
         "reveal": "always"
       },
@@ -99,6 +99,19 @@
     {
       "label": "snapshot-parser:test:only",
       "command": "yarn -s run test-only",
+      "type": "shell",
+      "args": [],
+      "problemMatcher": ["$tsc"],
+      "presentation": {
+        "reveal": "always"
+      },
+      "options": {
+        "cwd": "libs/snapshot-parser"
+      }
+    },
+    {
+      "label": "snapshot-parser:repl",
+      "command": "yarn -s run repl",
       "type": "shell",
       "args": [],
       "problemMatcher": ["$tsc"],
@@ -147,6 +160,14 @@
       "options": {
         "cwd": "libs/database"
       }
+    },
+    {
+      "type": "npm",
+      "script": "repl",
+      "path": "libs/snapshot-parser",
+      "problemMatcher": ["$msCompile"],
+      "label": "npm: repl - libs/snapshot-parser",
+      "detail": "node dist/src/repl.js"
     }
   ]
 }

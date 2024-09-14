@@ -9,10 +9,11 @@ import {
   SnapshotDTO,
   SnapshotState,
 } from "./dtos/snapshot.js";
-import { initializeSQLiteDB, SnapshotStats } from "@memlaser/database";
+import { openSQLiteDB, SnapshotStats } from "@memlaser/database";
 import { parseSnapshotToSQLite } from "@memlaser/snapshot-parser";
 import { DataSource } from "typeorm";
 import { pick, sortBy } from "lodash-es";
+import * as fsLib from "node:fs";
 
 export interface ImportSnapshotCallbacks {
   onProgress(snapshotName: string, message: string): void;
@@ -57,6 +58,16 @@ export class SnapshotService implements OnModuleInit {
     // Sort by imported at to ensure we consistently sort the snapshots in the
     // sidebar. Eventually we should make this user customizable.
     return sortBy(snapshots, (s) => s.stats.importedAt);
+  }
+
+  async doesSnapshotExist(name: string): Promise<boolean> {
+    const path = this.buildSnapshotPath(name);
+    return fs.existsSync(path);
+  }
+
+  buildSnapshotPath(name: string): string {
+    const path = pathLib.join(this.snapshotDirectoryPath, `${name}.sqlite`);
+    return path;
   }
 
   async canImportFile(path: string): Promise<ImportSnapshotValidationDTO> {
@@ -111,6 +122,12 @@ export class SnapshotService implements OnModuleInit {
       } catch (err) {
         console.error("Failed to import snapshot.", err);
         callbacks.onFailure(name, (err as Error).message);
+      } finally {
+        // Output file might not exist if the file errored out before the first
+        // insert.
+        if (fsLib.existsSync(outputPath)) {
+          await fsLib.promises.rm(outputPath);
+        }
       }
     })();
 
@@ -137,7 +154,7 @@ export class SnapshotService implements OnModuleInit {
   ): Promise<SnapshotStats> {
     let db;
     if (typeof snapshot === "string") {
-      db = await initializeSQLiteDB(snapshot);
+      db = await openSQLiteDB(snapshot);
     } else {
       db = snapshot;
     }
