@@ -72,7 +72,7 @@
     },
     {
       "label": "snapshot-parser:watch",
-      "command": "yarn -s run start",
+      "command": "yarn -s run watch",
       "type": "shell",
       "args": [],
       "problemMatcher": ["$tsc"],

@@ -1,24 +1,16 @@
 import repl from "node:repl";
-import { z } from "zod";
 import { processSampleSnapshot } from "./devScripts/processSampleSnapshot.js";
 import { processSampleGraph } from "./devScripts/processSampleGraph.js";
-
-enum DevScript {
-  ProcessSampleSnapshot = 1,
-  ProcessSampleGraph = 2,
-}
 
 export interface DevScriptDefinition {
   description: string;
   execute: () => Promise<unknown>;
 }
 
-const SCRIPT_MAP: Record<DevScript, DevScriptDefinition> = {
-  [DevScript.ProcessSampleSnapshot]: processSampleSnapshot,
-  [DevScript.ProcessSampleGraph]: processSampleGraph,
+const SCRIPT_MAP: Record<string, DevScriptDefinition> = {
+  processSampleSnapshot,
+  processSampleGraph,
 };
-
-const devScriptsSchema = z.nativeEnum(DevScript);
 
 console.log("Type '.scripts' to see list of available dev scripts.");
 const server = repl.start({
@@ -42,9 +34,8 @@ server.defineCommand("scripts", {
         return;
       }
 
-      const script = await devScriptsSchema.parseAsync(num);
-      const def = SCRIPT_MAP[script];
-      await def.execute();
+      const script = Object.values(SCRIPT_MAP)[num];
+      await script.execute();
     } catch (err) {
       console.error("Script failed.");
       console.error(err);
