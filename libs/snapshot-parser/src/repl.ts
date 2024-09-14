@@ -1,39 +1,24 @@
 import repl from "node:repl";
 import { z } from "zod";
-import { parseSnapshotToSQLite } from "./index.js";
+import { processSampleSnapshot } from "./devScripts/processSampleSnapshot.js";
+import { processSampleGraph } from "./devScripts/processSampleGraph.js";
 
-enum Script {
+enum DevScript {
   ProcessSampleSnapshot = 1,
   ProcessSampleGraph = 2,
 }
 
-interface ScriptDefinition {
+export interface DevScriptDefinition {
   description: string;
   execute: () => Promise<unknown>;
 }
 
-const SCRIPT_MAP: Record<Script, ScriptDefinition> = {
-  [Script.ProcessSampleSnapshot]: {
-    description: "Process a sample snapshot",
-    execute: async () => {
-      await parseSnapshotToSQLite({
-        // TODO: Add support for allowing other sample snapshots.
-        snapshotPath: "samples/foo-bar.heapsnapshot",
-        outputPath: "out/foo-bar.sqlite",
-        overwriteExisting: true,
-        logger: console.log,
-      });
-    },
-  },
-  [Script.ProcessSampleGraph]: {
-    description: "Process sample graph (via processGraph())",
-    execute: async () => {
-      console.log("Calculating (not really)...");
-    },
-  },
+const SCRIPT_MAP: Record<DevScript, DevScriptDefinition> = {
+  [DevScript.ProcessSampleSnapshot]: processSampleSnapshot,
+  [DevScript.ProcessSampleGraph]: processSampleGraph,
 };
 
-const scriptsSchema = z.nativeEnum(Script);
+const devScriptsSchema = z.nativeEnum(DevScript);
 
 console.log("Type '.scripts' to see list of available dev scripts.");
 const server = repl.start({
@@ -57,7 +42,7 @@ server.defineCommand("scripts", {
         return;
       }
 
-      const script = await scriptsSchema.parseAsync(num);
+      const script = await devScriptsSchema.parseAsync(num);
       const def = SCRIPT_MAP[script];
       await def.execute();
     } catch (err) {

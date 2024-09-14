@@ -13,7 +13,7 @@
     "node": ">=18"
   },
   "scripts": {
-    "start": "tsx watch src",
+    "watch": "tsx watch src",
     "test": "node --no-warnings=ExperimentalWarning --test --loader ts-node/esm test/**/**.test.ts",
     "test-only": "node --no-warnings=ExperimentalWarning --test --loader ts-node/esm --test-only test/**/**.test.ts",
     "build": "tsc",
