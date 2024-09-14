@@ -6,8 +6,8 @@ import {
   SQLITE_IN_MEMORY,
   initializeSQLiteDB,
 } from "@memlaser/database";
-import { DevScriptDefinition } from "../repl.js";
 import { processGraph } from "../processing/graph.js";
+import { DevScriptDefinition } from "@memlaser/core";
 
 export const processSampleGraph: DevScriptDefinition = {
   description: "Process sample graph (via processGraph())",
