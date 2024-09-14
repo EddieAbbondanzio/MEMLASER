@@ -21,7 +21,6 @@
     "repl": "node dist/src/repl.js"
   },
   "devDependencies": {
-    "@types/better-sqlite3": "^7.6.10",
     "@types/node": "18",
     "@types/stream-chain": "^2.1.0",
     "@types/stream-json": "^1.7.7",
@@ -32,7 +31,6 @@
     "@memlaser/core": "^1.0.0",
     "@memlaser/database": "^1.0.0",
     "@types/lodash": "^4.17.5",
-    "better-sqlite3": "^11.0.0",
     "lodash": "^4.17.21",
     "reflect-metadata": "^0.2.2",
     "stream-chain": "^2.2.5",

@@ -7,4 +7,5 @@ const SCRIPT_MAP: Record<string, DevScriptDefinition> = {
   processSampleGraph,
 };
 
+// "magic"
 void startRepl(SCRIPT_MAP);
