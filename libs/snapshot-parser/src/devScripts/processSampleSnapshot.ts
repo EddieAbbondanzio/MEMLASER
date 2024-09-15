@@ -1,4 +1,4 @@
-import { DevScriptDefinition } from "../repl.js";
+import { DevScriptDefinition } from "@memlaser/core";
 import { parseSnapshotToSQLite } from "../index.js";
 
 export const processSampleSnapshot: DevScriptDefinition = {
