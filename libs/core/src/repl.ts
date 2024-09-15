@@ -1,4 +1,5 @@
 import repl from "node:repl";
+import { Context } from "node:vm";
 
 export interface DevScriptDefinition {
   description: string;
@@ -8,7 +9,10 @@ export interface DevScriptDefinition {
 export type DevScriptMap = Record<string, DevScriptDefinition>;
 export type Question = (query: string) => Promise<string>;
 
-export async function startRepl(scriptMap: DevScriptMap): Promise<void> {
+export async function startRepl(
+  scriptMap: DevScriptMap,
+  extendContext?: (context: Context) => void,
+): Promise<void> {
   console.log("Type '.scripts' to see list of available dev scripts.");
 
   const server = repl.start({
@@ -50,4 +54,8 @@ export async function startRepl(scriptMap: DevScriptMap): Promise<void> {
       }
     },
   });
+
+  if (extendContext != null) {
+    extendContext(server.context);
+  }
 }

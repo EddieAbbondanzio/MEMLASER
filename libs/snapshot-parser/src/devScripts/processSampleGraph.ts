@@ -8,6 +8,7 @@ import {
 } from "@memlaser/database";
 import { processGraph } from "../processing/graph.js";
 import { DevScriptDefinition } from "@memlaser/core";
+import { insertNode } from "./utils.js";
 
 export const processSampleGraph: DevScriptDefinition = {
   description: "Process sample graph (via processGraph())",
@@ -19,22 +20,14 @@ export const processSampleGraph: DevScriptDefinition = {
     // Mock heapdump has:
     // Empty object
     // Array with 3 number elements
-    // Circular reference between some nested objects
+    // Circular reference between two nested objects
 
     // Snapshot root. Points to GC root.
-    const root = nodeRepo.create({
-      id: 1,
-      index: 0,
-      nodeId: 1,
+    await insertNode(db, {
       type: NodeType.Synthetic,
       name: "",
       edgeCount: 1,
-      detached: false,
-      traceNodeId: 0,
-      shallowSize: 0,
-      retainedSize: null,
     });
-    await nodeRepo.save(root);
 
     // Holds objects
     const gcRoot = nodeRepo.create({
