@@ -1,10 +1,12 @@
-import { Node } from "@memlaser/database";
-import { DataSource } from "typeorm";
+import { Edge, Node } from "@memlaser/database";
+import { DataSource, In } from "typeorm";
 
 export async function processGraph(db: DataSource): Promise<void> {
   const nodeRepo = db.getRepository(Node);
-  const nodes = await nodeRepo.find();
-  console.log(nodes);
+  // Root node is always first.
+  const [root] = await nodeRepo.findBy({ id: 1 });
+
+  await preorderTraversal(db, root, n => console.log(n.id));
 
   // TODO: Calculate retained size and distance from root.
   //
@@ -20,4 +22,43 @@ export async function processGraph(db: DataSource): Promise<void> {
   //
   // When visiting nodes if we set it has a 1 already then it has been visited and can
   // be ignored.
+  //
+  // Questions:
+  // - If we hit a node twice, how do we handle distance?
+  //   Seems like we'd set distance based on the shortest route.
+}
+
+async function preorderTraversal(
+  db: DataSource,
+  root: Node,
+  callback: (node: Node) => void,
+): Promise<void> {
+  recursiveStep(root);
+
+  async function recursiveStep(node: Node): Promise<void> {
+    callback(node);
+
+    const children = await getNodeChildren(db, node);
+    for (const child of children) {
+      await recursiveStep(child);
+    }
+  }
+}
+
+async function getNodeChildren(db: DataSource, node: Node): Promise<Node[]> {
+  const nodeRepo = db.getRepository(Node);
+  const edgeRepo = db.getRepository(Edge);
+
+  const childrenEdges = await edgeRepo.findBy({ fromNodeId: node.id });
+  if (node.edgeCount !== childrenEdges.length) {
+    throw new Error(
+      `Only found ${childrenEdges.length} of ${node.edgeCount} edges for node (id: ${node.id})`,
+    );
+  }
+
+  // Sort by ID so we can do a pre-order visit of children. (we assume nodes with
+  // a lower ID are first)
+  const childrenIds = childrenEdges.map(e => e.toNodeId).sort();
+  const children = await nodeRepo.findBy({ id: In(childrenIds) });
+  return children;
 }

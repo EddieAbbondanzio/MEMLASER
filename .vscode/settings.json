@@ -6,6 +6,7 @@
     "LTRB",
     "memfs",
     "memlaser",
+    "preorder",
     "typeorm"
   ],
   "editor.formatOnSave": true

@@ -30,7 +30,7 @@ export const processSampleGraph: DevScriptDefinition = {
     const gcRoot = await insertNode(db, {
       type: NodeType.Synthetic,
       name: "(GC roots)",
-      edgeCount: 4,
+      edgeCount: 3,
     });
     await insertEdge(db, {
       type: EdgeType.Element,
@@ -59,6 +59,12 @@ export const processSampleGraph: DevScriptDefinition = {
       edgeCount: size,
       shallowSize: 40,
     });
+    await insertEdge(db, {
+      type: EdgeType.Element,
+      fromNodeId: gcRoot.id,
+      toNodeId: array.id,
+    });
+
     for (let i = 0; i < size; i++) {
       const element = await insertNode(db, {
         type: NodeType.Number,
@@ -79,6 +85,11 @@ export const processSampleGraph: DevScriptDefinition = {
       name: "Object",
       edgeCount: 2,
       shallowSize: 16,
+    });
+    await insertEdge(db, {
+      type: EdgeType.Element,
+      fromNodeId: gcRoot.id,
+      toNodeId: circularParent.id,
     });
 
     const child1 = await insertNode(db, {
