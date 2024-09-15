@@ -1,4 +1,11 @@
-import { Edge, Node, NodeField, NodeType } from "@memlaser/database";
+import {
+  Edge,
+  EdgeField,
+  EdgeType,
+  Node,
+  NodeField,
+  NodeType,
+} from "@memlaser/database";
 import { DataSource, DeepPartial } from "typeorm";
 
 let nodeCount = 0;
@@ -32,16 +39,32 @@ export async function insertNode(
     retainedSize: props?.retainedSize ?? null,
   });
 
-  // There may be some gotchas here since we always increment nodeCount because
-  // it technically will leave unused indices and nodeIds. Prob doesn't matter?
   nodeCount += 1;
   return await repo.save(node);
 }
 
+let edgeCount = 0;
 export async function insertEdge(
-  _db: DataSource,
-  _props: DeepPartial<Edge>,
+  db: DataSource,
+  props: DeepPartial<Edge> & { fromNodeId: number; toNodeId: number },
 ): Promise<Edge> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return null as any;
+  const repo = db.getRepository(Edge);
+
+  let index = props?.index;
+  if (index == null) {
+    // Index increments by # of edge fields.
+    index = edgeCount * Object.keys(EdgeField).length;
+  }
+
+  const edge = repo.create({
+    // ID gets set by the DB.
+    index,
+    type: props?.type ?? EdgeType.Element,
+    name: props?.name ?? "",
+    fromNodeId: props.fromNodeId,
+    toNodeId: props.toNodeId,
+  });
+
+  edgeCount += 1;
+  return await repo.save(edge);
 }

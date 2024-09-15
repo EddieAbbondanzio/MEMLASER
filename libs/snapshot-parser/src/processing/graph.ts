@@ -1,6 +1,11 @@
+import { Node } from "@memlaser/database";
 import { DataSource } from "typeorm";
 
 export async function processGraph(db: DataSource): Promise<void> {
+  const nodeRepo = db.getRepository(Node);
+  const nodes = await nodeRepo.find();
+  console.log(nodes);
+
   // TODO: Calculate retained size and distance from root.
   //
   // How to iterate graph?

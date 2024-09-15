@@ -1,251 +1,124 @@
 import {
-  Edge,
   EdgeType,
-  Node,
   NodeType,
   SQLITE_IN_MEMORY,
   initializeSQLiteDB,
 } from "@memlaser/database";
 import { processGraph } from "../processing/graph.js";
 import { DevScriptDefinition } from "@memlaser/core";
-import { insertNode } from "./utils.js";
+import { insertEdge, insertNode } from "./utils.js";
 
 export const processSampleGraph: DevScriptDefinition = {
   description: "Process sample graph (via processGraph())",
   execute: async () => {
     const db = await initializeSQLiteDB(SQLITE_IN_MEMORY);
-    const nodeRepo = db.getRepository(Node);
-    const edgeRepo = db.getRepository(Edge);
 
     // Mock heapdump has:
     // Empty object
     // Array with 3 number elements
     // Circular reference between two nested objects
 
-    // Snapshot root. Points to GC root.
-    await insertNode(db, {
+    // Snapshot root. Points to GC root (amongst other things).
+    const root = await insertNode(db, {
       type: NodeType.Synthetic,
       name: "",
       edgeCount: 1,
+      shallowSize: 40,
     });
 
-    // Holds objects
-    const gcRoot = nodeRepo.create({
-      id: 2,
-      index: 7,
-      nodeId: 3,
+    // GC Root. Holds objects
+    const gcRoot = await insertNode(db, {
       type: NodeType.Synthetic,
       name: "(GC roots)",
       edgeCount: 4,
-      detached: false,
-      traceNodeId: 0,
-      shallowSize: 0,
-      retainedSize: null,
     });
-    await nodeRepo.save(gcRoot);
-    const rootToGCRootEdge = edgeRepo.create({
-      id: 1,
-      index: 0,
+    await insertEdge(db, {
       type: EdgeType.Element,
       name: "",
-      fromNodeId: 1,
-      toNodeId: 2,
+      fromNodeId: root.id,
+      toNodeId: gcRoot.id,
     });
-    await edgeRepo.save(rootToGCRootEdge);
 
     // Empty object
-    const emptyObject = nodeRepo.create({
-      id: 3,
-      index: 14,
-      nodeId: 5,
+    const emptyObject = await insertNode(db, {
       type: NodeType.Object,
       name: "Object",
-      // Objects never have an edgeCount of 0, but we are simplifying for
-      // testing purposes.
-      edgeCount: 0,
-      detached: false,
-      traceNodeId: 0,
-      shallowSize: 80,
-      retainedSize: null,
+      shallowSize: 40,
     });
-    await nodeRepo.save(emptyObject);
-    const gcRootToEmptyObject = edgeRepo.create({
-      id: 2,
-      index: 3,
-      type: EdgeType.Property,
-      name: "",
-      fromNodeId: 1,
-      toNodeId: 2,
+    await insertEdge(db, {
+      type: EdgeType.Element,
+      fromNodeId: gcRoot.id,
+      toNodeId: emptyObject.id,
     });
-    await edgeRepo.save(gcRootToEmptyObject);
 
     // Array
-    const array = nodeRepo.create({
-      id: 4,
-      index: 21,
-      nodeId: 7,
+    const size = 3;
+    const array = await insertNode(db, {
       type: NodeType.Array,
       name: "",
-      edgeCount: 3,
-      detached: false,
-      traceNodeId: 0,
-      shallowSize: 16,
-      retainedSize: null,
+      edgeCount: size,
+      shallowSize: 40,
     });
-    await nodeRepo.save(array);
-
-    const element1 = nodeRepo.create({
-      id: 5,
-      index: 28,
-      nodeId: 9,
-      type: NodeType.Number,
-      name: "heap number",
-      // Numbers will never have an edgeCount of 0 but we are simplifying for
-      // testing purposes.
-      edgeCount: 0,
-      detached: false,
-      traceNodeId: 0,
-      shallowSize: 16,
-      retainedSize: null,
-    });
-    await nodeRepo.save(element1);
-    const arrayToElement1 = edgeRepo.create({
-      id: 3,
-      index: 6,
-      type: EdgeType.Element,
-      name: "",
-      fromNodeId: array.id,
-      toNodeId: element1.id,
-    });
-    await edgeRepo.save(arrayToElement1);
-
-    const element2 = nodeRepo.create({
-      id: 6,
-      index: 35,
-      nodeId: 11,
-      type: NodeType.Number,
-      name: "heap number",
-      // Numbers will never have an edgeCount of 0 but we are simplifying for
-      // testing purposes.
-      edgeCount: 0,
-      detached: false,
-      traceNodeId: 0,
-      shallowSize: 16,
-      retainedSize: null,
-    });
-    await nodeRepo.save(element2);
-    const arrayToElement2 = edgeRepo.create({
-      id: 4,
-      index: 9,
-      type: EdgeType.Element,
-      name: "",
-      fromNodeId: array.id,
-      toNodeId: element2.id,
-    });
-    await edgeRepo.save(arrayToElement2);
-
-    const element3 = nodeRepo.create({
-      id: 7,
-      index: 42,
-      nodeId: 13,
-      type: NodeType.Number,
-      name: "heap number",
-      // Numbers will never have an edgeCount of 0 but we are simplifying for
-      // testing purposes.
-      edgeCount: 0,
-      detached: false,
-      traceNodeId: 0,
-      shallowSize: 16,
-      retainedSize: null,
-    });
-    await nodeRepo.save(element2);
-    const arrayToElement3 = edgeRepo.create({
-      id: 5,
-      index: 12,
-      type: EdgeType.Element,
-      name: "",
-      fromNodeId: array.id,
-      toNodeId: element3.id,
-    });
-    await edgeRepo.save(arrayToElement3);
+    for (let i = 0; i < size; i++) {
+      const element = await insertNode(db, {
+        type: NodeType.Number,
+        name: "heap number",
+        shallowSize: 16,
+      });
+      await insertEdge(db, {
+        type: EdgeType.Element,
+        name: "",
+        fromNodeId: array.id,
+        toNodeId: element.id,
+      });
+    }
 
     // Circular reference. Parent -> Child <-> Child
-    const circularParent = nodeRepo.create({
-      id: 8,
-      index: 49,
-      nodeId: 15,
+    const circularParent = await insertNode(db, {
       type: NodeType.Object,
       name: "Object",
       edgeCount: 2,
-      detached: false,
-      traceNodeId: 0,
       shallowSize: 16,
-      retainedSize: null,
     });
-    await nodeRepo.save(circularParent);
-    const child1 = nodeRepo.create({
-      id: 9,
-      index: 56,
-      nodeId: 17,
+
+    const child1 = await insertNode(db, {
       type: NodeType.Object,
       name: "Object",
       edgeCount: 1,
-      detached: false,
-      traceNodeId: 0,
       shallowSize: 16,
-      retainedSize: null,
     });
-    await nodeRepo.save(child1);
-    const parentToChild1 = edgeRepo.create({
-      id: 6,
-      index: 15,
+    await insertEdge(db, {
       type: EdgeType.Property,
       name: "",
       fromNodeId: circularParent.id,
       toNodeId: child1.id,
     });
-    await edgeRepo.save(parentToChild1);
-    const child2 = nodeRepo.create({
-      id: 10,
-      index: 63,
-      nodeId: 17,
+
+    const child2 = await insertNode(db, {
       type: NodeType.Object,
       name: "Object",
       edgeCount: 1,
-      detached: false,
-      traceNodeId: 0,
       shallowSize: 16,
-      retainedSize: null,
     });
-    await nodeRepo.save(child2);
-    const parentToChild2 = edgeRepo.create({
-      id: 7,
-      index: 18,
+    await insertEdge(db, {
       type: EdgeType.Property,
       name: "",
       fromNodeId: circularParent.id,
       toNodeId: child2.id,
     });
-    await edgeRepo.save(parentToChild2);
 
-    const child1ToChild2 = edgeRepo.create({
-      id: 8,
-      index: 21,
+    await insertEdge(db, {
       type: EdgeType.Property,
       name: "",
       fromNodeId: child1.id,
       toNodeId: child2.id,
     });
-    await edgeRepo.save(child1ToChild2);
-    const child2ToChild1 = edgeRepo.create({
-      id: 9,
-      index: 24,
+    await insertEdge(db, {
       type: EdgeType.Property,
       name: "",
       fromNodeId: child2.id,
       toNodeId: child1.id,
     });
-    await edgeRepo.save(child2ToChild1);
 
     await processGraph(db);
     console.log("Done!");
