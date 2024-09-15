@@ -11,8 +11,8 @@
     "start": "tsx watch src",
     "build": "tsc",
     "buildProd": "tsc --project tsconfig.build.json",
-    "test": "node --no-warnings=ExperimentalWarning --test --loader ts-node/esm 'test/**/*.test.ts'",
-    "test-only": "node --no-warnings=ExperimentalWarning --test --loader ts-node/esm --test-only test/**/*.test.ts"
+    "test": "node --no-warnings=ExperimentalWarning --loader ts-node/esm --test $(find test -name '*.test.ts')",
+    "test-only": "node --no-warnings=ExperimentalWarning --loader ts-node/esm --test-only --test $(find test -name '*.test.ts')"
   },
   "license": "GPL-3.0-only",
   "type": "module",
