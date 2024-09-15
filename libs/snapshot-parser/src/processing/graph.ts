@@ -6,7 +6,7 @@ export async function processGraph(db: DataSource): Promise<void> {
   // How to iterate graph?
   // - We need to handle circular references
   // - Can be large number of nodes (ex 100k+) so speed is important
-  // 
+  //
   // Algorithm:
   // Start at root and begin visiting children depth first. On first visit to node
   // we mark it as 1, and then visit it's all of it's children in the same manner.

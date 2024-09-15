@@ -176,8 +176,83 @@ export const processSampleGraph: DevScriptDefinition = {
     });
     await edgeRepo.save(arrayToElement3);
 
-    // Circular reference
-    // TODO: Add one! Do 3 objects. Parent -> child <-> child
+    // Circular reference. Parent -> Child <-> Child
+    const circularParent = nodeRepo.create({
+      id: 8,
+      index: 49,
+      nodeId: 15,
+      type: NodeType.Object,
+      name: "Object",
+      edgeCount: 2,
+      detached: false,
+      traceNodeId: 0,
+      shallowSize: 16,
+      retainedSize: null,
+    });
+    await nodeRepo.save(circularParent);
+    const child1 = nodeRepo.create({
+      id: 9,
+      index: 56,
+      nodeId: 17,
+      type: NodeType.Object,
+      name: "Object",
+      edgeCount: 1,
+      detached: false,
+      traceNodeId: 0,
+      shallowSize: 16,
+      retainedSize: null,
+    });
+    await nodeRepo.save(child1);
+    const parentToChild1 = edgeRepo.create({
+      id: 6,
+      index: 15,
+      type: EdgeType.Property,
+      name: "",
+      fromNodeId: circularParent.id,
+      toNodeId: child1.id,
+    });
+    await edgeRepo.save(parentToChild1);
+    const child2 = nodeRepo.create({
+      id: 10,
+      index: 63,
+      nodeId: 17,
+      type: NodeType.Object,
+      name: "Object",
+      edgeCount: 1,
+      detached: false,
+      traceNodeId: 0,
+      shallowSize: 16,
+      retainedSize: null,
+    });
+    await nodeRepo.save(child2);
+    const parentToChild2 = edgeRepo.create({
+      id: 7,
+      index: 18,
+      type: EdgeType.Property,
+      name: "",
+      fromNodeId: circularParent.id,
+      toNodeId: child2.id,
+    });
+    await edgeRepo.save(parentToChild2);
+
+    const child1ToChild2 = edgeRepo.create({
+      id: 8,
+      index: 21,
+      type: EdgeType.Property,
+      name: "",
+      fromNodeId: child1.id,
+      toNodeId: child2.id,
+    });
+    await edgeRepo.save(child1ToChild2);
+    const child2ToChild1 = edgeRepo.create({
+      id: 9,
+      index: 24,
+      type: EdgeType.Property,
+      name: "",
+      fromNodeId: child2.id,
+      toNodeId: child1.id,
+    });
+    await edgeRepo.save(child2ToChild1);
 
     await processGraph(db);
     console.log("Done!");
