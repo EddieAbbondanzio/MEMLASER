@@ -58,9 +58,6 @@ export async function* batchSelectAll<T extends ObjectLiteral>(
   orderBy: keyof T,
   batchSize: number,
 ): AsyncGenerator<T[], void, void> {
-  // Repeat batches until we get a batch smaller than batchSize. That means
-  // we are done!
-
   const order = { [orderBy]: "ASC" } as FindOptionsOrder<T>;
 
   let offset = 0;

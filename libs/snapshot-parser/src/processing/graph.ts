@@ -1,64 +1,152 @@
-import { Edge, Node } from "@memlaser/database";
+import { Edge, Node, batchSelectAll } from "@memlaser/database";
+import { chunk } from "lodash";
 import { DataSource, In } from "typeorm";
 
-export async function processGraph(db: DataSource): Promise<void> {
-  const nodeRepo = db.getRepository(Node);
-  // Root node is always first.
-  const [root] = await nodeRepo.findBy({ id: 1 });
-
-  await preorderTraversal(db, root, n => console.log(n.id));
-
-  // TODO: Calculate retained size and distance from root.
-  //
-  // How to iterate graph?
-  // - We need to handle circular references
-  // - Can be large number of nodes (ex 100k+) so speed is important
-  //
-  // Algorithm:
-  // Start at root and begin visiting children depth first. On first visit to node
-  // we mark it as 1, and then visit it's all of it's children in the same manner.
-  // When we hit a leaf, we mark it as 2 and start to go back up through visit history
-  // each node we hit is a 2 and we set retained size.
-  //
-  // When visiting nodes if we set it has a 1 already then it has been visited and can
-  // be ignored.
-  //
-  // Questions:
-  // - If we hit a node twice, how do we handle distance?
-  //   Seems like we'd set distance based on the shortest route.
+enum Color {
+  // Node has been visited, but one or more children hasn't been visited yet so
+  // the node isn't ready yet.
+  RED,
+  // Node has had every child visited, and it's retainedSize has been calculated
+  GREEN,
 }
 
-async function preorderTraversal(
-  db: DataSource,
-  root: Node,
-  callback: (node: Node) => void,
-): Promise<void> {
-  recursiveStep(root);
+type NodeWithFamily = {
+  node: Node;
+  parentNodeIds: number[];
+  childrenNodeIds: number[];
+  color?: Color;
+};
 
-  async function recursiveStep(node: Node): Promise<void> {
-    callback(node);
+// Assumptions:
+// - There is enough memory for us to load the entire graph at once.
 
-    const children = await getNodeChildren(db, node);
-    for (const child of children) {
-      await recursiveStep(child);
+export async function processGraph(db: DataSource): Promise<void> {
+  const nodesWithEdges: NodeWithFamily[] = [];
+  for await (const nodes of batchSelectAll(db, Node, "id", 10_000)) {
+    const edges = await db
+      .createQueryBuilder()
+      .select(["id, from_node_id", "to_node_id"])
+      .from(Edge, "edge")
+      .where({ fromNodeId: In(nodes.map(n => n.id)) })
+      .orWhere({ toNodeId: In(nodes.map(n => n.id)) })
+      .getMany();
+
+    for (const node of nodes) {
+      nodesWithEdges[node.id] = {
+        node,
+        parentNodeIds: edges.filter(e => e.toNodeId == node.id).map(e => e.id),
+        childrenNodeIds: edges
+          .filter(e => e.fromNodeId == node.id)
+          .map(e => e.id),
+      };
     }
   }
-}
 
-async function getNodeChildren(db: DataSource, node: Node): Promise<Node[]> {
-  const nodeRepo = db.getRepository(Node);
-  const edgeRepo = db.getRepository(Edge);
+  const nodesById: Record<string, NodeWithFamily> = {};
+  let nodesToVisit: NodeWithFamily[] = [];
 
-  const childrenEdges = await edgeRepo.findBy({ fromNodeId: node.id });
-  if (node.edgeCount !== childrenEdges.length) {
-    throw new Error(
-      `Only found ${childrenEdges.length} of ${node.edgeCount} edges for node (id: ${node.id})`,
-    );
+  // Build node lookup table and grab the leaves so we can visit them first.
+  for (const node of nodesWithEdges) {
+    nodesById[node.node.id] = node;
+
+    if (node.childrenNodeIds.length === 0) {
+      nodesToVisit.push(node);
+
+      // Objects without properties have a retained size equal to shallow size
+      // because they don't reference any other objects.
+      node.node.retainedSize = node.node.shallowSize;
+      node.color = Color.GREEN;
+    }
   }
 
-  // Sort by ID so we can do a pre-order visit of children. (we assume nodes with
-  // a lower ID are first)
-  const childrenIds = childrenEdges.map(e => e.toNodeId).sort();
-  const children = await nodeRepo.findBy({ id: In(childrenIds) });
-  return children;
+  // Calculate retained size by starting with the leaves and traversing up the
+  // branches until we hit root.
+  while (nodesToVisit.length > 0) {
+    const node = nodesToVisit.shift()!;
+    console.log(`Visit node ID: ${node.node.id}`);
+
+    // Nothing left to do here. Node has already had it's retained size
+    // calculated.
+    if (node.color == Color.GREEN) {
+      continue;
+    }
+
+    // This is the Node's first visit. Mark it so it won't accidentally get
+    // visited again. (ie: We think it's a parent that hasn't been visited yet)
+    if (node.color == undefined) {
+      node.color = Color.RED;
+    }
+
+    // See if every retained child has been had it's size calculated so we can
+    // calculate this nodes retained size.
+    const children = node.childrenNodeIds.map(c => nodesById[c]);
+
+    if (children.every(c => c.color == Color.GREEN)) {
+      // TODO: Update this to handle skipping children that have a non
+      // retaining edge. (Use helper `shouldFollowForRetainedSize`)
+      node.node.retainedSize ??= 0;
+      children.forEach(c => (node.node.retainedSize! += c.node.retainedSize!));
+      node.color = Color.GREEN;
+    }
+
+    // We only visit parents if they haven't been visited yet to avoid going
+    // into infinite lo
+    const parentsToVisit = node.parentNodeIds
+      .map(id => nodesById[id]!)
+      .filter(p => p.color != undefined);
+    nodesToVisit.push(...parentsToVisit);
+
+    // Calculate depth. We start with the synthetic GC Roots node even though it
+    // has a parent because everything above the GC Root is not accessible to the
+    // app code and unlikely to be related to any leaks.
+    const { id: gcRootsId } = await db
+      .createQueryBuilder()
+      .select("id")
+      .from(Node, "node")
+      .where("node.name = :name", { name: "(GC Roots)" })
+      .getOneOrFail();
+
+    const gcRoot = nodesById[gcRootsId];
+    gcRoot.node.depth = 0;
+    nodesToVisit = [...gcRoot.childrenNodeIds.map(c => nodesById[c]!)];
+
+    while (nodesToVisit.length > 0) {
+      const node = nodesToVisit.shift()!;
+      if (node.node.depth != undefined) {
+        continue;
+      }
+
+      const parentNodes = node.parentNodeIds.map(id => nodesById[id]!);
+      if (parentNodes.every(p => p.node.depth != null)) {
+        // Shallowest depth is most interesting because there's a chance deeper
+        // parents are just circular references.
+        const shallowestParent = parentNodes.reduce((prev, curr) =>
+          prev.node.depth! > curr.node.depth! ? curr : prev,
+        );
+
+        node.node.depth = shallowestParent.node.depth! + 1;
+      } else {
+        // Re-visit it once it's parent's are done.
+        nodesToVisit.push(node);
+      }
+    }
+
+    // Update depth and retained size into the db.
+    for (const batch of chunk(nodesWithEdges, 10_000)) {
+      const valuesArray = batch.map(
+        ({ node }) => `(${node.id}, ${node.depth}, ${node.retainedSize})`,
+      );
+
+      // Src: https://stackoverflow.com/a/18799497
+      await db.query(`
+        UPDATE nodes AS n SET
+          depth = c.depth,
+          retained_size = c.retained_size
+        FROM (values
+          ${valuesArray.join(", ")}
+        ) as c(id, depth, retained_size)
+        WHERE c.id = n.id;
+      `);
+    }
+  }
 }

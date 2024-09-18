@@ -150,6 +150,13 @@ export class Init1720318566156 implements MigrationInterface {
             isNullable: true,
           },
           {
+            name: "depth",
+            type: "integer",
+            // We can't calculate depth until every edge is in the DB
+            // so it has to support null.
+            isNullable: true,
+          },
+          {
             name: "edge_count",
             type: "integer",
             isNullable: false,

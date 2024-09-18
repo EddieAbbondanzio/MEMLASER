@@ -17,6 +17,8 @@ export class Node {
   shallowSize!: number;
   @Column({ type: "integer", nullable: true })
   retainedSize!: number | null;
+  @Column({ type: "integer", nullable: true })
+  depth!: number | null;
   @Column({ type: "integer" })
   edgeCount!: number;
   @Column({ type: "integer" })
