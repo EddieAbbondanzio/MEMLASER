@@ -7,7 +7,7 @@ import {
 } from "../../../src/editor/snapshot.service.js";
 import esmock from "esmock";
 import * as memfs from "memfs";
-import path from "node:path";
+import * as pathLib from "node:path";
 import { subDays } from "date-fns";
 import { SnapshotState } from "../../../src/editor/dtos/snapshot.js";
 
@@ -67,10 +67,10 @@ describe("SnapshotService", async () => {
     const { snapshotDirectoryPath } = snapshotService;
 
     memfs.vol.fromJSON({
-      [path.join(snapshotDirectoryPath, "foo.sqlite")]: "",
-      [path.join(snapshotDirectoryPath, "bar.sqlite")]: "",
+      [pathLib.join(snapshotDirectoryPath, "foo.sqlite")]: "",
+      [pathLib.join(snapshotDirectoryPath, "bar.sqlite")]: "",
       // Should be ignored
-      [path.join(snapshotDirectoryPath, "random.txt")]: "",
+      [pathLib.join(snapshotDirectoryPath, "random.txt")]: "",
     });
 
     snapshotService._getSnapshotStats = mock.fn(async (path: string) => {

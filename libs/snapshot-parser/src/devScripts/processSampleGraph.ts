@@ -1,17 +1,33 @@
-import {
-  EdgeType,
-  NodeType,
-  SQLITE_IN_MEMORY,
-  initializeSQLiteDB,
-} from "@memlaser/database";
+import { EdgeType, NodeType, initializeSQLiteDB } from "@memlaser/database";
 import { processGraph } from "../processing/graph.js";
 import { DevScriptDefinition } from "@memlaser/core";
 import { insertEdge, insertNode } from "./utils.js";
+import * as pathLib from "node:path";
+import * as fsLib from "node:fs";
+
+export const TMP_DIR = pathLib.join(process.cwd(), "tmp");
 
 export const processSampleGraph: DevScriptDefinition = {
   description: "Process sample graph (via processGraph())",
-  execute: async () => {
-    const db = await initializeSQLiteDB(SQLITE_IN_MEMORY);
+  execute: async question => {
+    const tmpDBPath = pathLib.join(TMP_DIR, "sample-graph.sqlite");
+
+    if (fsLib.existsSync(tmpDBPath)) {
+      const shouldDelete = await question(
+        "File already exists. Delete it? (y/n)",
+      );
+      if (shouldDelete === "y" || shouldDelete === "yes") {
+        await fsLib.promises.rm(tmpDBPath);
+      } else if (shouldDelete === "n" || shouldDelete === "no") {
+        console.log("File must be deleted before running the script.");
+        return;
+      } else {
+        console.log("Bad input. Goodbye.");
+        return;
+      }
+    }
+
+    const db = await initializeSQLiteDB(tmpDBPath);
 
     // Mock heapdump has:
     // Empty object
@@ -132,6 +148,9 @@ export const processSampleGraph: DevScriptDefinition = {
     });
 
     await processGraph(db);
-    console.log("Done!");
+    console.log("Done. Output saved to:");
+    console.log(tmpDBPath);
+
+    await db.destroy();
   },
 };
