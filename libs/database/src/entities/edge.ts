@@ -1,6 +1,7 @@
 import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 import { Node } from "./node.js";
 import { EdgeType } from "../valueObjects/edge.js";
+import * as util from "node:util";
 
 @Entity({ name: "edges" })
 export class Edge {
@@ -18,4 +19,8 @@ export class Edge {
   @Column({ type: "integer" })
   @OneToOne(() => Node, n => n.id)
   toNodeId!: number;
+
+  [util.inspect.custom](): string {
+    return `{ id: ${this.id}, name: ${this.name}, fromNodeId: ${this.fromNodeId}, toNodeId: ${this.toNodeId}, ... }`;
+  }
 }

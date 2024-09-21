@@ -1,5 +1,6 @@
 import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
 import { NodeType } from "../valueObjects/node.js";
+import * as util from "node:util";
 
 @Entity({ name: "nodes" })
 export class Node {
@@ -25,4 +26,8 @@ export class Node {
   traceNodeId!: number;
   @Column({ type: "integer" })
   detached!: boolean;
+
+  [util.inspect.custom](): string {
+    return `{ id: ${this.id}, name: ${this.name}, ... }`;
+  }
 }
