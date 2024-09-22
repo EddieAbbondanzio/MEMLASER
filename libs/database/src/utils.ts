@@ -30,6 +30,8 @@ function createDataSource(path: string): DataSource {
     entities: ENTITIES,
     migrations: [Init1720318566156],
     namingStrategy: new SnakeCaseNamingStrategy(),
+    // logging: "all",
+    // logger: "simple-console",
   });
 }
 

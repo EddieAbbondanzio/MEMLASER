@@ -171,6 +171,12 @@ export class Init1720318566156 implements MigrationInterface {
             type: "boolean",
             isNullable: false,
           },
+          {
+            name: "root",
+            type: "boolean",
+            // We can't calculate root nodes until we process the graph.
+            isNullable: true,
+          },
         ],
       }),
     );

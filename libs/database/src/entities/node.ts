@@ -2,6 +2,8 @@ import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
 import { NodeType } from "../valueObjects/node.js";
 import * as util from "node:util";
 
+export const GC_ROOTS_NAME = "(GC roots)";
+
 @Entity({ name: "nodes" })
 export class Node {
   @PrimaryGeneratedColumn()
@@ -26,8 +28,10 @@ export class Node {
   traceNodeId!: number;
   @Column({ type: "integer" })
   detached!: boolean;
+  @Column({ type: "integer" })
+  root!: boolean;
 
   [util.inspect.custom](): string {
-    return `{ id: ${this.id}, name: ${this.name}, ... }`;
+    return `{ id: ${this.id}, name: '${this.name}', ... }`;
   }
 }

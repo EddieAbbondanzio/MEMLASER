@@ -21,6 +21,6 @@ export class Edge {
   toNodeId!: number;
 
   [util.inspect.custom](): string {
-    return `{ id: ${this.id}, name: ${this.name}, fromNodeId: ${this.fromNodeId}, toNodeId: ${this.toNodeId}, ... }`;
+    return `{ id: ${this.id}, name: '${this.name}', fromNodeId: ${this.fromNodeId}, toNodeId: ${this.toNodeId}, ... }`;
   }
 }
