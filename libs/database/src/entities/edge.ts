@@ -2,9 +2,10 @@ import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 import { Node } from "./node.js";
 import { EdgeType } from "../valueObjects/edge.js";
 import * as util from "node:util";
+import { CustomReplToString } from "@memlaser/core";
 
 @Entity({ name: "edges" })
-export class Edge {
+export class Edge implements CustomReplToString {
   @PrimaryGeneratedColumn()
   id!: number;
   @Column({ type: "integer" })

@@ -118,7 +118,7 @@ export async function processGraph(db: DataSource): Promise<void> {
   }
 }
 
-async function buildNodeLookup(db: DataSource): Promise<NodeLookup> {
+export async function buildNodeLookup(db: DataSource): Promise<NodeLookup> {
   let gcRootNode: NodeWithFamily | null = null;
   const nodesById: Record<string, NodeWithFamily> = {};
 
@@ -151,7 +151,7 @@ async function buildNodeLookup(db: DataSource): Promise<NodeLookup> {
   };
 }
 
-async function getNodeFamilies(
+export async function getNodeFamilies(
   db: DataSource,
   nodes: Node[],
 ): Promise<NodeWithFamily[]> {
@@ -177,7 +177,7 @@ async function getNodeFamilies(
   }));
 }
 
-async function calculateNodeDepths(
+export async function calculateNodeDepths(
   nodesById: NodesById,
   gcRootsNode: NodeWithFamily,
 ): Promise<void> {

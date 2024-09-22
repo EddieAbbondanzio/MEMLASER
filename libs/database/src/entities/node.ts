@@ -1,11 +1,12 @@
 import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
 import { NodeType } from "../valueObjects/node.js";
 import * as util from "node:util";
+import { CustomReplToString } from "@memlaser/core";
 
 export const GC_ROOTS_NAME = "(GC roots)";
 
 @Entity({ name: "nodes" })
-export class Node {
+export class Node implements CustomReplToString {
   @PrimaryGeneratedColumn()
   id!: number;
   @Column({ type: "integer" })
