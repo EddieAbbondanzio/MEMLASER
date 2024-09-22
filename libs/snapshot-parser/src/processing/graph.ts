@@ -98,16 +98,18 @@ export async function processGraph(db: DataSource): Promise<void> {
   const nodes = Object.values(nodesById);
   for (const batch of _.chunk(nodes, 10_000)) {
     const valuesArray = batch.map(
-      ({ node }) => `(${node.id}, ${node.depth}, ${node.retainedSize})`,
+      ({ node }) =>
+        `(${node.id}, ${node.depth ?? "null"}, ${node.retainedSize ?? "null"}, ${node.root ?? "null"})`,
     );
 
     await db.query(`
-      WITH updated_node_values(id, depth, retained_size) as (VALUES
+      WITH updated_node_values(id, depth, retained_size, root) as (VALUES
         ${valuesArray.join(", ")}
       )
       UPDATE nodes SET
         depth = updated_node_values.depth,
-        retained_size = updated_node_values.retained_size
+        retained_size = updated_node_values.retained_size,
+        root = updated_node_values.root
       FROM
         updated_node_values
       WHERE
