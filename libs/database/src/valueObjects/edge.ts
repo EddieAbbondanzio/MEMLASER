@@ -17,6 +17,6 @@ export enum EdgeField {
 
 const IGNORED_FOR_RETAINED_SIZE = [EdgeType.Shortcut];
 
-export function shouldFollowForRetainedSize(edgeType: EdgeType) {
-  return IGNORED_FOR_RETAINED_SIZE.includes(edgeType);
+export function isRetainingEdge(edgeType: EdgeType) {
+  return !IGNORED_FOR_RETAINED_SIZE.includes(edgeType);
 }

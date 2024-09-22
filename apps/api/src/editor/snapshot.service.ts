@@ -1,7 +1,6 @@
 import { Injectable, OnModuleInit } from "@nestjs/common";
 import { DATA_DIR } from "../core/config.js";
-import fs from "node:fs";
-import pathLib from "node:path";
+import * as pathLib from "node:path";
 import {
   ImportSnapshotErrorCode,
   ImportSnapshotValidationDTO,
@@ -27,18 +26,18 @@ export class SnapshotService implements OnModuleInit {
 
   async onModuleInit(): Promise<void> {
     // Create data directory if it doesn't exist.
-    if (!fs.existsSync(DATA_DIR)) {
-      await fs.promises.mkdir(DATA_DIR);
+    if (!fsLib.existsSync(DATA_DIR)) {
+      await fsLib.promises.mkdir(DATA_DIR);
     }
 
-    if (!fs.existsSync(this.snapshotDirectoryPath)) {
-      await fs.promises.mkdir(this.snapshotDirectoryPath);
+    if (!fsLib.existsSync(this.snapshotDirectoryPath)) {
+      await fsLib.promises.mkdir(this.snapshotDirectoryPath);
     }
   }
 
   async getAvailableSnapshots(): Promise<SnapshotDTO[]> {
     const snapshotFiles = (
-      await fs.promises.readdir(this.snapshotDirectoryPath)
+      await fsLib.promises.readdir(this.snapshotDirectoryPath)
     ).filter((f) => /.*\.sqlite/.test(f));
 
     const snapshots: SnapshotDTO[] = [];
@@ -62,7 +61,7 @@ export class SnapshotService implements OnModuleInit {
 
   async doesSnapshotExist(name: string): Promise<boolean> {
     const path = this.buildSnapshotPath(name);
-    return fs.existsSync(path);
+    return fsLib.existsSync(path);
   }
 
   buildSnapshotPath(name: string): string {
@@ -84,7 +83,7 @@ export class SnapshotService implements OnModuleInit {
       this.snapshotDirectoryPath,
       `${importPath.name}.sqlite`,
     );
-    if (fs.existsSync(outputPath)) {
+    if (fsLib.existsSync(outputPath)) {
       return {
         valid: false,
         errorCode: ImportSnapshotErrorCode.Duplicate,
@@ -140,11 +139,11 @@ export class SnapshotService implements OnModuleInit {
 
   async deleteSnapshot(name: string): Promise<boolean> {
     const fullPath = pathLib.join(this.snapshotDirectoryPath, `${name}.sqlite`);
-    if (!fs.existsSync(fullPath)) {
+    if (!fsLib.existsSync(fullPath)) {
       return false;
     }
 
-    await fs.promises.rm(fullPath);
+    await fsLib.promises.rm(fullPath);
     return true;
   }
 
