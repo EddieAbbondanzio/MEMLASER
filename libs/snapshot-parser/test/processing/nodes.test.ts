@@ -85,6 +85,8 @@ test("processNodes", async () => {
     edgeCount: 65,
     traceNodeId: 0,
     detached: 0,
+    depth: null,
+    root: null,
   });
   assert.deepEqual(nodes[1], {
     id: 2,
@@ -97,6 +99,8 @@ test("processNodes", async () => {
     edgeCount: 27,
     traceNodeId: 0,
     detached: 0,
+    depth: null,
+    root: null,
   });
   assert.deepEqual(nodes[2], {
     id: 3,
@@ -109,6 +113,8 @@ test("processNodes", async () => {
     edgeCount: 9432,
     traceNodeId: 0,
     detached: 0,
+    depth: null,
+    root: null,
   });
   assert.deepEqual(nodes[3], {
     id: 4,
@@ -121,5 +127,7 @@ test("processNodes", async () => {
     edgeCount: 86,
     traceNodeId: 0,
     detached: 0,
+    depth: null,
+    root: null,
   });
 });
