@@ -25,7 +25,7 @@ export async function processGraph(db: DataSource): Promise<void> {
 
   // Calculate depth first so we can use it when calculating retained size.
   await calculateNodeDepths(nodesById, gcRootsNode);
-  await calculateNodeRetainedSizes(nodesById, gcRootsNode);
+  await calculateNodeRetainedSizes(nodesById);
 
   const nodes = Object.values(nodesById);
   for (const batch of _.chunk(nodes, BATCH_SIZE)) {
@@ -132,7 +132,6 @@ export async function calculateNodeDepths(
   const queue = [...roots];
   while (queue.length > 0) {
     const node = queue.shift()!;
-    console.log("Visit:", node.node);
 
     // Depth is based off the parent closest to GC root because deeper parents
     // could just be circular references.
@@ -162,82 +161,35 @@ export async function calculateNodeDepths(
 
 export async function calculateNodeRetainedSizes(
   nodesById: NodesById,
-  gcRootsNode: NodeWithFamily,
 ): Promise<void> {
-  // Start with the synthetic GC roots node even though it has a parent because
-  // everything above the GC roots is not accessible to app code and unlikely to
-  // be leaky.
-  gcRootsNode.node.depth = 0;
-  const roots = gcRootsNode.childrenNodeIds.map(c => nodesById[c]);
-  for (const root of roots) {
-    root.node.root = true;
-    root.node.depth = 1;
+  const leaves = Object.values(nodesById).filter(
+    n => n.childrenNodeIds.length === 0,
+  );
+
+  // Leaf nodes will have a retained size equal to shallow size so we start with
+  // them first.
+  const queue = [...leaves];
+  while (queue.length > 0) {
+    const node = queue.shift()!;
+
+    const children = node.childrenNodeIds.map(c => nodesById[c]);
+
+    // If a child is missing it's retained size, and the edge is retaining we
+    // can't calculate retained size for this node yet.
+    //
+    // TODO: Handle non retaining edges
+    if (children.some(c => c.node.retainedSize == null)) {
+      continue;
+    }
+
+    let retainedSize = node.node.shallowSize;
+    for (const child of children) {
+      // TODO: Check if edge is non-retaining!
+      retainedSize += child.node.retainedSize!;
+    }
+    node.node.retainedSize = retainedSize;
+
+    const parents = node.parentNodeIds.map(p => nodesById[p]);
+    queue.push(...parents);
   }
-
-  if (roots.length === 0) {
-    throw new Error("Invalid heap snapshot. No root nodes.");
-  }
-
-  // TODO:
-  // - Have calculateNodeDepths() build an array of leaves and return it
-  // - Pass leaves to this function
-  // - Then we start with the leaves and iterate UP the tree until we hit root.
-
-  // TODO: Implement it lol.
-
-  // Calculate retained size by starting with the leaves and traversing up the
-  // branches until we hit root.
-  // while (nodesToVisit.length > 0) {
-  //   const node = nodesToVisit.shift()!;
-  //   console.log(`Visit node ID: ${node.node.id}`);
-
-  //   if (node.color != Color.GREEN) {
-  //     // This is the Node's first visit. Mark it so it won't accidentally get
-  //     // visited again. (ie: We think it's a parent that hasn't been visited yet)
-  //     if (node.color == undefined) {
-  //       console.log("- First visit. Set it RED");
-  //       node.color = Color.RED;
-  //     }
-
-  //     // Leaf node.
-  //     if (node.childrenNodeIds.length === 0) {
-  //       console.log("- It's a leaf. Set retained size = shallow size.");
-  //       node.color = Color.GREEN;
-  //       node.node.retainedSize = node.node.shallowSize;
-  //     } else {
-  //       // See if every retained child has been had it's size calculated so we can
-  //       // calculate this nodes retained size.
-  //       const children = node.childrenNodeIds.map(c => nodesById[c]);
-
-  //       if (children.every(c => c.color == Color.GREEN)) {
-  //         console.log("- Every child is GREEN. Let's make this one GREEN.");
-  //         // TODO: Update this to handle skipping children that have a non
-  //         // retaining edge. (Use helper `isRetainingEdge`)
-  //         node.node.retainedSize ??= 0;
-  //         children.forEach(
-  //           c => (node.node.retainedSize! += c.node.retainedSize!),
-  //         );
-  //         node.color = Color.GREEN;
-  //       } else {
-  //         console.log("NOT READY YET!");
-  //         continue;
-  //       }
-  //     }
-
-  //     // We only visit parents if they haven't been visited yet to avoid going
-  //     // into infinite lo
-  //     const parentsToVisit = node.parentNodeIds
-  //       .map(id => nodesById[id]!)
-  //       .filter(p => p.node.name !== "(GC roots)" && p.color == undefined);
-
-  //     nodesToVisit.push(...parentsToVisit);
-  //     console.log(
-  //       "- Parents to visit: ",
-  //       parentsToVisit.map(p => p),
-  //     );
-  //   }
-  // }
-
-  // console.log("DONE CALCULATING SIZE!!!!");
-  // return;
 }
