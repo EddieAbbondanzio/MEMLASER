@@ -1,4 +1,11 @@
-import { Edge, GC_ROOTS_NAME, Node, batchSelectAll } from "@memlaser/database";
+import {
+  Edge,
+  EdgeType,
+  GC_ROOTS_NAME,
+  Node,
+  batchSelectAll,
+  isRetainingEdge,
+} from "@memlaser/database";
 import _ from "lodash";
 import { DataSource } from "typeorm";
 
@@ -13,8 +20,13 @@ type NodesById = Record<string, NodeWithFamily>;
 
 interface NodeWithFamily {
   node: Node;
-  parentNodeIds: number[];
-  childrenNodeIds: number[];
+  parentNodes: NodeEdge[];
+  childrenNodes: NodeEdge[];
+}
+
+interface NodeEdge {
+  edgeType: EdgeType;
+  nodeId: number;
 }
 
 // Assumptions:
@@ -23,9 +35,9 @@ interface NodeWithFamily {
 export async function processGraph(db: DataSource): Promise<void> {
   const { nodesById, gcRootsNode } = await buildNodeLookup(db);
 
-  // Calculate depth first so we can use it when calculating retained size.
-  await calculateNodeDepths(nodesById, gcRootsNode);
-  await calculateNodeRetainedSizes(nodesById);
+  const roots = await calculateRoots(nodesById, gcRootsNode);
+  await calculateNodeDepths(nodesById, roots);
+  await calculateNodeRetainedSizes(nodesById, roots);
 
   const nodes = Object.values(nodesById);
   for (const batch of _.chunk(nodes, BATCH_SIZE)) {
@@ -100,24 +112,24 @@ export async function getNodeFamilies(
 
   return nodes.map(node => ({
     node,
-    parentNodeIds: edges
+    parentNodes: edges
       .filter(e => e.toNodeId == node.id)
-      .map(e => e.fromNodeId),
-    childrenNodeIds: edges
+      .map(e => ({ nodeId: e.fromNodeId, edgeType: e.type })),
+    childrenNodes: edges
       .filter(e => e.fromNodeId == node.id)
-      .map(e => e.toNodeId),
+      .map(e => ({ nodeId: e.toNodeId, edgeType: e.type })),
   }));
 }
 
-export async function calculateNodeDepths(
+export async function calculateRoots(
   nodesById: NodesById,
   gcRootsNode: NodeWithFamily,
-): Promise<void> {
+): Promise<NodeWithFamily[]> {
   // Start with the synthetic GC roots node even though it has a parent because
   // everything above the GC roots is not accessible to app code and unlikely to
   // be leaky.
   gcRootsNode.node.depth = 0;
-  const roots = gcRootsNode.childrenNodeIds.map(c => nodesById[c]);
+  const roots = gcRootsNode.childrenNodes.map(r => nodesById[r.nodeId]);
   for (const root of roots) {
     root.node.root = true;
     root.node.depth = 1;
@@ -127,6 +139,13 @@ export async function calculateNodeDepths(
     throw new Error("Invalid heap snapshot. No root nodes.");
   }
 
+  return roots;
+}
+
+export async function calculateNodeDepths(
+  nodesById: NodesById,
+  roots: NodeWithFamily[],
+): Promise<void> {
   // Iterate the graph in level order so we can ensure we've visited the
   // shallower nodes first.
   const queue = [...roots];
@@ -135,8 +154,8 @@ export async function calculateNodeDepths(
 
     // Depth is based off the parent closest to GC root because deeper parents
     // could just be circular references.
-    const shallowestParent = node.parentNodeIds
-      .map(p => nodesById[p])
+    const shallowestParent = node.parentNodes
+      .map(p => nodesById[p.nodeId])
       .filter(p => p.node.depth != null)
       .reduce((prev, curr) =>
         prev.node.depth! > curr.node.depth! ? curr : prev,
@@ -152,7 +171,7 @@ export async function calculateNodeDepths(
       depthWasSet = true;
     }
 
-    const children = node.childrenNodeIds.map(c => nodesById[c]);
+    const children = node.childrenNodes.map(c => nodesById[c.nodeId]);
     if (depthWasSet || children.some(c => c.node.depth == null)) {
       queue.push(...children);
     }
@@ -161,35 +180,57 @@ export async function calculateNodeDepths(
 
 export async function calculateNodeRetainedSizes(
   nodesById: NodesById,
+  roots: NodeWithFamily[],
 ): Promise<void> {
-  const leaves = Object.values(nodesById).filter(
-    n => n.childrenNodeIds.length === 0,
-  );
+  // We need to do this to better handle circular references.
+  // Below doesn't work because circular references between children have the
+  // wrong retained size for 1 of the children.
 
-  // Leaf nodes will have a retained size equal to shallow size so we start with
-  // them first.
-  const queue = [...leaves];
-  while (queue.length > 0) {
-    const node = queue.shift()!;
-
-    const children = node.childrenNodeIds.map(c => nodesById[c]);
-
-    // If a child is missing it's retained size, and the edge is retaining we
-    // can't calculate retained size for this node yet.
-    //
-    // TODO: Handle non retaining edges
-    if (children.some(c => c.node.retainedSize == null)) {
-      continue;
+  const recursiveStep = (node: NodeWithFamily, visited: NodeWithFamily[]) => {
+    console.log("Visit: ", node.node);
+    // Leaf nodes will always have a retained size equal to their shallow size
+    // since they don't hold references.
+    if (node.childrenNodes.length === 0) {
+      return node.node.shallowSize;
     }
 
-    let retainedSize = node.node.shallowSize;
-    for (const child of children) {
-      // TODO: Check if edge is non-retaining!
-      retainedSize += child.node.retainedSize!;
-    }
-    node.node.retainedSize = retainedSize;
+    let currSize = node.node.shallowSize;
+    for (const c of node.childrenNodes) {
+      if (!isRetainingEdge(c.edgeType)) continue;
 
-    const parents = node.parentNodeIds.map(p => nodesById[p]);
-    queue.push(...parents);
+      // If we found a reference back to the starting node, skip over it.
+      if (c.nodeId == visited[0].node.id) {
+        console.log("-- Found reference back to OG node: ", visited[0].node.id);
+        continue;
+      }
+
+      // Don't double count a reference if we found a way back to it.
+      if (visited.some(p => p.node.id === c.nodeId)) {
+        console.log(
+          "-- Found reference to previously visited node: ",
+          visited[0].node.id,
+        );
+        // TODO: Explain why this works, and make it more efficient!
+        currSize += visited.find(p => p.node.id === c.nodeId)!.node.shallowSize;
+        continue;
+      }
+
+      const childSize = recursiveStep(nodesById[c.nodeId], [
+        ...visited,
+        nodesById[c.nodeId],
+      ]);
+      // Is this right?
+      if (nodesById[c.nodeId].node.retainedSize! < childSize) {
+        nodesById[c.nodeId].node.retainedSize = childSize;
+      }
+
+      currSize += childSize;
+    }
+
+    return currSize;
+  };
+
+  for (const root of roots) {
+    root.node.retainedSize = recursiveStep(root, [root]);
   }
 }
