@@ -187,47 +187,64 @@ export async function calculateNodeRetainedSizes(
   // wrong retained size for 1 of the children.
 
   const recursiveStep = (node: NodeWithFamily, visited: NodeWithFamily[]) => {
-    console.log("Visit: ", node.node);
+    console.log(
+      "Visit: ",
+      node.node,
+      " path taken was: ",
+      visited.map(v => v.node.id).join(", "),
+    );
     // Leaf nodes will always have a retained size equal to their shallow size
     // since they don't hold references.
     if (node.childrenNodes.length === 0) {
       return node.node.shallowSize;
     }
 
-    let currSize = node.node.shallowSize;
+    let childrenSize = node.node.shallowSize;
+    let returnSize = node.node.shallowSize;
     for (const c of node.childrenNodes) {
-      if (!isRetainingEdge(c.edgeType)) continue;
-
-      // If we found a reference back to the starting node, skip over it.
-      if (c.nodeId == visited[0].node.id) {
-        console.log("-- Found reference back to OG node: ", visited[0].node.id);
+      if (
+        !isRetainingEdge(c.edgeType) ||
+        nodesById[c.nodeId].node.retainedSize != null
+      )
         continue;
-      }
 
-      // Don't double count a reference if we found a way back to it.
-      if (visited.some(p => p.node.id === c.nodeId)) {
+      let size;
+      // Ignore a reference if we found a way back to a visited node to prevent
+      // double counting children.
+      const alreadyVisited = visited.find(p => p.node.id === c.nodeId);
+      if (alreadyVisited != null) {
         console.log(
           "-- Found reference to previously visited node: ",
-          visited[0].node.id,
+          alreadyVisited.node.id,
+          " from: ",
+          node.node.id,
+          " child: ",
+          c.nodeId,
         );
-        // TODO: Explain why this works, and make it more efficient!
-        currSize += visited.find(p => p.node.id === c.nodeId)!.node.shallowSize;
-        continue;
+        size = nodesById[c.nodeId].node.shallowSize;
+        console.log("-- Use shallow size for: ", c.nodeId, " size: ", size);
+      } else {
+        size = recursiveStep(nodesById[c.nodeId], [
+          ...visited,
+          nodesById[c.nodeId],
+        ]);
+        console.log(
+          "-- Calculated retained size for: ",
+          c.nodeId,
+          " size: ",
+          size,
+        );
       }
 
-      const childSize = recursiveStep(nodesById[c.nodeId], [
-        ...visited,
-        nodesById[c.nodeId],
-      ]);
-      // Is this right?
-      if (nodesById[c.nodeId].node.retainedSize! < childSize) {
-        nodesById[c.nodeId].node.retainedSize = childSize;
-      }
-
-      currSize += childSize;
+      childrenSize += size;
+      // Don't add size if already visited because it'll cause the already
+      // visited node to have it's own size added to it's retained size.
+      returnSize += alreadyVisited ? 0 : size;
     }
 
-    return currSize;
+    nodesById[node.node.id].node.retainedSize = childrenSize;
+    console.log("-- ", node.node.id, " done! ", { childrenSize, returnSize });
+    return returnSize;
   };
 
   for (const root of roots) {
